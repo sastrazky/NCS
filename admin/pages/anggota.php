@@ -354,7 +354,7 @@ if (!empty($search)) {
                             
                             <div class="mb-3">
                                 <label for="nip_nim" class="form-label">NIP/NIM <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" name="nip_nim" 
+                                <input type="number" class="form-control" name="nip_nim" 
                                        value="<?= $edit_data ? htmlspecialchars($edit_data['nip_nim']) : '' ?>" required>
                             </div>
                             

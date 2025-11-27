@@ -2,7 +2,7 @@
 // index.php (User Frontend)
 require_once 'config.php';
 
-$page = isset($_GET['page']) ? $_GET['page'] : 'home';
+$page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -39,8 +39,18 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'home';
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top shadow-sm">
         <div class="container">
-            <a class="navbar-brand" href="?page=home">
-                <img src="assets/image/logo.jpg" alt="NCS Logo" height="50" class="d-inline-block align-text-top me-2">
+            <?php
+            // Get logo from database
+            $logo_query = pg_query($conn, "SELECT logo_path FROM profil LIMIT 1");
+            $logo_data = pg_fetch_assoc($logo_query);
+            $logo_path = !empty($logo_data['logo_path']) ? $logo_data['logo_path'] : 'assets/images/logo-ncs.png';
+            ?>
+            <a class="navbar-brand" href="?page=beranda">
+                <?php if (file_exists($logo_path)): ?>
+                    <img src="<?= htmlspecialchars($logo_path) ?>" alt="NCS Logo" height="50" class="d-inline-block align-text-top me-2">
+                <?php else: ?>
+                    <i class="fas fa-shield-alt" style="font-size: 2rem; color: var(--primary-color);"></i>
+                <?php endif; ?>
                 <span class="brand-text">
                     <strong>NCS</strong>
                     <small class="d-block text-muted" style="font-size: 0.7rem;">Network and Cyber Security</small>
@@ -52,7 +62,7 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'home';
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link <?= $page == 'home' ? 'active' : '' ?>" href="?page=home">Beranda</a>
+                        <a class="nav-link <?= $page == 'beranda' ? 'active' : '' ?>" href="?page=beranda">Beranda</a>
                     </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle <?= in_array($page, ['sejarah', 'visi-misi', 'anggota']) ? 'active' : '' ?>" 
@@ -72,9 +82,6 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'home';
                         <a class="nav-link <?= $page == 'sarana' ? 'active' : '' ?>" href="?page=sarana">Fasilitas</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link <?= $page == 'agenda' ? 'active' : '' ?>" href="?page=agenda">Agenda</a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link <?= $page == 'galeri' ? 'active' : '' ?>" href="?page=galeri">Galeri</a>
                     </li>
                     <li class="nav-item">
@@ -89,7 +96,7 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'home';
     <main>
         <?php
         switch($page) {
-            case 'home':
+            case 'beranda':
                 include 'pages/user/beranda.php';
                 break;
             case 'sejarah':
@@ -107,9 +114,6 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'home';
             case 'sarana':
                 include 'pages/user/sarana.php';
                 break;
-            case 'agenda':
-                include 'pages/user/agenda.php';
-                break;
             case 'galeri':
                 include 'pages/user/galeri.php';
                 break;
@@ -117,7 +121,7 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'home';
                 include 'pages/user/arsip.php';
                 break;
             default:
-                include 'pages/user/home.php';
+                include 'pages/user/beranda.php';
         }
         ?>
     </main>
@@ -159,7 +163,7 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'home';
                 <div class="col-md-4">
                     <h5 class="text-white mb-3">Link Cepat</h5>
                     <ul class="list-unstyled">
-                        <li><a href="?page=home" class="text-light text-decoration-none">Beranda</a></li>
+                        <li><a href="?page=beranda" class="text-light text-decoration-none">Beranda</a></li>
                         <li><a href="?page=sejarah" class="text-light text-decoration-none">Profil</a></li>
                         <li><a href="?page=galeri" class="text-light text-decoration-none">Galeri</a></li>
                         <li><a href="?page=arsip" class="text-light text-decoration-none">Arsip</a></li>

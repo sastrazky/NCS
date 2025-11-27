@@ -376,12 +376,8 @@ if (!empty($search)) {
                     <div class="mb-3">
                         <label for="kategori" class="form-label">Kategori</label>
                         <select class="form-select" id="kategori" name="kategori">
-                            <option value="Umum" <?= ($edit_data && $edit_data['kategori'] == 'Umum') ? 'selected' : '' ?>>Umum</option>
-                            <option value="Laporan" <?= ($edit_data && $edit_data['kategori'] == 'Laporan') ? 'selected' : '' ?>>Laporan</option>
-                            <option value="Proposal" <?= ($edit_data && $edit_data['kategori'] == 'Proposal') ? 'selected' : '' ?>>Proposal</option>
-                            <option value="Dokumentasi" <?= ($edit_data && $edit_data['kategori'] == 'Dokumentasi') ? 'selected' : '' ?>>Dokumentasi</option>
-                            <option value="Surat" <?= ($edit_data && $edit_data['kategori'] == 'Surat') ? 'selected' : '' ?>>Surat</option>
-                            <option value="Lainnya" <?= ($edit_data && $edit_data['kategori'] == 'Lainnya') ? 'selected' : '' ?>>Lainnya</option>
+                            <option value="Umum" <?= ($edit_data && $edit_data['kategori'] == 'Umum') ? 'selected' : '' ?>>Penelitian</option>
+                            <option value="Laporan" <?= ($edit_data && $edit_data['kategori'] == 'Laporan') ? 'selected' : '' ?>>Pengabdian</option>
                         </select>
                     </div>
                     

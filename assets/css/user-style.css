@@ -439,6 +439,87 @@ body {
     border-bottom-color: var(--primary-color);
 }
 
+/* Date Box for Agenda */
+.date-box {
+    width: 80px;
+    background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+    color: white;
+    text-align: center;
+    padding: 1rem 0.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.date-day {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+}
+
+.date-month {
+    font-size: 0.9rem;
+    text-transform: capitalize;
+    margin-bottom: 0.25rem;
+    opacity: 0.9;
+}
+
+.date-year {
+    font-size: 0.85rem;
+    opacity: 0.8;
+}
+
+/* Button Group for Filters */
+.btn-group .btn {
+    min-width: 150px;
+    font-weight: 500;
+    border-radius: 0;
+    transition: all 0.3s;
+}
+
+.btn-group .btn:first-child {
+    border-radius: 8px 0 0 8px;
+}
+
+.btn-group .btn:last-child {
+    border-radius: 0 8px 8px 0;
+}
+
+.btn-group .btn-outline-secondary {
+    color: var(--text-light);
+    border-color: #dee2e6;
+    background: white;
+}
+
+.btn-group .btn-outline-secondary:hover {
+    background: var(--bg-light);
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-group .btn-primary {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* Table Styling */
+.table thead th {
+    background: var(--bg-light);
+    color: var(--text-dark);
+    font-weight: 600;
+    border-bottom: 2px solid #dee2e6;
+    padding: 1rem;
+}
+
+.table tbody td {
+    padding: 1rem;
+    vertical-align: middle;
+}
+
+.table-hover tbody tr:hover {
+    background: var(--bg-light);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .hero h1 {
@@ -462,13 +543,4 @@ body {
     .stat-number {
         font-size: 2rem;
     }
-
-    .img-member {
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    object-fit: cover;
-    margin: 0 auto 1rem;
-    display: block;
-}
 }
