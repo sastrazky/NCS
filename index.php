@@ -13,84 +13,153 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="assets/css/user-style.css" rel="stylesheet">
+    <link href="assets/css/anggota.css" rel="stylesheet">
+    <link href="assets/css/agenda.css" rel="stylesheet">
+    <link href="assets/css/footer.css" rel="stylesheet">
+    <link href="assets/css/galeri.css" rel="stylesheet">
+    <style>
+        /* Top Header Bar - Yellow */
+        .top-header-bar {
+            background-color: #34597E;
+            padding: 8px 0;
+            font-size: 0.85rem;
+        }
+        
+        .top-header-bar a {
+            color: #ffffffff;
+            text-decoration: none;
+            padding: 0 15px;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        .top-header-bar a:hover {
+            color: #fff;
+        }
+        
+        .top-header-bar .separator {
+            color: #2C3E50;
+            margin: 0 5px;
+        }
+        
+        .language-selector {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .language-selector img {
+            width: 20px;
+            height: auto;
+        }
+        
+        /* Top Contact Bar - Dark Blue */
+        .top-bar {
+            background-color: #3d5a80;
+            padding: 10px 0;
+            font-size: 0.9rem;
+        }
+    </style>
 </head>
 <body>
-    <!-- Top Bar -->
-    <div class="top-bar">
+    <!-- Top Header Links Bar (Yellow) -->
+    <div class="top-header-bar ">
         <div class="container">
             <div class="d-flex justify-content-between align-items-center">
-                <div class="top-bar-left">
-                    <a href="#" class="text-white text-decoration-none me-3">
-                        <i class="fas fa-envelope me-1"></i> ncs@polinema.ac.id
-                    </a>
-                    <a href="#" class="text-white text-decoration-none">
-                        <i class="fas fa-phone me-1"></i> (0341) 404424
-                    </a>
-                </div>
-                <div class="top-bar-right">
-                    <a href="admin/" class="text-white text-decoration-none">
-                        <i class="fas fa-lock me-1"></i> Login
-                    </a>
+                <div class="header-links">
+                    <?php
+                    // Get external links excluding social media
+                    $link_query = pg_query($conn, "
+                        SELECT * FROM link_eksternal 
+                        WHERE kategori != 'Social Media' 
+                        ORDER BY urutan ASC
+                    ");
+                    
+                    $links = [];
+                    while($link = pg_fetch_assoc($link_query)) {
+                        $links[] = $link;
+                    }
+                    
+                    // Display links with separators
+                    foreach($links as $index => $link):
+                    ?>
+                        <a href="<?= htmlspecialchars($link['uri']) ?>" target="_blank">
+                            <?= htmlspecialchars($link['nama_link']) ?>
+                        </a>
+                        <?php if($index < count($links) - 1): ?>
+                            <span class="separator">|</span>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
                 </div>
             </div>
         </div>
+        
     </div>
 
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top shadow-sm">
-        <div class="container">
-            <?php
-            // Get logo from database
-            $logo_query = pg_query($conn, "SELECT logo_path FROM profil LIMIT 1");
-            $logo_data = pg_fetch_assoc($logo_query);
-            $logo_path = !empty($logo_data['logo_path']) ? $logo_data['logo_path'] : 'assets/images/logo-ncs.png';
-            ?>
-            <a class="navbar-brand" href="?page=beranda">
-                <?php if (file_exists($logo_path)): ?>
-                    <img src="<?= htmlspecialchars($logo_path) ?>" alt="NCS Logo" height="50" class="d-inline-block align-text-top me-2">
-                <?php else: ?>
-                    <i class="fas fa-shield-alt" style="font-size: 2rem; color: var(--primary-color);"></i>
-                <?php endif; ?>
-                <span class="brand-text">
-                    <strong>NCS</strong>
-                    <small class="d-block text-muted" style="font-size: 0.7rem;">Network and Cyber Security</small>
-                </span>
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link <?= $page == 'beranda' ? 'active' : '' ?>" href="?page=beranda">Beranda</a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle <?= in_array($page, ['sejarah', 'visi-misi', 'anggota']) ? 'active' : '' ?>" 
-                           href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                            Profil
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="?page=sejarah">Sejarah</a></li>
-                            <li><a class="dropdown-item" href="?page=visi-misi">Visi & Misi</a></li>
-                            <li><a class="dropdown-item" href="?page=anggota">Anggota Tim</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= $page == 'produk' ? 'active' : '' ?>" href="?page=produk">Produk & Layanan</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= $page == 'sarana' ? 'active' : '' ?>" href="?page=sarana">Fasilitas</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= $page == 'galeri' ? 'active' : '' ?>" href="?page=galeri">Galeri</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= $page == 'arsip' ? 'active' : '' ?>" href="?page=arsip">Arsip</a>
-                    </li>
-                </ul>
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top shadow-sm">
+            <div class="container">
+                <?php
+                // Get profil data to use logo path
+                $profil_query = pg_query($conn, "SELECT * FROM profil LIMIT 1");
+                $profil_data = pg_fetch_assoc($profil_query);
+                $logo_path = !empty($profil_data['logo_path']) ? "admin/" . $profil_data['logo_path'] : 'assets/images/logo-ncs.png';
+                
+                // Check if file exists, if not use default
+                if (!file_exists($logo_path)) {
+                    $logo_path = 'assets/images/logo-ncs.png';
+                }
+                ?>
+                <a class="navbar-brand" href="?page=beranda">
+                    <?php if (file_exists($logo_path)): ?>
+                        <img src="<?= htmlspecialchars($logo_path) ?>" 
+                            alt="NCS Logo" 
+                            height="50" 
+                            class="d-inline-block align-text-top me-2"
+                            onerror="this.style.display='none';">
+                    <?php else: ?>
+                        <i class="fas fa-shield-alt" style="font-size: 2rem; color: var(--primary-color);"></i>
+                    <?php endif; ?>
+                    <span class="brand-text">
+                        <strong>NCS</strong>
+                        <small class="d-block text-muted" style="font-size: 0.7rem;">Network and Cyber Security</small>
+                    </span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <a class="nav-link <?= $page == 'beranda' ? 'active' : '' ?>" href="?page=beranda">Beranda</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle <?= in_array($page, ['sejarah', 'visi-misi', 'anggota']) ? 'active' : '' ?>" 
+                            href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                Profil
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="?page=sejarah">Sejarah</a></li>
+                                <li><a class="dropdown-item" href="?page=visi-misi">Visi & Misi</a></li>
+                                <li><a class="dropdown-item" href="?page=anggota">Anggota Tim</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?= $page == 'sarana' ? 'active' : '' ?>" href="?page=sarana">Fasilitas</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?= $page == 'galeri' ? 'active' : '' ?>" href="?page=galeri">Galeri</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?= $page == 'arsip' ? 'active' : '' ?>" href="?page=arsip">Arsip</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link <?= $page == 'produk' ? 'active' : '' ?>" href="?page=produk">Produk & Layanan</a>
+                        </li>
+                    </ul>
+                </div>
             </div>
-        </div>
-    </nav>
+        </nav>
 
     <!-- Main Content -->
     <main>
@@ -108,9 +177,6 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
             case 'anggota':
                 include 'pages/user/anggota.php';
                 break;
-            case 'produk':
-                include 'pages/user/produk.php';
-                break;
             case 'sarana':
                 include 'pages/user/sarana.php';
                 break;
@@ -119,6 +185,9 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
                 break;
             case 'arsip':
                 include 'pages/user/arsip.php';
+                break;
+            case 'produk':
+                include 'pages/user/produk-layanan.php';    
                 break;
             default:
                 include 'pages/user/beranda.php';
@@ -138,9 +207,19 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
                         // Get social media links
                         $social_query = pg_query($conn, "SELECT * FROM link_eksternal WHERE kategori = 'Social Media' ORDER BY urutan ASC LIMIT 5");
                         while($social = pg_fetch_assoc($social_query)):
+                            // Map nama_link to Font Awesome icon names
+                            $icon_map = [
+                                'Facebook' => 'facebook-f',
+                                'Instagram' => 'instagram',
+                                'Twitter' => 'twitter',
+                                'LinkedIn' => 'linkedin-in',
+                                'YouTube' => 'youtube',
+                                'TikTok' => 'tiktok'
+                            ];
+                            $icon = isset($icon_map[$social['nama_link']]) ? $icon_map[$social['nama_link']] : strtolower($social['nama_link']);
                         ?>
                             <a href="<?= htmlspecialchars($social['uri']) ?>" target="_blank" class="text-white me-3">
-                                <i class="fab fa-<?= strtolower(str_replace(' ', '-', $social['nama_link'])) ?>"></i>
+                                <i class="fab fa-<?= $icon ?>"></i>
                             </a>
                         <?php endwhile; ?>
                     </div>

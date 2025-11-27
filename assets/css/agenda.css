@@ -1,0 +1,53 @@
+.agenda-card {
+    border-left: 4px solid var(--primary-color);
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin-bottom: 1rem;
+    transition: all 0.3s;
+}
+
+.agenda-card:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.agenda-date {
+    display: inline-block;
+    background: var(--primary-color);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.date-box {
+    width: 80px;
+    background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+    color: white;
+    text-align: center;
+    padding: 1rem 0.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.date-day {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+}
+
+.date-month {
+    font-size: 0.9rem;
+    text-transform: capitalize;
+    margin-bottom: 0.25rem;
+    opacity: 0.9;
+}
+
+.date-year {
+    font-size: 0.85rem;
+    opacity: 0.8;
+}

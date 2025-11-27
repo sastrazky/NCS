@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $id_admin = $_SESSION['id_admin'];
     
     // Handle logo upload
-    $logo_path = '';
+    $logo_path = '/uploads/profil/' . $new_file_name;
     if (isset($_FILES['logo']) && $_FILES['logo']['error'] == 0) {
         $allowed_ext = ['jpg', 'jpeg', 'png', 'gif'];
         $file_name = $_FILES['logo']['name'];
@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         } else if ($file_size > 5 * 1024 * 1024) { // 5MB max
             $error_msg = "Ukuran file maksimal 5MB!";
         } else {
-            $upload_dir = 'uploads/profil/';
+            $upload_dir = '../uploads/profil/';
             if (!file_exists($upload_dir)) {
                 mkdir($upload_dir, 0777, true);
             }

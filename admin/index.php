@@ -109,37 +109,37 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
             // Include page based on parameter
             switch($page) {
                 case 'dashboard':
-                    include 'pages/dashboard.php';
+                    include 'pages_admin/dashboard.php';
                     break;
                 case 'profil':
-                    include 'pages/profil.php';
+                    include 'pages_admin/profil.php';
                     break;
                 case 'anggota':
-                    include 'pages/anggota.php';
+                    include 'pages_admin/anggota.php';
                     break;
                 case 'produk_layanan':
-                    include 'pages/produk_layanan.php';
+                    include 'pages_admin/produk_layanan.php';
                     break;
                 case 'sarana_prasarana':
-                    include 'pages/sarana_prasarana.php';
+                    include 'pages_admin/sarana_prasarana.php';
                     break;
                 case 'agenda':
-                    include 'pages/agenda.php';
+                    include 'pages_admin/agenda.php';
                     break;
                 case 'galeri':
-                    include 'pages/galeri.php';
+                    include 'pages_admin/galeri.php';
                     break;
                 case 'arsip':
-                    include 'pages/arsip.php';
+                    include 'pages_admin/arsip.php';
                     break;
                 case 'link_eksternal':
-                    include 'pages/link_eksternal.php';
+                    include 'pages_admin/link_eksternal.php';
                     break;
                 case 'change_password':
                     include 'change_password.php';
                     break;
                 default:
-                    include 'pages/dashboard.php';
+                    include 'pages_admin/dashboard.php';
             }
             ?>
         </div>

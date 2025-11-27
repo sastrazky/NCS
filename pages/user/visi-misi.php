@@ -28,24 +28,6 @@ $profil = pg_fetch_assoc($profil_query);
     <div class="container">
         <div class="row">
 
-            <!-- Sidebar -->
-            <div class="col-lg-3 mb-4">
-                <div class="content-box">
-                    <h5 class="fw-bold mb-3">Menu Profil</h5>
-                    <div class="list-group list-group-flush">
-                        <a href="?page=sejarah" class="list-group-item list-group-item-action">
-                            <i class="fas fa-history me-2"></i>Sejarah
-                        </a>
-                        <a href="?page=visi-misi" class="list-group-item list-group-item-action active">
-                            <i class="fas fa-bullseye me-2"></i>Visi & Misi
-                        </a>
-                        <a href="?page=anggota" class="list-group-item list-group-item-action">
-                            <i class="fas fa-users me-2"></i>Anggota Tim
-                        </a>
-                    </div>
-                </div>
-            </div>
-
             <!-- Main Content -->
             <div class="col-lg-9">
                 <?php if ($profil): ?>

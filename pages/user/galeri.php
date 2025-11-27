@@ -14,21 +14,22 @@ if ($filter_tab == 'agenda') {
     $count_query = pg_query($conn, "SELECT COUNT(*) as total FROM agenda");
     $total_records = pg_fetch_assoc($count_query)['total'];
     $total_pages = ceil($total_records / $limit);
-    
+
     $data_query = pg_query($conn, "SELECT * FROM agenda ORDER BY tanggal_mulai DESC LIMIT $limit OFFSET $offset");
 } else {
     // Get Kegiatan (Galeri) data
     $count_query = pg_query($conn, "SELECT COUNT(*) as total FROM galeri");
     $total_records = pg_fetch_assoc($count_query)['total'];
     $total_pages = ceil($total_records / $limit);
-    
+
     $data_query = pg_query($conn, "SELECT * FROM galeri ORDER BY created_at DESC LIMIT $limit OFFSET $offset");
 }
 
 // Helper function to get agenda status
-function getAgendaStatus($tanggal_mulai, $tanggal_selesai) {
+function getAgendaStatus($tanggal_mulai, $tanggal_selesai)
+{
     $today = date('Y-m-d');
-    
+
     if ($tanggal_mulai > $today) {
         return ['status' => 'Akan Datang', 'class' => 'badge-upcoming'];
     } else if ($tanggal_mulai <= $today && (empty($tanggal_selesai) || $tanggal_selesai >= $today)) {
@@ -72,7 +73,7 @@ function getAgendaStatus($tanggal_mulai, $tanggal_selesai) {
             <!-- AGENDA VIEW -->
             <?php if (pg_num_rows($data_query) > 0): ?>
                 <div class="row g-4">
-                    <?php while($agenda = pg_fetch_assoc($data_query)): ?>
+                    <?php while ($agenda = pg_fetch_assoc($data_query)): ?>
                         <?php
                         $status_info = getAgendaStatus($agenda['tanggal_mulai'], $agenda['tanggal_selesai']);
                         $tgl_mulai = new DateTime($agenda['tanggal_mulai']);
@@ -90,7 +91,7 @@ function getAgendaStatus($tanggal_mulai, $tanggal_selesai) {
                                                 <div class="date-year"><?= $tgl_mulai->format('Y') ?></div>
                                             </div>
                                         </div>
-                                        
+
                                         <!-- Content -->
                                         <div class="col">
                                             <div class="d-flex justify-content-between align-items-start mb-2">
@@ -99,14 +100,14 @@ function getAgendaStatus($tanggal_mulai, $tanggal_selesai) {
                                                     <?= $status_info['status'] ?>
                                                 </span>
                                             </div>
-                                            
+
                                             <?php if (!empty($agenda['deskripsi'])): ?>
                                                 <p class="text-muted mb-2">
                                                     <?= htmlspecialchars(substr($agenda['deskripsi'], 0, 150)) ?>
                                                     <?= strlen($agenda['deskripsi']) > 150 ? '...' : '' ?>
                                                 </p>
                                             <?php endif; ?>
-                                            
+
                                             <div class="d-flex align-items-center gap-3 text-muted small">
                                                 <span>
                                                     <i class="fas fa-clock me-1"></i>
@@ -132,20 +133,33 @@ function getAgendaStatus($tanggal_mulai, $tanggal_selesai) {
                     <h4 class="mt-3 text-muted">Belum ada agenda</h4>
                 </div>
             <?php endif; ?>
-            
+
         <?php else: ?>
             <!-- KEGIATAN VIEW -->
             <?php if (pg_num_rows($data_query) > 0): ?>
                 <div class="row g-4">
-                    <?php while($galeri = pg_fetch_assoc($data_query)): ?>
+                    <?php while ($galeri = pg_fetch_assoc($data_query)): ?>
+                        <?php
+                        // ---------- START: media path logic (minimal, non-destructive) ----------
+                        $original_media = !empty($galeri['media_path']) ? $galeri['media_path'] : '';
+                        $media_path = $original_media ? "admin/" . $original_media : "assets/images/no-image.jpg";
+
+                        // Jika file di server tidak ada, fallback ke no-image
+                        if (!file_exists($media_path)) {
+                            $media_path = "assets/images/no-image.jpg";
+                        }
+                        // ---------- END: media path logic ----------
+                        ?>
+
                         <div class="col-md-4">
                             <div class="card-custom">
-                                <div class="gallery-item" onclick="viewMedia('<?= htmlspecialchars($galeri['media_path']) ?>', '<?= $galeri['tipe_media'] ?>', '<?= htmlspecialchars(addslashes($galeri['judul'])) ?>')">
-                                    <?php if ($galeri['tipe_media'] == 'Foto' && !empty($galeri['media_path']) && file_exists($galeri['media_path'])): ?>
-                                        <img src="<?= htmlspecialchars($galeri['media_path']) ?>" alt="<?= htmlspecialchars($galeri['judul']) ?>">
-                                    <?php elseif ($galeri['tipe_media'] == 'Video' && !empty($galeri['media_path']) && file_exists($galeri['media_path'])): ?>
+                                <div class="gallery-item" onclick="viewMedia('<?= htmlspecialchars($media_path) ?>', '<?= $galeri['tipe_media'] ?>', '<?= htmlspecialchars(addslashes($galeri['judul'])) ?>')">
+
+                                    <?php if ($galeri['tipe_media'] == 'Foto' && !empty($galeri['media_path']) && file_exists($media_path)): ?>
+                                        <img src="<?= htmlspecialchars($media_path) ?>" alt="<?= htmlspecialchars($galeri['judul']) ?>">
+                                    <?php elseif ($galeri['tipe_media'] == 'Video' && !empty($galeri['media_path']) && file_exists($media_path)): ?>
                                         <video style="width: 100%; height: 100%; object-fit: cover;">
-                                            <source src="<?= htmlspecialchars($galeri['media_path']) ?>" type="video/mp4">
+                                            <source src="<?= htmlspecialchars($media_path) ?>" type="video/mp4">
                                         </video>
                                         <div class="position-absolute top-50 start-50 translate-middle">
                                             <i class="fas fa-play-circle" style="font-size: 3rem; color: white; opacity: 0.8;"></i>
@@ -155,11 +169,11 @@ function getAgendaStatus($tanggal_mulai, $tanggal_selesai) {
                                             <i class="fas fa-image text-white" style="font-size: 3rem;"></i>
                                         </div>
                                     <?php endif; ?>
-                                    
+
                                     <div class="gallery-overlay">
                                         <i class="fas fa-search-plus"></i>
                                     </div>
-                                    
+
                                     <div class="gallery-info">
                                         <div class="d-flex justify-content-between align-items-start">
                                             <div>
@@ -177,7 +191,7 @@ function getAgendaStatus($tanggal_mulai, $tanggal_selesai) {
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <?php if (!empty($galeri['deskripsi'])): ?>
                                     <div class="card-body">
                                         <p class="card-text text-muted mb-0" style="font-size: 0.9rem;">
@@ -207,15 +221,15 @@ function getAgendaStatus($tanggal_mulai, $tanggal_selesai) {
                             <i class="fas fa-chevron-left"></i>
                         </a>
                     </li>
-                    
-                    <?php for($i = 1; $i <= $total_pages; $i++): ?>
+
+                    <?php for ($i = 1; $i <= $total_pages; $i++): ?>
                         <li class="page-item <?= $i == $page_num ? 'active' : '' ?>">
                             <a class="page-link" href="?page=galeri&tab=<?= $filter_tab ?>&p=<?= $i ?>">
                                 <?= $i ?>
                             </a>
                         </li>
                     <?php endfor; ?>
-                    
+
                     <li class="page-item <?= $page_num >= $total_pages ? 'disabled' : '' ?>">
                         <a class="page-link" href="?page=galeri&tab=<?= $filter_tab ?>&p=<?= $page_num + 1 ?>">
                             <i class="fas fa-chevron-right"></i>
@@ -242,17 +256,29 @@ function getAgendaStatus($tanggal_mulai, $tanggal_selesai) {
 </div>
 
 <script>
-function viewMedia(path, type, title) {
-    document.getElementById('viewMediaTitle').textContent = title;
-    const body = document.getElementById('viewMediaBody');
-    
-    if (type === 'Foto') {
-        body.innerHTML = '<img src="' + path + '" class="img-fluid" style="max-height: 85vh; border-radius: 8px;">';
-    } else {
-        body.innerHTML = '<video class="img-fluid" style="max-height: 85vh; border-radius: 8px;" controls autoplay><source src="' + path + '" type="video/mp4"></video>';
+    function viewMedia(path, type, title) {
+        document.getElementById('viewMediaTitle').textContent = title;
+        const body = document.getElementById('viewMediaBody');
+
+        if (type === 'Foto') {
+            body.innerHTML = `
+            <img src="${path}" class="img-fluid" 
+                 style="max-height: 85vh; border-radius: 8px;">
+        `;
+        } else if (type === 'Video') {
+            body.innerHTML = `
+            <video controls autoplay style="max-height: 85vh; width: 100%; border-radius: 8px;">
+                <source src="${path}" type="video/mp4">
+                Browser kamu ga support video 😢
+            </video>
+        `;
+        } else {
+            body.innerHTML = `
+            <div class="text-white">Media tidak tersedia 🤷‍♂️</div>
+        `;
+        }
+
+        const myModal = new bootstrap.Modal(document.getElementById('modalViewMedia'));
+        myModal.show();
     }
-    
-    var modal = new bootstrap.Modal(document.getElementById('modalViewMedia'));
-    modal.show();
-}
 </script>

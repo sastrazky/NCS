@@ -1,6 +1,6 @@
 <?php
 // pages/agenda.php
-
+require_once __DIR__ . '/../../config.php';
 // Handle success/error messages
 $success_msg = '';
 $error_msg = '';
