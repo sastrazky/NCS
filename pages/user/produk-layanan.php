@@ -14,32 +14,56 @@ $query = pg_query($conn, "SELECT * FROM produk_layanan ORDER BY id_produk_layana
 
         <?php if (pg_num_rows($query) > 0): ?>
             <?php while ($row = pg_fetch_assoc($query)): ?>
+
+                <?php
+                // ---------- START: media path logic (tiru dari galeri) ----------
+                // Di DB kolomnya: gambar_path, isinya misal: "uploads/produk/produk_1764....jpg"
+                $original_media = !empty($row['gambar_path']) ? $row['gambar_path'] : '';
+
+                // Prefix "admin/" karena file fisik ada di folder admin/
+                $media_path = $original_media ? "admin/" . $original_media : "assets/images/no-image.jpg";
+
+                // Jika file fisik tidak ditemukan, fallback ke no-image
+                if (!file_exists($media_path)) {
+                    $media_path = "assets/images/no-image.jpg";
+                }
+                // ---------- END: media path logic ----------
+                ?>
+
                 <div class="col-md-4">
                     <div class="card shadow-sm border-0 h-100">
-                        
-                        <?php if (!empty($row['gambar_path'])): ?>
-                            <img src="../../uploads/produk_layanan/<?php echo htmlspecialchars($row['gambar_path']); ?>" 
-                                 class="card-img-top"
-                                 style="height:220px; object-fit:cover;">
+
+                        <?php if (!empty($row['tipe_media']) && $row['tipe_media'] == 'Video' && !empty($row['gambar_path']) && file_exists($media_path)): ?>
+                            <div class="position-relative" style="height:220px;">
+                                <video style="width: 100%; height: 100%; object-fit: cover;">
+                                    <source src="<?= htmlspecialchars($media_path) ?>" type="video/mp4">
+                                </video>
+                                <div class="position-absolute top-50 start-50 translate-middle">
+                                    <i class="fas fa-play-circle" style="font-size: 3rem; color: white; opacity: 0.8;"></i>
+                                </div>
+                            </div>
+
                         <?php else: ?>
-                            <img src="../../assets/image/no-image.png"
+                            <!-- Default: anggap foto (atau fallback no-image) -->
+                            <img src="<?= htmlspecialchars($media_path) ?>" 
+                                 alt="<?= htmlspecialchars($row['judul']) ?>"
                                  class="card-img-top"
                                  style="height:220px; object-fit:cover;">
                         <?php endif; ?>
 
                         <div class="card-body">
                             <span class="badge bg-primary px-3 py-2 mb-2">
-                                <?php echo htmlspecialchars($row['kategori']); ?>
+                                <?= htmlspecialchars($row['kategori']) ?>
                             </span>
 
-                            <h5 class="fw-bold"><?php echo htmlspecialchars($row['judul']); ?></h5>
+                            <h5 class="fw-bold"><?= htmlspecialchars($row['judul']) ?></h5>
                             <p class="text-muted" style="font-size: 0.9rem;">
-                                <?php echo nl2br(htmlspecialchars(substr($row['deskripsi'], 0, 120))); ?>...
+                                <?= nl2br(htmlspecialchars(substr($row['deskripsi'], 0, 120))) ?>...
                             </p>
 
                             <!-- Tombol detail -->
                             <button class="btn btn-primary-custom w-100 mt-2" data-bs-toggle="modal"
-                                    data-bs-target="#detail<?php echo $row['id_produk_layanan']; ?>">
+                                    data-bs-target="#detail<?= $row['id_produk_layanan']; ?>">
                                 Lihat Detail
                             </button>
                         </div>
@@ -48,28 +72,37 @@ $query = pg_query($conn, "SELECT * FROM produk_layanan ORDER BY id_produk_layana
                 </div>
 
                 <!-- MODAL DETAIL -->
-                <div class="modal fade" id="detail<?php echo $row['id_produk_layanan']; ?>" tabindex="-1">
+                <div class="modal fade" id="detail<?= $row['id_produk_layanan']; ?>" tabindex="-1">
                     <div class="modal-dialog modal-lg modal-dialog-centered">
                         <div class="modal-content">
 
                             <div class="modal-header">
-                                <h5 class="modal-title fw-bold"><?php echo htmlspecialchars($row['judul']); ?></h5>
+                                <h5 class="modal-title fw-bold"><?= htmlspecialchars($row['judul']); ?></h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
 
                             <div class="modal-body">
-                                <?php if (!empty($row['gambar_path'])): ?>
-                                    <img src="../../uploads/produk_layanan/<?php echo htmlspecialchars($row['gambar_path']); ?>" 
+
+                                <?php if (!empty($row['tipe_media']) && $row['tipe_media'] == 'Video' && !empty($row['gambar_path']) && file_exists($media_path)): ?>
+                                    <div class="position-relative mb-3">
+                                        <video style="width: 100%; height: 100%; object-fit: cover;" controls>
+                                            <source src="<?= htmlspecialchars($media_path) ?>" type="video/mp4">
+                                        </video>
+                                    </div>
+
+                                <?php else: ?>
+                                    <img src="<?= htmlspecialchars($media_path) ?>" 
+                                         alt="<?= htmlspecialchars($row['judul']) ?>"
                                          class="w-100 rounded mb-3">
                                 <?php endif; ?>
 
                                 <p class="text-muted">
                                     <strong>Kategori:</strong> 
-                                    <?php echo htmlspecialchars($row['kategori']); ?>
+                                    <?= htmlspecialchars($row['kategori']); ?>
                                 </p>
 
                                 <p style="white-space: pre-line;">
-                                    <?php echo htmlspecialchars($row['deskripsi']); ?>
+                                    <?= htmlspecialchars($row['deskripsi']); ?>
                                 </p>
                             </div>
 

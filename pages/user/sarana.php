@@ -29,9 +29,16 @@ $total_pages = ceil($total_records / $limit);
 
 // Get data
 if (!empty($query_params)) {
-    $sarana_query = pg_query_params($conn, "SELECT * FROM sarana_prasarana $where_clause ORDER BY nama_fasilitas ASC LIMIT $limit OFFSET $offset", $query_params);
+    $sarana_query = pg_query_params(
+        $conn,
+        "SELECT * FROM sarana_prasarana $where_clause ORDER BY nama_fasilitas ASC LIMIT $limit OFFSET $offset",
+        $query_params
+    );
 } else {
-    $sarana_query = pg_query($conn, "SELECT * FROM sarana_prasarana ORDER BY nama_fasilitas ASC LIMIT $limit OFFSET $offset");
+    $sarana_query = pg_query(
+        $conn,
+        "SELECT * FROM sarana_prasarana ORDER BY nama_fasilitas ASC LIMIT $limit OFFSET $offset"
+    );
 }
 
 // Get statistics
@@ -131,24 +138,27 @@ $stats = pg_fetch_assoc($stats_query);
             <div class="row g-4">
                 <?php while ($sarana = pg_fetch_assoc($sarana_query)): ?>
                     <?php
+                    // ---------- START: media path logic (disamakan dengan galeri & produk) ----------
                     $original_media = !empty($sarana['gambar_path']) ? $sarana['gambar_path'] : '';
-                    $media_path = "uploads/sarana/" . $original_media;
+
+                    // Di DB disimpan misal "uploads/sarana/nama-file.jpg"
+                    // Di front-end kita prefix "admin/" karena file fisik ada di folder admin/
+                    $media_path = $original_media ? "admin/" . $original_media : "assets/images/no-image.jpg";
 
                     if (!file_exists($media_path)) {
                         $media_path = "assets/images/no-image.jpg";
                     }
-
+                    // ---------- END: media path logic ----------
                     ?>
 
                     <div class="col-md-4">
                         <div class="card-custom facility-card">
                             <!-- Image -->
                             <div class="facility-image">
-                                <?php if (!empty($sarana['gambar_path']) && file_exists($sarana['gambar_path'])): ?>
+                                <?php if (!empty($original_media) && $media_path !== "assets/images/no-image.jpg"): ?>
                                     <img src="<?= htmlspecialchars($media_path) ?>"
-                                        alt="<?= htmlspecialchars($sarana['nama_fasilitas']) ?>"
-                                        style="width: 100%; height: 200px; object-fit: cover;">
-
+                                         alt="<?= htmlspecialchars($sarana['nama_fasilitas']) ?>"
+                                         style="width: 100%; height: 200px; object-fit: cover;">
                                 <?php else: ?>
                                     <div class="bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
                                         <i class="fas fa-warehouse text-muted" style="font-size: 4rem;"></i>
@@ -216,21 +226,24 @@ $stats = pg_fetch_assoc($stats_query);
                 <nav class="mt-5">
                     <ul class="pagination justify-content-center">
                         <li class="page-item <?= $page_num <= 1 ? 'disabled' : '' ?>">
-                            <a class="page-link" href="?page=sarana<?= !empty($filter_kondisi) ? '&kondisi=' . urlencode($filter_kondisi) : '' ?>&p=<?= $page_num - 1 ?>">
+                            <a class="page-link"
+                               href="?page=sarana<?= !empty($filter_kondisi) ? '&kondisi=' . urlencode($filter_kondisi) : '' ?>&p=<?= $page_num - 1 ?>">
                                 <i class="fas fa-chevron-left"></i>
                             </a>
                         </li>
 
                         <?php for ($i = 1; $i <= $total_pages; $i++): ?>
                             <li class="page-item <?= $i == $page_num ? 'active' : '' ?>">
-                                <a class="page-link" href="?page=sarana<?= !empty($filter_kondisi) ? '&kondisi=' . urlencode($filter_kondisi) : '' ?>&p=<?= $i ?>">
+                                <a class="page-link"
+                                   href="?page=sarana<?= !empty($filter_kondisi) ? '&kondisi=' . urlencode($filter_kondisi) : '' ?>&p=<?= $i ?>">
                                     <?= $i ?>
                                 </a>
                             </li>
                         <?php endfor; ?>
 
                         <li class="page-item <?= $page_num >= $total_pages ? 'disabled' : '' ?>">
-                            <a class="page-link" href="?page=sarana<?= !empty($filter_kondisi) ? '&kondisi=' . urlencode($filter_kondisi) : '' ?>&p=<?= $page_num + 1 ?>">
+                            <a class="page-link"
+                               href="?page=sarana<?= !empty($filter_kondisi) ? '&kondisi=' . urlencode($filter_kondisi) : '' ?>&p=<?= $page_num + 1 ?>">
                                 <i class="fas fa-chevron-right"></i>
                             </a>
                         </li>
