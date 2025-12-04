@@ -24,6 +24,7 @@ body {
 /* Navbar */
 .navbar {
     padding: 1rem 0;
+    border-top: 10px solid #34597E;
 }
 
 .navbar-brand {
@@ -224,7 +225,7 @@ body {
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     margin-bottom: 2rem;
-    width: 1300px;
+    width: 100%;
 }
 
 .content-box h3 {

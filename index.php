@@ -18,11 +18,10 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
     <link href="assets/css/footer.css" rel="stylesheet">
     <link href="assets/css/galeri.css" rel="stylesheet">
     <style>
-        /* Top Header Bar - Yellow */
         .top-header-bar {
             background-color: #34597E;
             padding: 8px 0;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
         }
         
         .top-header-bar a {

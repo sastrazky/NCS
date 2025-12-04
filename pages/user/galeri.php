@@ -109,10 +109,7 @@ function getAgendaStatus($tanggal_mulai, $tanggal_selesai)
                                             <?php endif; ?>
 
                                             <div class="d-flex align-items-center gap-3 text-muted small">
-                                                <span>
-                                                    <i class="fas fa-clock me-1"></i>
-                                                    <?= $tgl_mulai->format('H:i') ?> - <?= $tgl_selesai ? $tgl_selesai->format('H:i') : '16:00' ?> WIB
-                                                </span>
+
                                                 <?php if (!empty($agenda['lokasi'])): ?>
                                                     <span>
                                                         <i class="fas fa-map-marker-alt me-1"></i>

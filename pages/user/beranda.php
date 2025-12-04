@@ -221,10 +221,6 @@ $stats = [
                                 </div>
                             <?php endif; ?>
 
-                            <div class="gallery-overlay">
-                                <i class="fas fa-search-plus"></i>
-                            </div>
-
                         </div>
                     </div>
                 <?php endwhile; ?>
