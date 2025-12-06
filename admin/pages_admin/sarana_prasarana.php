@@ -214,114 +214,147 @@ if (count($query_params) > 0) {
     </button>
 </div>
 
-<div class="card mb-4" style="border: none; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-    <div class="card-body">
+<!-- SEARCH BAR DIPERBAIKI -->
+<div class="card mb-3" style="border: none; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+    <div class="card-body p-3">
         <form method="GET" action="">
             <input type="hidden" name="page" value="sarana_prasarana">
-            <div class="row g-3">
-                <div class="col-md-10">
-                    <input type="text" class="form-control" name="search" placeholder="Cari sarana/prasarana..." value="<?= htmlspecialchars($search) ?>">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <input type="text" class="form-control" name="search"
+                        placeholder="Cari sarana/prasarana..."
+                        value="<?= htmlspecialchars($search) ?>"
+                        style="height: 45px;">
                 </div>
-                <div class="col-md-2">
-                    <div class="input-group">
-                        <button class="btn btn-primary-custom" type="submit">
-                            <i class="fas fa-search"></i>
-                        </button>
-                        <?php if (!empty($search)): ?>
-                            <a href="?page=sarana_prasarana" class="btn btn-secondary">Reset</a>
-                        <?php endif; ?>
-                    </div>
+                <div class="col-auto">
+                    <button class="btn btn-primary-custom px-4" type="submit" style="height: 45px;">
+                        <i class="fas fa-search me-2"></i>Cari
+                    </button>
+                    <?php if (!empty($search)): ?>
+                        <a href="?page=sarana_prasarana" class="btn btn-secondary ms-2" style="height: 45px;" title="Reset">
+                            <i class="fas fa-redo"></i>
+                        </a>
+                    <?php endif; ?>
                 </div>
             </div>
         </form>
     </div>
 </div>
 
-<div class="table-responsive">
-    <table class="table">
-        <thead>
-            <tr>
-                <th style="width: 50px;">No</th>
-                <th style="width: 100px;">Gambar</th>
-                <th>Nama Fasilitas</th>
-                <th>Deskripsi</th>
-                <th style="width: 80px;">Jumlah</th>
-                <th style="width: 180px;">Aksi</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php if (pg_num_rows($sarana_result) > 0): ?>
-                <?php $no = $offset + 1; ?>
-                <?php while ($row = pg_fetch_assoc($sarana_result)): ?>
+<!-- TABEL DIPERBAIKI -->
+<div class="card" style="border: none; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead style="background-color: #f8f9fa;">
                     <tr>
-                        <td><?= $no++ ?></td>
-                        <td>
-                            <?php if (!empty($row['gambar_path']) && file_exists($row['gambar_path'])): ?>
-                                <img src="<?= htmlspecialchars($row['gambar_path']) ?>"
-                                    class="img-thumbnail"
-                                    style="width: 80px; height: 80px; object-fit: cover;">
-                            <?php else: ?>
-                                <div class="bg-light d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
-                                    <i class="fas fa-warehouse text-muted"></i>
-                                </div>
-                            <?php endif; ?>
-                        </td>
-                        <td>
-                            <strong><?= htmlspecialchars($row['nama_fasilitas']) ?></strong>
-                        </td>
-                        <td>
-                            <small class="text-muted">
-                                <?= htmlspecialchars(substr($row['deskripsi'] ?? '-', 0, 80)) ?>
-                                <?= strlen($row['deskripsi'] ?? '') > 80 ? '...' : '' ?>
-                            </small>
-                        </td>
-                        <td class="text-center">
-                            <span class="badge bg-primary"><?= number_format($row['jumlah'] ?? 0) ?></span>
-                        </td>
-                        <td>
-                            <div class="btn-group" role="group">
-                                <a href="?page=sarana_prasarana&edit=<?= $row['id_sarana'] ?>" class="btn btn-sm btn-edit" title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <button class="btn btn-sm btn-delete"
-                                    onclick="if(confirm('Apakah Anda yakin ingin menghapus data ini?')) window.location.href='?page=sarana_prasarana&delete=<?= $row['id_sarana'] ?>'"
-                                    title="Hapus">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </td>
+                        <th style="width: 50px; padding: 12px;" class="text-center">No</th>
+                        <th style="width: 100px; padding: 12px;" class="text-center">Gambar</th>
+                        <th style="padding: 12px;">Nama Fasilitas</th>
+                        <th style="padding: 12px;">Deskripsi</th>
+                        <th style="width: 100px; padding: 12px;" class="text-center">Jumlah</th>
+                        <th style="width: 120px; padding: 12px;" class="text-center">Aksi</th>
                     </tr>
-                <?php endwhile; ?>
-            <?php else: ?>
-                <tr>
-                    <td colspan="6">
-                        <div class="empty-state">
-                            <i class="fas fa-warehouse"></i>
-                            <p>Tidak ada data sarana/prasarana</p>
-                        </div>
-                    </td>
-                </tr>
-            <?php endif; ?>
-        </tbody>
-    </table>
+                </thead>
+                <tbody>
+                    <?php if (pg_num_rows($sarana_result) > 0): ?>
+                        <?php $no = $offset + 1; ?>
+                        <?php while ($row = pg_fetch_assoc($sarana_result)): ?>
+                            <tr>
+                                <td class="text-center align-middle"><?= $no++ ?></td>
+                                <td class="text-center align-middle">
+                                    <?php if (!empty($row['gambar_path']) && file_exists($row['gambar_path'])): ?>
+                                        <img src="<?= htmlspecialchars($row['gambar_path']) ?>"
+                                            class="img-thumbnail"
+                                            style="width: 70px; height: 70px; object-fit: cover; cursor: pointer;"
+                                            onclick="showImageModal('<?= htmlspecialchars($row['gambar_path']) ?>')">
+                                    <?php else: ?>
+                                        <div class="bg-light d-flex align-items-center justify-content-center rounded"
+                                            style="width: 70px; height: 70px; margin: 0 auto;">
+                                            <i class="fas fa-warehouse text-muted"></i>
+                                        </div>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="align-middle">
+                                    <strong class="d-block" style="word-wrap: break-word; word-break: break-word; white-space: normal; max-width: 250px;">
+                                        <?= htmlspecialchars($row['nama_fasilitas']) ?>
+                                    </strong>
+                                </td>
+                                <td class="align-middle">
+                                    <small class="text-muted d-block" style="line-height: 1.4; word-wrap: break-word; word-break: break-word; white-space: normal; max-width: 300px;">
+                                        <?= htmlspecialchars(substr($row['deskripsi'] ?? 'Tidak ada deskripsi', 0, 100)) ?>
+                                        <?= strlen($row['deskripsi'] ?? '') > 100 ? '...' : '' ?>
+                                    </small>
+                                </td>
+                                <td class="text-center align-middle">
+                                    <span class="badge bg-primary px-3 py-2"><?= number_format($row['jumlah'] ?? 0) ?> Unit</span>
+                                </td>
+                                <td class="text-center align-middle">
+                                    <div class="btn-group" role="group">
+                                        <a href="?page=sarana_prasarana&edit=<?= $row['id_sarana'] ?>"
+                                            class="btn btn-sm btn-edit" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button class="btn btn-sm btn-delete"
+                                            onclick="if(confirm('Apakah Anda yakin ingin menghapus data ini?')) window.location.href='?page=sarana_prasarana&delete=<?= $row['id_sarana'] ?>'"
+                                            title="Hapus">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endwhile; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <div class="empty-state">
+                                    <i class="fas fa-warehouse mb-3" style="font-size: 3rem; color: #ddd;"></i>
+                                    <p class="text-muted mb-0">Tidak ada data sarana/prasarana</p>
+                                    <?php if (!empty($search)): ?>
+                                        <small class="text-muted">Coba ubah kata kunci pencarian</small>
+                                    <?php endif; ?>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
+<!-- PAGINATION DIPERBAIKI -->
 <?php if ($total_pages > 1): ?>
-    <nav>
-        <ul class="pagination justify-content-center">
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center mb-0">
             <li class="page-item <?= $page_num <= 1 ? 'disabled' : '' ?>">
                 <a class="page-link" href="?page=sarana_prasarana&p=<?= $page_num - 1 ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>">
                     <i class="fas fa-chevron-left"></i>
                 </a>
             </li>
 
-            <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+            <?php
+            // Pagination logic untuk menampilkan max 5 halaman
+            $start = max(1, $page_num - 2);
+            $end = min($total_pages, $page_num + 2);
+
+            if ($start > 1): ?>
+                <li class="page-item"><a class="page-link" href="?page=sarana_prasarana&p=1<?= !empty($search) ? '&search=' . urlencode($search) : '' ?>">1</a></li>
+                <?php if ($start > 2): ?><li class="page-item disabled"><span class="page-link">...</span></li><?php endif; ?>
+            <?php endif; ?>
+
+            <?php for ($i = $start; $i <= $end; $i++): ?>
                 <li class="page-item <?= $i == $page_num ? 'active' : '' ?>">
                     <a class="page-link" href="?page=sarana_prasarana&p=<?= $i ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>">
                         <?= $i ?>
                     </a>
                 </li>
             <?php endfor; ?>
+
+            <?php if ($end < $total_pages): ?>
+                <?php if ($end < $total_pages - 1): ?><li class="page-item disabled"><span class="page-link">...</span></li><?php endif; ?>
+                <li class="page-item"><a class="page-link" href="?page=sarana_prasarana&p=<?= $total_pages ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>"><?= $total_pages ?></a></li>
+            <?php endif; ?>
 
             <li class="page-item <?= $page_num >= $total_pages ? 'disabled' : '' ?>">
                 <a class="page-link" href="?page=sarana_prasarana&p=<?= $page_num + 1 ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>">
