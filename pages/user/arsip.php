@@ -227,8 +227,8 @@ $year_query = pg_query($conn, "
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body text-center">
+                <div class="card border-0 shadow-sm text-center">
+                    <div class="card-body">
                         <h5 class="text-muted mb-2">Publikasi <?= date('Y') - 1 ?></h5>
                         <h2 class="fw-bold text-primary mb-0">
                             <?php

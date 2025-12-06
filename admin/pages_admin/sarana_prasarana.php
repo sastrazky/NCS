@@ -1,9 +1,15 @@
 <?php
 // pages/sarana_prasarana.php
 
+// Pastikan $conn tersedia dan SESSION dimulai
+if (!isset($conn) || !isset($_SESSION['id_admin'])) {
+    // Diasumsikan koneksi dan session sudah dicek di index.php
+}
+
 // Handle success/error messages
 $success_msg = '';
 $error_msg = '';
+$id_admin = (int)$_SESSION['id_admin']; // Ambil ID Admin yang sedang login
 
 // Get data for edit
 $edit_data = null;
@@ -17,26 +23,41 @@ if (isset($_GET['edit'])) {
 if (isset($_GET['delete'])) {
     $id_sarana = (int)$_GET['delete'];
 
-    // Get file path before deleting
-    $file_query = pg_query_params($conn, "SELECT gambar_path FROM sarana_prasarana WHERE id_sarana = $1", [$id_sarana]);
+    // --- LANGKAH 1 (DELETE): Ambil Judul Item (Nama Fasilitas) untuk Log ---
+    $file_query = pg_query_params($conn, "SELECT nama_fasilitas, gambar_path FROM sarana_prasarana WHERE id_sarana = $1", [$id_sarana]);
+    $item_title = 'Sarana/Prasarana ID ' . $id_sarana; // Default title
 
     if ($file_row = pg_fetch_assoc($file_query)) {
+        $item_title = $file_row['nama_fasilitas']; // Ambil nama fasilitas untuk log
+
         // Delete file if exists
         if (!empty($file_row['gambar_path']) && file_exists($file_row['gambar_path'])) {
-            unlink($file_row['gambar_path']);
+            @unlink($file_row['gambar_path']); // Gunakan @ agar error path tidak menghentikan proses
         }
 
         // Delete from database
         $delete_result = pg_query_params($conn, "DELETE FROM sarana_prasarana WHERE id_sarana = $1", [$id_sarana]);
 
         if ($delete_result) {
+            // --- LANGKAH 2 (DELETE): Catat Log Aktivitas ---
+            $safe_item_title = pg_escape_literal($conn, $item_title);
+            $log_query = "
+                INSERT INTO aktivitas_log (id_admin, item_type, item_title, action)
+                VALUES ($id_admin, 'sarana', $safe_item_title, 'dihapus')
+            ";
+            
+            pg_query($conn, $log_query);
+            // ------------------------------------------------
             $success_msg = "Sarana/Prasarana berhasil dihapus!";
         } else {
             $error_msg = "Gagal menghapus sarana/prasarana!";
         }
+    } else {
+        $error_msg = "Gagal mengambil data sarana/prasarana untuk dihapus!";
     }
 
-    header("Location: ?page=sarana_prasarana&success=" . urlencode($success_msg));
+    // Perbaikan: Redirect menggunakan success/error message
+    header("Location: ?page=sarana_prasarana" . (!empty($success_msg) ? "&success=" . urlencode($success_msg) : "") . (!empty($error_msg) ? "&error=" . urlencode($error_msg) : ""));
     exit();
 }
 
@@ -59,6 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         $gambar_path = '';
+        $new_gambar_uploaded = false;
 
         // Handle file upload
         if (isset($_FILES['gambar']) && $_FILES['gambar']['error'] == 0) {
@@ -79,6 +101,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 if (!move_uploaded_file($file_tmp, $gambar_path)) {
                     $error_msg = "Gagal mengupload gambar!";
                     $gambar_path = '';
+                } else {
+                    $new_gambar_uploaded = true;
                 }
             }
         }
@@ -86,31 +110,40 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if (empty($error_msg)) {
             if ($id_sarana > 0) {
                 // Update
-                if (!empty($gambar_path)) {
+                $update_query_fields = "nama_fasilitas = $1, deskripsi = $2, jumlah = $3, updated_at = NOW()";
+                $params = [$nama_fasilitas, $deskripsi, $jumlah, $id_sarana]; // Parameter diset tanpa gambar_path
+
+                if ($new_gambar_uploaded) {
                     // Get old file and delete it
                     $old_file_query = pg_query_params($conn, "SELECT gambar_path FROM sarana_prasarana WHERE id_sarana = $1", [$id_sarana]);
                     if ($old_file_row = pg_fetch_assoc($old_file_query)) {
                         if (!empty($old_file_row['gambar_path']) && file_exists($old_file_row['gambar_path'])) {
-                            unlink($old_file_row['gambar_path']);
+                            @unlink($old_file_row['gambar_path']);
                         }
                     }
 
-                    // QUERY UPDATE DENGAN GAMBAR
-                    $update_result = pg_query_params(
-                        $conn,
-                        "UPDATE sarana_prasarana SET nama_fasilitas = $1, deskripsi = $2, jumlah = $3, gambar_path = $4, updated_at = NOW() WHERE id_sarana = $5",
-                        [$nama_fasilitas, $deskripsi, $jumlah, $gambar_path, $id_sarana]
-                    );
-                } else {
-                    // QUERY UPDATE TANPA GAMBAR
-                    $update_result = pg_query_params(
-                        $conn,
-                        "UPDATE sarana_prasarana SET nama_fasilitas = $1, deskripsi = $2, jumlah = $3, updated_at = NOW() WHERE id_sarana = $4",
-                        [$nama_fasilitas, $deskripsi, $jumlah, $id_sarana]
-                    );
+                    // Update query dan params dengan gambar_path baru
+                    $update_query_fields = "nama_fasilitas = $1, deskripsi = $2, jumlah = $3, gambar_path = $4, updated_at = NOW()";
+                    $params = [$nama_fasilitas, $deskripsi, $jumlah, $gambar_path, $id_sarana];
                 }
+                
+                // Eksekusi Update
+                $update_result = pg_query_params(
+                    $conn,
+                    "UPDATE sarana_prasarana SET $update_query_fields WHERE id_sarana = $" . count($params),
+                    $params
+                );
 
                 if ($update_result) {
+                    // --- LOGGING UPDATE ---
+                    $safe_item_title = pg_escape_literal($conn, $nama_fasilitas);
+                    $log_query = "
+                        INSERT INTO aktivitas_log (id_admin, item_type, item_title, action)
+                        VALUES ($id_admin, 'sarana', $safe_item_title, 'diperbarui')
+                    ";
+                    pg_query($conn, $log_query);
+                    // ----------------------
+                    
                     header("Location: ?page=sarana_prasarana&success=" . urlencode("Sarana/Prasarana berhasil diperbarui!"));
                     exit();
                 } else {
@@ -121,11 +154,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 // QUERY INSERT
                 $insert_result = pg_query_params(
                     $conn,
-                    "INSERT INTO sarana_prasarana (nama_fasilitas, deskripsi, jumlah, gambar_path, id_admin, updated_at) VALUES ($1, $2, $3, $4, $5, NOW())",
+                    "INSERT INTO sarana_prasarana (nama_fasilitas, deskripsi, jumlah, gambar_path, id_admin, created_at) VALUES ($1, $2, $3, $4, $5, NOW())",
                     [$nama_fasilitas, $deskripsi, $jumlah, $gambar_path, $id_admin]
                 );
 
                 if ($insert_result) {
+                    // --- LOGGING INSERT ---
+                    $safe_item_title = pg_escape_literal($conn, $nama_fasilitas);
+                    $log_query = "
+                        INSERT INTO aktivitas_log (id_admin, item_type, item_title, action)
+                        VALUES ($id_admin, 'sarana', $safe_item_title, 'ditambahkan')
+                    ";
+                    pg_query($conn, $log_query);
+                    // ----------------------
+                    
                     header("Location: ?page=sarana_prasarana&success=" . urlencode("Sarana/Prasarana berhasil ditambahkan!"));
                     exit();
                 } else {
@@ -140,6 +182,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 if (isset($_GET['success'])) {
     $success_msg = $_GET['success'];
 }
+// Get error message from URL (ditambahkan untuk menangani error dari redirect delete)
+if (isset($_GET['error'])) {
+    $error_msg = $_GET['error'];
+}
+
 
 // Pagination
 $limit = 10;
@@ -214,7 +261,6 @@ if (count($query_params) > 0) {
     </button>
 </div>
 
-<!-- SEARCH BAR DIPERBAIKI -->
 <div class="card mb-3" style="border: none; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
     <div class="card-body p-3">
         <form method="GET" action="">
@@ -241,7 +287,6 @@ if (count($query_params) > 0) {
     </div>
 </div>
 
-<!-- TABEL DIPERBAIKI -->
 <div class="card" style="border: none; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -323,7 +368,6 @@ if (count($query_params) > 0) {
     </div>
 </div>
 
-<!-- PAGINATION DIPERBAIKI -->
 <?php if ($total_pages > 1): ?>
     <nav class="mt-4">
         <ul class="pagination justify-content-center mb-0">
@@ -381,8 +425,8 @@ if (count($query_params) > 0) {
                         <div class="border rounded p-3 bg-light">
                             <img id="preview-gambar"
                                 src="<?= $edit_data && !empty($edit_data['gambar_path'])
-                                            ? htmlspecialchars($edit_data['gambar_path'])
-                                            : '' ?>"
+                                                ? htmlspecialchars($edit_data['gambar_path'])
+                                                : '' ?>"
                                 class="img-fluid mb-2 <?= $edit_data && !empty($edit_data['gambar_path']) ? '' : 'd-none' ?>"
                                 style="max-height: 200px; object-fit: cover;">
 
@@ -430,11 +474,29 @@ if (count($query_params) > 0) {
     </div>
 </div>
 
+<div class="modal fade" id="imageModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body p-0">
+                <img id="fullImage" src="" class="img-fluid w-100" alt="Full Image">
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <?php if ($edit_data): ?>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            var myModal = new bootstrap.Modal(document.getElementById('modalSarana'));
-            myModal.show();
+            // Pastikan bootstrap dimuat sebelum membuat modal
+            if (typeof bootstrap !== 'undefined') {
+                var modalElement = document.getElementById('modalSarana');
+                // Pastikan modal belum ditampilkan
+                if (!modalElement.classList.contains('show')) {
+                    var myModal = new bootstrap.Modal(modalElement);
+                    myModal.show();
+                }
+            }
         });
     </script>
 <?php endif; ?>
@@ -454,4 +516,81 @@ if (count($query_params) > 0) {
             reader.readAsDataURL(input.files[0]);
         }
     }
+
+    // Fungsi tambahan untuk menampilkan gambar dalam modal (diperlukan karena ada onclick di tabel)
+    function showImageModal(imagePath) {
+        if (typeof bootstrap !== 'undefined') {
+            document.getElementById('fullImage').src = imagePath;
+            var imageModal = new bootstrap.Modal(document.getElementById('imageModal'));
+            imageModal.show();
+        } else {
+             alert("Bootstrap JS tidak dimuat. Gambar tidak dapat ditampilkan dalam modal.");
+        }
+    }
 </script>
+
+<style>
+    .btn-primary-custom {
+        color: #fff;
+        background-color: #0d6efd; /* Warna default Bootstrap Primary */
+        border-color: #0d6efd;
+    }
+
+    .btn-primary-custom:hover {
+        background-color: #0b5ed7; 
+        border-color: #0a58ca;
+    }
+    
+    .btn-edit {
+        color: #0d6efd;
+        border: none;
+        background: transparent;
+    }
+    .btn-edit:hover {
+        color: #0b5ed7;
+        background-color: #f1f5f9;
+        text-decoration: none;
+    }
+
+    .btn-delete {
+        color: #dc3545;
+        border: none;
+        background: transparent;
+    }
+    .btn-delete:hover {
+        color: #bb2d3b;
+        background-color: #f1f5f9;
+        text-decoration: none;
+    }
+
+    .card:hover {
+        /* Hapus efek hover pada card container agar tabel lebih konsisten */
+    }
+
+    .card-footer {
+        padding: 0.75rem 1rem;
+    }
+
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 2rem;
+        color: #adb5bd;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        color: #adb5bd;
+    }
+
+    .bg-light {
+        background-color: #f8fafc !important;
+    }
+
+    .modal-backdrop.show {
+        opacity: 0.5 !important;
+    }
+</style>

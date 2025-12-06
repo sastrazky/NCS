@@ -11,6 +11,21 @@ if (!isset($_SESSION['id_admin'])) {
 }
 
 $page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
+$admin_name = 'Admin'; // Default jika gagal
+$initial = 'A'; // Default initial
+
+$id_admin = (int)$_SESSION['id_admin'];
+
+if ($id_admin > 0 && isset($conn)) {
+    $query = pg_query_params($conn, "SELECT nama_lengkap FROM admin WHERE id_admin = $1", [$id_admin]);
+    if ($row = pg_fetch_assoc($query)) {
+        $admin_name = htmlspecialchars($row['nama_lengkap']);
+        
+        $name_parts = explode(' ', $row['nama_lengkap']);
+        $first_name = $name_parts[0];
+        $initial = strtoupper(substr($first_name, 0, 1));
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -92,10 +107,11 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
                 </div>
                 <div class="dropdown">
                     <div class="user-avatar" data-bs-toggle="dropdown" style="cursor:pointer;">
-                        W
+                        <?= $initial ?>
                     </div>
 
                     <ul class="dropdown-menu dropdown-menu-end">
+                        <li><span class="dropdown-item-text text-muted small">Logged in as <?= $admin_name ?></span></li>
                         <li><a class="dropdown-item" href="?page=change_password"><i class="fas fa-key me-2"></i>Change Password</a></li>
                         <li><a class="dropdown-item text-danger" href="logout.php"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
                     </ul>

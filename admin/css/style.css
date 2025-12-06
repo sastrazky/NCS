@@ -106,7 +106,14 @@ body {
     box-shadow: 0 4px 12px rgba(0,0,0,0.06);
     border-radius: 0 0 12px 12px;
 }
-
+.top-navbar .dropdown-menu {
+    top: 100% !important; 
+    margin-top: 5px !important; 
+    right: 0 !important; 
+    left: auto !important;
+    transition: none !important;
+    transform: none !important;
+}
 .navbar-title h4 {
     margin: 0;
     font-weight: 700;
@@ -217,6 +224,7 @@ body {
 .activity-dot.green { background: #10b981; }
 .activity-dot.orange { background: #f59e0b; }
 .activity-dot.purple { background: #a855f7; }
+.activity-dot.pink { background: #ec4899; }
 
 .badge-category {
     font-size: 0.75rem;
@@ -474,16 +482,6 @@ body {
 .user-avatar:hover {
     transform: scale(1.07) rotate(3deg);
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-/* Dropdown – tampil lebih smooth dan elegan */
-.dropdown-menu {
-    border-radius: 12px;
-    padding: 8px 0;
-    border: none;
-    min-width: 180px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.12);
-    animation: dropdownFade 0.18s ease-out;
 }
 
 /* Dropdown item */

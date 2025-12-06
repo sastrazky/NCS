@@ -23,7 +23,7 @@ $stats = [
 <section class="hero">
     <div class="container hero-content">
         <div class="row align-items-center">
-            <div class="col-lg-8">
+            <div class="col-lg-8 ">
                 <h1><?= htmlspecialchars($profil['nama_profil'] ?? "Lab Network and Cyber Security") ?></h1>
                 <p><?= nl2br(htmlspecialchars($profil['deskripsi_singkat'] ?? "Teknologi Informasi Polinema")) ?></p>
                 <div class="mt-4">
@@ -32,18 +32,6 @@ $stats = [
                     </a> -->
                 </div>
             </div>
-
-            <div class="col-lg-4 text-center">
-                <?php
-                $logo = !empty($profil['logo_path']) ? "admin/" . $profil['logo_path'] : "assets/images/no-image.jpg";
-                if (!file_exists($logo)) $logo = "assets/images/no-image.jpg";
-                ?>
-                <img src="<?= htmlspecialchars($logo) ?>"
-                    alt="<?= htmlspecialchars($profil['nama_profil'] ?? "Logo Lab NCS") ?>"
-                    class="img-fluid"
-                    style="max-height: 300px;">
-            </div>
-
         </div>
     </div>
 </section>
@@ -108,12 +96,16 @@ $stats = [
 
             <div class="row align-items-center">
                 <div class="col-lg-6 mb-4 mb-lg-0">
-                    <img src="assets/image/logo.jpg" alt="ss">
+                    <div class="about-image-container">
+                        <img src="assets/image/LABNCS.jpg" 
+                             alt="Lab NCS"
+                             class="img-fluid">
+                    </div>
                 </div>
 
                 <div class="col-lg-6">
                     <div class="content-box">
-                        <h3><i class="fas fa-history text-primary me-2"></i>Sejarah</h3>
+                        <h3>Sejarah</h3>
                         <p style="text-align: justify;">
                             <?= nl2br(htmlspecialchars(substr($profil['sejarah'] ?? '', 0, 400))) ?>...
                         </p>

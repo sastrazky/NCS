@@ -1,9 +1,15 @@
 <?php
 // pages/produk_layanan.php
 
+// Pastikan $conn tersedia dan SESSION dimulai
+if (!isset($conn) || !isset($_SESSION['id_admin'])) {
+    // Diasumsikan koneksi dan session sudah dicek di index.php
+}
+
 // Handle success/error messages
 $success_msg = '';
 $error_msg = '';
+$id_admin = (int)$_SESSION['id_admin']; // Ambil ID Admin yang sedang login
 
 // Get data for edit
 $edit_data = null;
@@ -17,26 +23,40 @@ if (isset($_GET['edit'])) {
 if (isset($_GET['delete'])) {
     $id_produk = (int)$_GET['delete'];
     
-    // Get file path before deleting
-    $file_query = pg_query_params($conn, "SELECT gambar_path FROM produk_layanan WHERE id_produk_layanan = $1", [$id_produk]);
+    // --- LANGKAH 1 (DELETE): Ambil Judul Item untuk Log ---
+    $file_query = pg_query_params($conn, "SELECT judul, gambar_path FROM produk_layanan WHERE id_produk_layanan = $1", [$id_produk]);
+    $item_title = 'Produk/Layanan ID ' . $id_produk; // Default title
     
     if ($file_row = pg_fetch_assoc($file_query)) {
+        $item_title = $file_row['judul']; // Ambil judul untuk log
+
         // Delete file if exists
         if (!empty($file_row['gambar_path']) && file_exists($file_row['gambar_path'])) {
-            unlink($file_row['gambar_path']);
+            @unlink($file_row['gambar_path']); // Gunakan @ agar error path tidak menghentikan proses
         }
         
         // Delete from database
         $delete_result = pg_query_params($conn, "DELETE FROM produk_layanan WHERE id_produk_layanan = $1", [$id_produk]);
         
         if ($delete_result) {
+            // --- LANGKAH 2 (DELETE): Catat Log Aktivitas ---
+            $safe_item_title = pg_escape_literal($conn, $item_title);
+            $log_query = "
+                INSERT INTO aktivitas_log (id_admin, item_type, item_title, action)
+                VALUES ($id_admin, 'produk', $safe_item_title, 'dihapus')
+            ";
+            pg_query($conn, $log_query);
+            // ------------------------------------------------
             $success_msg = "Produk/Layanan berhasil dihapus!";
         } else {
             $error_msg = "Gagal menghapus produk/layanan!";
         }
+    } else {
+        $error_msg = "Gagal mengambil data produk/layanan untuk dihapus!";
     }
     
-    header("Location: ?page=produk_layanan&success=" . urlencode($success_msg));
+    // Perbaikan: Redirect menggunakan success/error message
+    header("Location: ?page=produk_layanan" . (!empty($success_msg) ? "&success=" . urlencode($success_msg) : "") . (!empty($error_msg) ? "&error=" . urlencode($error_msg) : ""));
     exit();
 }
 
@@ -58,6 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
         
         $gambar_path = '';
+        $new_gambar_uploaded = false;
         
         // Handle file upload
         if (isset($_FILES['gambar']) && $_FILES['gambar']['error'] == 0) {
@@ -78,6 +99,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 if (!move_uploaded_file($file_tmp, $gambar_path)) {
                     $error_msg = "Gagal mengupload gambar!";
                     $gambar_path = '';
+                } else {
+                    $new_gambar_uploaded = true;
                 }
             }
         }
@@ -85,27 +108,39 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if (empty($error_msg)) {
             if ($id_produk > 0) {
                 // Update
-                if (!empty($gambar_path)) {
+                $update_query_fields = "judul = $1, deskripsi = $2, kategori = $3, updated_at = NOW()";
+                $params = [$judul, $deskripsi, $kategori, $id_produk]; // Parameter diset tanpa gambar_path
+
+                if ($new_gambar_uploaded) {
                     // Get old file and delete it
                     $old_file_query = pg_query_params($conn, "SELECT gambar_path FROM produk_layanan WHERE id_produk_layanan = $1", [$id_produk]);
                     if ($old_file_row = pg_fetch_assoc($old_file_query)) {
                         if (!empty($old_file_row['gambar_path']) && file_exists($old_file_row['gambar_path'])) {
-                            unlink($old_file_row['gambar_path']);
+                            @unlink($old_file_row['gambar_path']);
                         }
                     }
                     
-                    $update_result = pg_query_params($conn, 
-                        "UPDATE produk_layanan SET judul = $1, deskripsi = $2, kategori = $3, gambar_path = $4, updated_at = NOW() WHERE id_produk_layanan = $5",
-                        [$judul, $deskripsi, $kategori, $gambar_path, $id_produk]
-                    );
-                } else {
-                    $update_result = pg_query_params($conn, 
-                        "UPDATE produk_layanan SET judul = $1, deskripsi = $2, kategori = $3, updated_at = NOW() WHERE id_produk_layanan = $4",
-                        [$judul, $deskripsi, $kategori, $id_produk]
-                    );
+                    // Update query dan params dengan gambar_path baru
+                    $update_query_fields = "judul = $1, deskripsi = $2, kategori = $3, gambar_path = $4, updated_at = NOW()";
+                    $params = [$judul, $deskripsi, $kategori, $gambar_path, $id_produk];
                 }
                 
+                // Eksekusi Update
+                $update_result = pg_query_params($conn, 
+                    "UPDATE produk_layanan SET $update_query_fields WHERE id_produk_layanan = $" . count($params),
+                    $params
+                );
+                
                 if ($update_result) {
+                    // --- LOGGING UPDATE ---
+                    $safe_item_title = pg_escape_literal($conn, $judul);
+                    $log_query = "
+                        INSERT INTO aktivitas_log (id_admin, item_type, item_title, action)
+                        VALUES ($id_admin, 'produk', $safe_item_title, 'diperbarui')
+                    ";
+                    pg_query($conn, $log_query);
+                    // ----------------------
+
                     header("Location: ?page=produk_layanan&success=" . urlencode("Produk/Layanan berhasil diperbarui!"));
                     exit();
                 } else {
@@ -119,6 +154,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 );
                 
                 if ($insert_result) {
+                    // --- LOGGING INSERT ---
+                    $safe_item_title = pg_escape_literal($conn, $judul);
+                    $log_query = "
+                        INSERT INTO aktivitas_log (id_admin, item_type, item_title, action)
+                        VALUES ($id_admin, 'produk', $safe_item_title, 'ditambahkan')
+                    ";
+                    pg_query($conn, $log_query);
+                    // ----------------------
+
                     header("Location: ?page=produk_layanan&success=" . urlencode("Produk/Layanan berhasil ditambahkan!"));
                     exit();
                 } else {
@@ -132,6 +176,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 // Get success message from URL
 if (isset($_GET['success'])) {
     $success_msg = $_GET['success'];
+}
+// Get error message from URL (ditambahkan untuk menangani error dari redirect delete)
+if (isset($_GET['error'])) {
+    $error_msg = $_GET['error'];
 }
 
 // Pagination
@@ -166,12 +214,21 @@ if (count($where_conditions) > 0) {
 
 // Get total records
 if (count($query_params) > 0) {
+    // Penyesuaian loop penamaan parameter untuk menghandle $param_count saat query string dibuat
     $count_query_str = "SELECT COUNT(*) as total FROM produk_layanan $where_clause";
-    $count_query_str = str_replace('$param_count', '$' . $param_count, $count_query_str);
-    for ($i = $param_count - 1; $i >= 1; $i--) {
-        $count_query_str = str_replace('$param_count', '$' . $i, $count_query_str);
+    
+    // Perbaikan logika penomoran parameter PostgreSQL
+    $temp_str = $count_query_str;
+    $j = 1;
+    if (!empty($search)) {
+        $temp_str = str_replace_once('$$param_count', '$' . $j, $temp_str);
+        $j++;
     }
-    $count_query = pg_query_params($conn, $count_query_str, $query_params);
+    if (!empty($filter_kategori)) {
+        $temp_str = str_replace_once('$$param_count', '$' . $j, $temp_str);
+    }
+    $count_query = pg_query_params($conn, $temp_str, $query_params);
+
 } else {
     $count_query = pg_query($conn, "SELECT COUNT(*) as total FROM produk_layanan");
 }
@@ -181,20 +238,33 @@ $total_pages = ceil($total_records / $limit);
 // Get data
 if (count($query_params) > 0) {
     $produk_query_str = "SELECT * FROM produk_layanan $where_clause ORDER BY created_at DESC LIMIT $limit OFFSET $offset";
-    $produk_query_str = str_replace('$param_count', '$' . $param_count, $produk_query_str);
-    for ($i = $param_count - 1; $i >= 1; $i--) {
-        $produk_query_str = str_replace('$param_count', '$' . $i, $produk_query_str);
+    
+    // Perbaikan logika penomoran parameter PostgreSQL
+    $temp_str = $produk_query_str;
+    $j = 1;
+    if (!empty($search)) {
+        $temp_str = str_replace_once('$$param_count', '$' . $j, $temp_str);
+        $j++;
     }
-    $produk_result = pg_query_params($conn, $produk_query_str, $query_params);
+    if (!empty($filter_kategori)) {
+        $temp_str = str_replace_once('$$param_count', '$' . $j, $temp_str);
+    }
+    $produk_result = pg_query_params($conn, $temp_str, $query_params);
 } else {
     $produk_result = pg_query($conn, "SELECT * FROM produk_layanan ORDER BY created_at DESC LIMIT $limit OFFSET $offset");
 }
 
 // Get kategori for filter
 $kategori_result = pg_query($conn, "SELECT DISTINCT kategori FROM produk_layanan WHERE kategori IS NOT NULL ORDER BY kategori");
+
+// Fungsi pembantu untuk mengganti hanya kemunculan pertama (diperlukan karena menggunakan $$param_count dua kali)
+function str_replace_once($search, $replace, $text) {
+    $pos = strpos($text, $search);
+    return $pos !== false ? substr_replace($text, $replace, $pos, strlen($search)) : $text;
+}
+
 ?>
 
-<!-- Success/Error Messages -->
 <?php if (!empty($success_msg)): ?>
     <div class="alert alert-success alert-dismissible fade show" role="alert">
         <i class="fas fa-check-circle me-2"></i><?= htmlspecialchars($success_msg) ?>
@@ -209,7 +279,6 @@ $kategori_result = pg_query($conn, "SELECT DISTINCT kategori FROM produk_layanan
     </div>
 <?php endif; ?>
 
-<!-- Header -->
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h4 class="mb-1 fw-bold">Produk & Layanan</h4>
@@ -220,7 +289,6 @@ $kategori_result = pg_query($conn, "SELECT DISTINCT kategori FROM produk_layanan
     </button>
 </div>
 
-<!-- Search & Filter -->
 <div class="card mb-4" style="border: none; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
     <div class="card-body">
         <form method="GET" action="">
@@ -252,7 +320,6 @@ $kategori_result = pg_query($conn, "SELECT DISTINCT kategori FROM produk_layanan
     </div>
 </div>
 
-<!-- Produk Cards -->
 <div class="row g-4 mb-4">
     <?php if (pg_num_rows($produk_result) > 0): ?>
         <?php while($row = pg_fetch_assoc($produk_result)): ?>
@@ -312,7 +379,6 @@ $kategori_result = pg_query($conn, "SELECT DISTINCT kategori FROM produk_layanan
     <?php endif; ?>
 </div>
 
-<!-- Pagination -->
 <?php if ($total_pages > 1): ?>
     <nav>
         <ul class="pagination justify-content-center">
@@ -339,7 +405,6 @@ $kategori_result = pg_query($conn, "SELECT DISTINCT kategori FROM produk_layanan
     </nav>
 <?php endif; ?>
 
-<!-- Modal Add/Edit -->
 <div class="modal fade" id="modalProduk" tabindex="-1" <?= $edit_data ? 'data-bs-show="true"' : '' ?>>
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -354,16 +419,20 @@ $kategori_result = pg_query($conn, "SELECT DISTINCT kategori FROM produk_layanan
                     <div class="mb-3 text-center">
                         <label class="form-label fw-bold">Gambar Produk/Layanan</label>
                         <div class="border rounded p-3 bg-light">
-                            <?php if ($edit_data && !empty($edit_data['gambar_path'])): ?>
-                                <img src="<?= htmlspecialchars($edit_data['gambar_path']) ?>" 
-                                     class="img-fluid mb-2" 
-                                     style="max-height: 200px; object-fit: cover;"
-                                     id="preview-gambar">
-                            <?php else: ?>
-                                <div id="preview-gambar" class="mb-2">
-                                    <i class="fas fa-box text-muted" style="font-size: 4rem;"></i>
-                                </div>
-                            <?php endif; ?>
+                            <?php 
+                            $gambar_preview_content = '';
+                            $initial_image_path = ($edit_data && !empty($edit_data['gambar_path'])) ? htmlspecialchars($edit_data['gambar_path']) : 'assets/img/no-image.png';
+
+                            if ($edit_data && !empty($edit_data['gambar_path'])): 
+                                $gambar_preview_content = '<img src="' . $initial_image_path . '" class="img-fluid mb-2" style="max-height: 200px; object-fit: cover;">';
+                            else: 
+                                $gambar_preview_content = '<i class="fas fa-box text-muted" style="font-size: 4rem;"></i>';
+                            endif;
+                            ?>
+                            <div id="preview-gambar" class="mb-2">
+                                <?= $gambar_preview_content ?>
+                            </div>
+                            
                             <input type="file" class="form-control" name="gambar" accept="image/*" onchange="previewImage(this)">
                             <small class="text-muted">Format: JPG, PNG, GIF | Max: 5MB</small>
                         </div>
@@ -392,7 +461,7 @@ $kategori_result = pg_query($conn, "SELECT DISTINCT kategori FROM produk_layanan
                     <div class="mb-3">
                         <label for="deskripsi" class="form-label">Deskripsi</label>
                         <textarea class="form-control" name="deskripsi" rows="5" 
-                                  placeholder="Deskripsikan produk/layanan secara detail..."><?= $edit_data ? htmlspecialchars($edit_data['deskripsi']) : '' ?></textarea>
+                                     placeholder="Deskripsikan produk/layanan secara detail..."><?= $edit_data ? htmlspecialchars($edit_data['deskripsi']) : '' ?></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -409,8 +478,13 @@ $kategori_result = pg_query($conn, "SELECT DISTINCT kategori FROM produk_layanan
 <?php if ($edit_data): ?>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        var myModal = new bootstrap.Modal(document.getElementById('modalProduk'));
-        myModal.show();
+        if (typeof bootstrap !== 'undefined') {
+            var modalElement = document.getElementById('modalProduk');
+            if (!modalElement.classList.contains('show')) {
+                var myModal = new bootstrap.Modal(modalElement);
+                myModal.show();
+            }
+        }
     });
 </script>
 <?php endif; ?>
@@ -422,9 +496,13 @@ function previewImage(input) {
     if (input.files && input.files[0]) {
         const reader = new FileReader();
         reader.onload = function(e) {
+            // Gunakan tag img, bukan hanya icon
             preview.innerHTML = '<img src="' + e.target.result + '" class="img-fluid mb-2" style="max-height: 200px; object-fit: cover;">';
         }
         reader.readAsDataURL(input.files[0]);
+    } else {
+        // Jika file dibatalkan, kembalikan ke icon/gambar default
+        preview.innerHTML = '<?php echo $edit_data && !empty($edit_data['gambar_path']) ? '<img src="' . htmlspecialchars($edit_data['gambar_path']) . '" class="img-fluid mb-2" style="max-height: 200px; object-fit: cover;">' : '<i class="fas fa-box text-muted" style="font-size: 4rem;"></i>'; ?>';
     }
 }
 </script>

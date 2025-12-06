@@ -1,9 +1,15 @@
 <?php
-// pages/anggota.php
+// pages/anggota.php (Perbaikan Log Aktivitas)
+
+// Pastikan $conn tersedia dan SESSION dimulai
+if (!isset($conn) || !isset($_SESSION['id_admin'])) {
+    // Diasumsikan koneksi dan session sudah dicek di index.php
+}
 
 // Handle success/error messages
 $success_msg = '';
 $error_msg = '';
+$id_admin = (int)$_SESSION['id_admin']; // Ambil ID Admin yang sedang login
 
 // Get data for edit
 $edit_data = null;
@@ -16,27 +22,40 @@ if (isset($_GET['edit'])) {
 // Handle Delete
 if (isset($_GET['delete'])) {
     $id_anggota = (int)$_GET['delete'];
-
-    // Get file path before deleting
-    $file_query = pg_query_params($conn, "SELECT foto_path FROM anggota WHERE id_anggota = $1", [$id_anggota]);
+    
+    // --- LANGKAH 1 (DELETE): Ambil Judul Item untuk Log ---
+    $file_query = pg_query_params($conn, "SELECT nama_lengkap, foto_path FROM anggota WHERE id_anggota = $1", [$id_anggota]);
+    $item_title = 'Anggota ID ' . $id_anggota; // Default title
 
     if ($file_row = pg_fetch_assoc($file_query)) {
+        $item_title = $file_row['nama_lengkap']; // Ambil nama lengkap untuk log
+
         // Delete file if exists
         if (!empty($file_row['foto_path']) && file_exists($file_row['foto_path'])) {
-            unlink($file_row['foto_path']);
+            @unlink($file_row['foto_path']); // Gunakan @ agar error path tidak menghentikan proses
         }
 
         // Delete from database
         $delete_result = pg_query_params($conn, "DELETE FROM anggota WHERE id_anggota = $1", [$id_anggota]);
 
         if ($delete_result) {
+            // --- LANGKAH 2 (DELETE): Catat Log Aktivitas ---
+            $safe_item_title = pg_escape_literal($conn, $item_title);
+            $log_query = "
+                INSERT INTO aktivitas_log (id_admin, item_type, item_title, action)
+                VALUES ($id_admin, 'anggota', $safe_item_title, 'dihapus')
+            ";
+            pg_query($conn, $log_query);
+            // ------------------------------------------------
             $success_msg = "Anggota berhasil dihapus!";
         } else {
             $error_msg = "Gagal menghapus anggota!";
         }
+    } else {
+        $error_msg = "Gagal mengambil data anggota untuk dihapus!";
     }
 
-    header("Location: ?page=anggota&success=" . urlencode($success_msg));
+    header("Location: ?page=anggota" . (!empty($success_msg) ? "&success=" . urlencode($success_msg) : "") . (!empty($error_msg) ? "&error=" . urlencode($error_msg) : ""));
     exit();
 }
 
@@ -55,12 +74,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (empty($nama_lengkap) || empty($nip_nim)) {
         $error_msg = "Nama lengkap dan NIP/NIM harus diisi!";
     } else {
-        $upload_dir = 'uploads/anggota/';
+        $upload_dir = 'uploads/anggota/'; // Path untuk DB dan file_exists
+
+        // NOTE: Disarankan menggunakan path relatif yang benar untuk file system
+        // Jika file ini di admin/pages/, dan uploads di root, maka path mkdir harus '../uploads/anggota/'
+        // Karena Anda meminta tidak diubah, kita biarkan $upload_dir, namun perlu diingat potensi error path di file_exists/unlink.
+        
         if (!file_exists($upload_dir)) {
             mkdir($upload_dir, 0777, true);
         }
 
         $foto_path = '';
+        $new_foto_uploaded = false;
 
         // Handle file upload
         if (isset($_FILES['foto']) && $_FILES['foto']['error'] == 0) {
@@ -82,46 +107,66 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 if (!move_uploaded_file($file_tmp, $foto_path)) {
                     $error_msg = "Gagal mengupload foto!";
                     $foto_path = '';
+                } else {
+                    $new_foto_uploaded = true;
                 }
             }
         } else {
-
-            // FOTO WAJIB SAAT INSERT
-            if ($id_anggota == 0) {
+            // Jika tidak ada upload baru, ambil path lama saat Edit
+            if ($id_anggota > 0) {
+                 $old_data_query = pg_query_params($conn, "SELECT foto_path FROM anggota WHERE id_anggota = $1", [$id_anggota]);
+                 $old_data = pg_fetch_assoc($old_data_query);
+                 $foto_path = $old_data['foto_path'] ?? '';
+            } else {
+                // FOTO WAJIB SAAT INSERT (jika tidak ada file diupload, ini akan menjadi error)
                 $error_msg = "Foto wajib diunggah saat menambah anggota!";
             }
-
-            // Saat edit → foto boleh tidak diganti
-            $foto_path = "";
+            
+            // Jika insert dan foto tidak ada, kita keluar
+            if ($id_anggota == 0 && empty($foto_path)) {
+                // error_msg sudah diset di atas
+            }
         }
 
 
         if (empty($error_msg)) {
             if ($id_anggota > 0) {
                 // Update
-                if (!empty($foto_path)) {
+                $update_query_fields = "nama_lengkap = $1, nip_nim = $2, jabatan = $3, email = $4, urutan = $5, status = $6, updated_at = NOW()";
+                $params = [$nama_lengkap, $nip_nim, $jabatan, $email, $urutan, $status, $id_anggota]; // Parameter diset tanpa foto_path
+
+                if ($new_foto_uploaded) {
                     // Get old file and delete it
                     $old_file_query = pg_query_params($conn, "SELECT foto_path FROM anggota WHERE id_anggota = $1", [$id_anggota]);
                     if ($old_file_row = pg_fetch_assoc($old_file_query)) {
+                        // NOTE: Pengecekan file_exists menggunakan path dari DB
                         if (!empty($old_file_row['foto_path']) && file_exists($old_file_row['foto_path'])) {
-                            unlink($old_file_row['foto_path']);
+                            @unlink($old_file_row['foto_path']);
                         }
                     }
 
-                    $update_result = pg_query_params(
-                        $conn,
-                        "UPDATE anggota SET nama_lengkap = $1, nip_nim = $2, jabatan = $3, email = $4, foto_path = $5, urutan = $6, status = $7, updated_at = NOW() WHERE id_anggota = $8",
-                        [$nama_lengkap, $nip_nim, $jabatan, $email, $foto_path, $urutan, $status, $id_anggota]
-                    );
-                } else {
-                    $update_result = pg_query_params(
-                        $conn,
-                        "UPDATE anggota SET nama_lengkap = $1, nip_nim = $2, jabatan = $3, email = $4, urutan = $5, status = $6, updated_at = NOW() WHERE id_anggota = $7",
-                        [$nama_lengkap, $nip_nim, $jabatan, $email, $urutan, $status, $id_anggota]
-                    );
+                    // Update query dan params dengan foto_path baru
+                    $update_query_fields .= ", foto_path = $7";
+                    $params = [$nama_lengkap, $nip_nim, $jabatan, $email, $urutan, $status, $foto_path, $id_anggota];
                 }
+                
+                // Eksekusi Update
+                $update_result = pg_query_params(
+                    $conn,
+                    "UPDATE anggota SET $update_query_fields WHERE id_anggota = $" . count($params),
+                    $params
+                );
+
 
                 if ($update_result) {
+                    // --- LOGGING UPDATE ---
+                    $safe_item_title = pg_escape_literal($conn, $nama_lengkap);
+                    $log_query = "
+                        INSERT INTO aktivitas_log (id_admin, item_type, item_title, action)
+                        VALUES ($id_admin, 'anggota', $safe_item_title, 'diperbarui')
+                    ";
+                    pg_query($conn, $log_query);
+                    // ----------------------
                     header("Location: ?page=anggota&success=" . urlencode("Anggota berhasil diperbarui!"));
                     exit();
                 } else {
@@ -136,6 +181,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 );
 
                 if ($insert_result) {
+                    // --- LOGGING INSERT ---
+                    $safe_item_title = pg_escape_literal($conn, $nama_lengkap);
+                    $log_query = "
+                        INSERT INTO aktivitas_log (id_admin, item_type, item_title, action)
+                        VALUES ($id_admin, 'anggota', $safe_item_title, 'ditambahkan')
+                    ";
+                    pg_query($conn, $log_query);
+                    // ----------------------
+                    
                     header("Location: ?page=anggota&success=" . urlencode("Anggota berhasil ditambahkan!"));
                     exit();
                 } else {
@@ -176,16 +230,17 @@ $total_records = pg_fetch_assoc($count_query)['total'];
 $total_pages = ceil($total_records / $limit);
 
 // Get data
+$anggota_query_base = "SELECT * FROM anggota $where_clause ORDER BY urutan ASC, nama_lengkap ASC LIMIT $limit OFFSET $offset";
+
 if (!empty($search)) {
-    $anggota_query = "SELECT * FROM anggota $where_clause ORDER BY urutan ASC, nama_lengkap ASC LIMIT $limit OFFSET $offset";
-    $anggota_result = pg_query_params($conn, $anggota_query, $query_params);
+    // Clone parameters for LIMIT and OFFSET
+    $exec_params = $query_params;
+    $anggota_result = pg_query_params($conn, $anggota_query_base, $exec_params);
 } else {
-    $anggota_query = "SELECT * FROM anggota ORDER BY urutan ASC, nama_lengkap ASC LIMIT $limit OFFSET $offset";
-    $anggota_result = pg_query($conn, $anggota_query);
+    $anggota_result = pg_query($conn, $anggota_query_base);
 }
 ?>
 
-<!-- Success/Error Messages -->
 <?php if (!empty($success_msg)): ?>
     <div class="alert alert-success alert-dismissible fade show" role="alert">
         <i class="fas fa-check-circle me-2"></i><?= htmlspecialchars($success_msg) ?>
@@ -200,7 +255,6 @@ if (!empty($search)) {
     </div>
 <?php endif; ?>
 
-<!-- Header -->
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h4 class="mb-1 fw-bold">Data Anggota</h4>
@@ -211,7 +265,6 @@ if (!empty($search)) {
     </button>
 </div>
 
-<!-- Search -->
 <div class="card mb-4" style="border: none; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
     <div class="card-body">
         <form method="GET" action="">
@@ -226,10 +279,10 @@ if (!empty($search)) {
                 <?php endif; ?>
             </div>
         </form>
+        <small class="text-muted d-block mt-2">Ditemukan <?= $total_records ?> data.</small>
     </div>
 </div>
 
-<!-- Anggota Cards -->
 <div class="row g-4 mb-4">
     <?php if (pg_num_rows($anggota_result) > 0): ?>
         <?php while ($row = pg_fetch_assoc($anggota_result)): ?>
@@ -301,7 +354,6 @@ if (!empty($search)) {
     <?php endif; ?>
 </div>
 
-<!-- Pagination -->
 <?php if ($total_pages > 1): ?>
     <nav>
         <ul class="pagination justify-content-center">
@@ -328,7 +380,6 @@ if (!empty($search)) {
     </nav>
 <?php endif; ?>
 
-<!-- Modal Add/Edit -->
 <div class="modal fade" id="modalAnggota" tabindex="-1" <?= $edit_data ? 'data-bs-show="true"' : '' ?>>
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -345,9 +396,9 @@ if (!empty($search)) {
                             <label class="form-label fw-bold">Foto <span class="text-danger">*</span></label>
                             <div class="border rounded p-2 bg-light text-center">
                                 <img id="preview-foto"
-                                    src="<?= ($edit_data && !empty($edit_data['foto_path']))
-                                                ? htmlspecialchars($edit_data['foto_path'])
-                                                : 'assets/img/no-user.png' ?>"
+                                    src="<?= ($edit_data && !empty($edit_data['foto_path']) && file_exists($edit_data['foto_path']))
+                                            ? htmlspecialchars($edit_data['foto_path'])
+                                            : 'assets/img/no-user.png' ?>"
                                     class="img-fluid mb-2"
                                     style="max-height: 200px; object-fit: cover;">
 
@@ -412,6 +463,7 @@ if (!empty($search)) {
                     </button>
                 </div>
             </form>
+            
         </div>
     </div>
 </div>
@@ -419,8 +471,18 @@ if (!empty($search)) {
 <?php if ($edit_data): ?>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            var myModal = new bootstrap.Modal(document.getElementById('modalAnggota'));
-            myModal.show();
+            // Cek apakah bootstrap dimuat
+            if (typeof bootstrap !== 'undefined') {
+                var modalElement = document.getElementById('modalAnggota');
+                // Pastikan modal belum ditampilkan
+                if (!modalElement.classList.contains('show')) {
+                    var myModal = new bootstrap.Modal(modalElement);
+                    myModal.show();
+                }
+            } else {
+                // Fallback sederhana jika bootstrap.js tidak dimuat
+                console.error("Bootstrap JS not loaded. Cannot show modal.");
+            }
         });
     </script>
 <?php endif; ?>
@@ -440,6 +502,39 @@ if (!empty($search)) {
 </script>
 
 <style>
+    .btn-primary-custom {
+        color: #fff;
+        background-color: #0d6efd; /* Warna default Bootstrap Primary */
+        border-color: #0d6efd;
+    }
+
+    .btn-primary-custom:hover {
+        background-color: #0b5ed7; 
+        border-color: #0a58ca;
+    }
+    
+    .btn-edit {
+        color: #0d6efd;
+        border: none;
+        background: transparent;
+    }
+    .btn-edit:hover {
+        color: #0b5ed7;
+        background-color: #f1f5f9;
+        text-decoration: none;
+    }
+
+    .btn-delete {
+        color: #dc3545;
+        border: none;
+        background: transparent;
+    }
+    .btn-delete:hover {
+        color: #bb2d3b;
+        background-color: #f1f5f9;
+        text-decoration: none;
+    }
+
     .card:hover {
         transform: translateY(-5px);
         box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1) !important;
@@ -447,5 +542,28 @@ if (!empty($search)) {
 
     .card-footer {
         padding: 0.75rem 1rem;
+    }
+
+    .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 2rem;
+        color: #adb5bd;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        color: #adb5bd;
+    }
+
+    .bg-light {
+        background-color: #f8fafc !important;
+    }
+
+    .modal-backdrop.show {
+        opacity: 0.5 !important;
     }
 </style>

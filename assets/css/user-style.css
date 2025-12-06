@@ -4,6 +4,7 @@
     --primary-color: #3b5998;
     --secondary-color: #2c4a7c;
     --accent-color: #5e81ac;
+    --highlight-color: #F8B400;
     --text-dark: #1e293b;
     --text-light: #64748b;
     --bg-light: #f8fafc;
@@ -44,7 +45,8 @@ body {
     transition: all 0.3s;
 }
 
-.nav-link:hover, .nav-link.active {
+.nav-link:hover,
+.nav-link.active {
     background: var(--bg-light);
     color: var(--primary-color) !important;
 }
@@ -65,9 +67,10 @@ body {
 .hero {
     background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
     color: white;
-    padding: 8rem 0 6rem;
+    padding: 20rem 0 6rem;
     position: relative;
     overflow: hidden;
+    background: url('../../assets/image/gedung-sipil.jpg') no-repeat center center / cover;
 }
 
 .hero::before {
@@ -77,8 +80,8 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(255,255,255,0.05)" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,154.7C960,171,1056,181,1152,165.3C1248,149,1344,107,1392,85.3L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') no-repeat bottom;
-    background-size: cover;
+    background: linear-gradient(135deg, rgba(44, 74, 124, 0.85) 0%, rgba(59, 89, 152, 0.85) 50%); 
+    z-index: 1;
 }
 
 .hero-content {
@@ -123,7 +126,7 @@ body {
     display: block;
     width: 60px;
     height: 4px;
-    background: var(--primary-color);
+    background: var(--highlight-color);
     margin: 1rem auto 0;
     border-radius: 2px;
 }
@@ -132,14 +135,14 @@ body {
 .card-custom {
     border: none;
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     transition: all 0.3s;
     height: 100%;
 }
 
 .card-custom:hover {
     transform: translateY(-5px);
-    box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
 }
 
 .card-custom .card-img-top {
@@ -158,16 +161,17 @@ body {
     padding: 2rem;
 }
 
+/* Stats */
 .stat-icon {
     width: 80px;
     height: 80px;
-    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    background: linear-gradient(135deg, var(--highlight-color), var(--primary-color)); 
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 0 auto 1rem;
-    color: white;
+    color: white; 
     font-size: 2rem;
 }
 
@@ -210,7 +214,7 @@ body {
 }
 
 .breadcrumb-item a {
-    color: rgba(255,255,255,0.8);
+    color: rgba(255, 255, 255, 0.8);
     text-decoration: none;
 }
 
@@ -219,14 +223,14 @@ body {
 }
 
 /* Content Box */
-.content-box{
-    background: rgb(195, 195, 195);
+.content-box {
+    background: white;
     padding: 2rem;
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(110, 119, 250, 0.08);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     margin: 10px auto 2rem auto;
     width: 100%;
-    max-width: 900px;        
+    max-width: 900px;
 }
 
 .content-box h3 {
@@ -282,7 +286,8 @@ body {
     transition: all 0.3s;
 }
 
-.filter-tab:hover, .filter-tab.active {
+.filter-tab:hover,
+.filter-tab.active {
     color: var(--primary-color);
     border-bottom-color: var(--primary-color);
 }
@@ -333,9 +338,28 @@ body {
     border-color: var(--primary-color);
 }
 
-.btn-group .btn-primary {
+.btn-group {
     background: var(--primary-color);
     border-color: var(--primary-color);
+}
+
+/* Update Button Primary */
+.btn-primary {
+    /* Ganti warna latar belakang dan border ke warna highlight baru */
+    background-color: var(--highlight-color);
+    border-color: var(--highlight-color);
+    color: var(--text-dark);
+    /* Ganti warna teks menjadi gelap agar kontras */
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    /* Gelapkan warna highlight saat di-hover */
+    background-color: #E2A200;
+    border-color: #E2A200;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 /* Table Styling */
@@ -361,22 +385,34 @@ body {
     .hero h1 {
         font-size: 2rem;
     }
-    
+
     .hero p {
         font-size: 1rem;
     }
-    
+
     .section-title h2 {
         font-size: 1.75rem;
     }
-    
+
     .stat-icon {
         width: 60px;
         height: 60px;
         font-size: 1.5rem;
     }
-    
+
     .stat-number {
         font-size: 2rem;
     }
-}   
+}
+
+.about-image-container {
+    height: 100%;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.about-image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}

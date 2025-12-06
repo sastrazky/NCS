@@ -60,6 +60,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (empty($error_msg)) {
         if ($profil_data) {
             // Update existing profil
+            $action = 'diperbarui';
+            $item_title = 'Profil Organisasi';
             
             if ($new_logo_uploaded) {
                 // Hapus logo lama jika upload logo baru berhasil
@@ -81,6 +83,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
             
             if ($update_result) {
+                // --- LOGGING UPDATE ---
+                $log_query = "
+                    INSERT INTO aktivitas_log (id_admin, item_type, item_title, action)
+                    VALUES ($id_admin, 'profil', 'Profil Organisasi', 'diperbarui')
+                ";
+                pg_query($conn, $log_query);
+                // ----------------------
+
                 header("Location: ?page=profil&success=" . urlencode("Profil berhasil diperbarui!"));
                 exit();
             } else {
@@ -94,6 +104,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             );
             
             if ($insert_result) {
+                // --- LOGGING INSERT ---
+                $log_query = "
+                    INSERT INTO aktivitas_log (id_admin, item_type, item_title, action)
+                    VALUES ($id_admin, 'profil', 'Profil Organisasi', 'ditambahkan')
+                ";
+                pg_query($conn, $log_query);
+                // ----------------------
+                
                 header("Location: ?page=profil&success=" . urlencode("Profil berhasil ditambahkan!"));
                 exit();
             } else {
@@ -113,7 +131,6 @@ $profil_query = pg_query($conn, "SELECT * FROM profil LIMIT 1");
 $profil_data = pg_fetch_assoc($profil_query);
 ?>
 
-<!-- Success/Error Messages -->
 <?php if (!empty($success_msg)): ?>
     <div class="alert alert-success alert-dismissible fade show" role="alert">
         <i class="fas fa-check-circle me-2"></i><?= htmlspecialchars($success_msg) ?>
@@ -128,7 +145,6 @@ $profil_data = pg_fetch_assoc($profil_query);
     </div>
 <?php endif; ?>
 
-<!-- Header -->
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h4 class="mb-1 fw-bold">Profil Organisasi</h4>
@@ -146,7 +162,6 @@ $profil_data = pg_fetch_assoc($profil_query);
 </div>
 
 <?php if (!$profil_data && !isset($_GET['edit'])): ?>
-    <!-- Empty State -->
     <div class="card">
         <div class="card-body">
             <div class="empty-state" style="padding: 4rem 2rem;">
@@ -160,7 +175,6 @@ $profil_data = pg_fetch_assoc($profil_query);
         </div>
     </div>
 <?php elseif (isset($_GET['edit'])): ?>
-<!-- Form Edit/Add -->
 <div class="card">
     <div class="card-header bg-white">
         <h5 class="mb-0">
@@ -171,14 +185,10 @@ $profil_data = pg_fetch_assoc($profil_query);
     <div class="card-body">
         <form method="POST" enctype="multipart/form-data">
             <div class="row">
-
-                <!-- Logo Section -->
                 <div class="col-md-4 mb-4">
                     <div class="text-center">
                         <label class="form-label fw-bold">Logo Organisasi</label>
                         <div class="border rounded p-3 bg-light">
-
-                            <!-- FIX PREVIEW WRAPPER -->
                             <div id="preview-wrapper" class="mb-3 text-center">
                                 <?php if ($profil_data && !empty($profil_data['logo_path'])): ?>
                                     <img src="<?= htmlspecialchars($profil_data['logo_path']) ?>" 
@@ -192,62 +202,54 @@ $profil_data = pg_fetch_assoc($profil_query);
                                     </div>
                                 <?php endif; ?>
                             </div>
-
-                            <!-- FILE INPUT -->
                             <input type="file" 
-                                   class="form-control" 
-                                   id="logo" 
-                                   name="logo" 
-                                   accept="image/*"
-                                   onchange="previewImage(this)">
+                               class="form-control" 
+                               id="logo" 
+                               name="logo" 
+                               accept="image/*"
+                               onchange="previewImage(this)">
                             <small class="text-muted d-block mt-2">Format: JPG, PNG, GIF | Max: 5MB</small>
                         </div>
                     </div>
                 </div>
 
-                <!-- Content Section -->
                 <div class="col-md-8">
-
-                    <!-- Sejarah -->
                     <div class="mb-4">
                         <label for="sejarah" class="form-label fw-bold">
                             <i class="fas fa-history text-primary me-2"></i>Sejarah
                         </label>
                         <textarea class="form-control" 
-                                  id="sejarah" 
-                                  name="sejarah" 
-                                  rows="5" 
-                                  placeholder="Tuliskan sejarah organisasi..."><?= $profil_data ? htmlspecialchars($profil_data['sejarah']) : '' ?></textarea>
+                                     id="sejarah" 
+                                     name="sejarah" 
+                                     rows="5" 
+                                     placeholder="Tuliskan sejarah organisasi..."><?= $profil_data ? htmlspecialchars($profil_data['sejarah']) : '' ?></textarea>
                     </div>
 
-                    <!-- Visi -->
                     <div class="mb-4">
                         <label for="visi" class="form-label fw-bold">
                             <i class="fas fa-eye text-primary me-2"></i>Visi
                         </label>
                         <textarea class="form-control" 
-                                  id="visi" 
-                                  name="visi" 
-                                  rows="4" 
-                                  placeholder="Tuliskan visi organisasi..."><?= $profil_data ? htmlspecialchars($profil_data['visi']) : '' ?></textarea>
+                                     id="visi" 
+                                     name="visi" 
+                                     rows="4" 
+                                     placeholder="Tuliskan visi organisasi..."><?= $profil_data ? htmlspecialchars($profil_data['visi']) : '' ?></textarea>
                     </div>
 
-                    <!-- Misi -->
                     <div class="mb-4">
                         <label for="misi" class="form-label fw-bold">
                             <i class="fas fa-bullseye text-primary me-2"></i>Misi
                         </label>
                         <textarea class="form-control" 
-                                  id="misi" 
-                                  name="misi" 
-                                  rows="6" 
-                                  placeholder="Tuliskan misi organisasi (gunakan enter untuk pemisah)..."><?= $profil_data ? htmlspecialchars($profil_data['misi']) : '' ?></textarea>
+                                     id="misi" 
+                                     name="misi" 
+                                     rows="6" 
+                                     placeholder="Tuliskan misi organisasi (gunakan enter untuk pemisah)..."><?= $profil_data ? htmlspecialchars($profil_data['misi']) : '' ?></textarea>
                         <small class="text-muted">Tips: Pisahkan setiap misi dengan baris baru</small>
                     </div>
                 </div>
             </div>
 
-            <!-- Action Buttons -->
             <div class="border-top pt-3 mt-4">
                 <div class="d-flex justify-content-end gap-2">
                     <a href="?page=profil" class="btn btn-secondary">
@@ -259,13 +261,12 @@ $profil_data = pg_fetch_assoc($profil_query);
                 </div>
             </div>
         </form>
+        
     </div>
 </div>
 
-<?php else: ?>
-    <!-- View Mode -->
+<?php elseif ($profil_data): ?>
     <div class="row g-4">
-        <!-- Logo Card -->
         <div class="col-md-4">
             <div class="card h-100">
                 <div class="card-header bg-white">
@@ -289,7 +290,6 @@ $profil_data = pg_fetch_assoc($profil_query);
             </div>
         </div>
         
-        <!-- Info Card -->
         <div class="col-md-8">
             <div class="card h-100">
                 <div class="card-header bg-white">
@@ -298,7 +298,6 @@ $profil_data = pg_fetch_assoc($profil_query);
                     </h5>
                 </div>
                 <div class="card-body">
-                    <!-- Sejarah -->
                     <div class="mb-4">
                         <h6 class="fw-bold text-primary mb-3">
                             <i class="fas fa-history me-2"></i>Sejarah
@@ -314,7 +313,6 @@ $profil_data = pg_fetch_assoc($profil_query);
                         </div>
                     </div>
                     
-                    <!-- Visi -->
                     <div class="mb-4">
                         <h6 class="fw-bold text-primary mb-3">
                             <i class="fas fa-eye me-2"></i>Visi
@@ -330,7 +328,6 @@ $profil_data = pg_fetch_assoc($profil_query);
                         </div>
                     </div>
                     
-                    <!-- Misi -->
                     <div class="mb-4">
                         <h6 class="fw-bold text-primary mb-3">
                             <i class="fas fa-bullseye me-2"></i>Misi
@@ -358,7 +355,6 @@ $profil_data = pg_fetch_assoc($profil_query);
                         </div>
                     </div>
                     
-                    <!-- Last Updated -->
                     <?php if (!empty($profil_data['updated_at'])): ?>
                         <div class="border-top pt-3 mt-4">
                             <small class="text-muted">
@@ -390,6 +386,24 @@ function previewImage(input) {
         }
 
         reader.readAsDataURL(input.files[0]);
+    } else {
+        // Jika file dihapus, kembalikan ke tampilan default (jika ada logo lama atau "Belum ada logo")
+        // Logika ini mungkin perlu disesuaikan tergantung bagaimana Anda ingin menangani penghapusan file
+        // Untuk saat ini, kita akan mencoba memuat ulang tampilan default jika tidak ada file yang dipilih
+        // (Ini memerlukan akses ke $profil_data, yang tidak tersedia di JS, jadi ini hanya perbaikan tampilan)
+        wrapper.innerHTML = `
+            <?php if ($profil_data && !empty($profil_data['logo_path'])): ?>
+                <img src="<?= htmlspecialchars($profil_data['logo_path']) ?>" 
+                    alt="Logo" 
+                    class="img-fluid" 
+                    style="max-height: 200px; object-fit: contain;">
+            <?php else: ?>
+                <div class="text-muted">
+                    <i class="fas fa-image" style="font-size: 4rem;"></i>
+                    <p class="mt-2">Belum ada logo</p>
+                </div>
+            <?php endif; ?>
+        `;
     }
 }
 </script>
@@ -416,5 +430,31 @@ textarea.form-control {
 
 ol li {
     padding-left: 0.5rem;
+}
+
+.btn-primary-custom {
+    color: #fff;
+    background-color: #0d6efd; /* Ganti dengan warna primary yang Anda inginkan */
+    border-color: #0d6efd;
+}
+
+.btn-primary-custom:hover {
+    color: #fff;
+    background-color: #0b5ed7; /* Warna hover */
+    border-color: #0a58ca;
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #adb5bd;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    color: #adb5bd;
 }
 </style>

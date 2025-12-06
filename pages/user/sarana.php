@@ -199,7 +199,7 @@ $stats = pg_fetch_assoc($stats_query);
                     <div class="card-body">
                         <h5 class="text-muted mb-2">Total Fasilitas</h5>
                         <h3 class="fw-bold text-primary mb-0">
-                            <?= number_format($stats['total']) ?>
+                            <?= number_format($stats['total']) ?> Fasilitas
                         </h3>
                     </div>
                 </div>

@@ -4,6 +4,7 @@ require_once __DIR__ . '/../../config.php';
 // Handle success/error messages
 $success_msg = '';
 $error_msg = '';
+$id_admin = (int)$_SESSION['id_admin']; // Ambil ID Admin yang sedang login
 
 // Get data for edit
 $edit_data = null;
@@ -17,15 +18,34 @@ if (isset($_GET['edit'])) {
 if (isset($_GET['delete'])) {
     $id_agenda = (int)$_GET['delete'];
     
-    $delete_result = pg_query_params($conn, "DELETE FROM agenda WHERE id_agenda = $1", [$id_agenda]);
-    
-    if ($delete_result) {
-        $success_msg = "Agenda berhasil dihapus!";
+    // --- LANGKAH 1 (DELETE): Ambil Judul Item untuk Log ---
+    $agenda_query = pg_query_params($conn, "SELECT judul_agenda FROM agenda WHERE id_agenda = $1", [$id_agenda]);
+    $item_title = 'Agenda ID ' . $id_agenda; // Default title
+
+    if ($agenda_row = pg_fetch_assoc($agenda_query)) {
+        $item_title = $agenda_row['judul_agenda']; // Ambil judul agenda untuk log
+
+        $delete_result = pg_query_params($conn, "DELETE FROM agenda WHERE id_agenda = $1", [$id_agenda]);
+        
+        if ($delete_result) {
+            // --- LANGKAH 2 (DELETE): Catat Log Aktivitas ---
+            $safe_item_title = pg_escape_literal($conn, $item_title);
+            $log_query = "
+                INSERT INTO aktivitas_log (id_admin, item_type, item_title, action)
+                VALUES ($id_admin, 'agenda', $safe_item_title, 'dihapus.')
+            ";
+            pg_query($conn, $log_query);
+            // ------------------------------------------------
+            $success_msg = "Agenda berhasil dihapus!";
+        } else {
+            $error_msg = "Gagal menghapus agenda!";
+        }
     } else {
-        $error_msg = "Gagal menghapus agenda!";
+        $error_msg = "Gagal mengambil data agenda untuk dihapus!";
     }
     
-    header("Location: ?page=agenda&success=" . urlencode($success_msg));
+    // Perbaikan: Redirect menggunakan success/error message
+    header("Location: ?page=agenda" . (!empty($success_msg) ? "&success=" . urlencode($success_msg) : "") . (!empty($error_msg) ? "&error=" . urlencode($error_msg) : ""));
     exit();
 }
 
@@ -37,8 +57,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $lokasi = trim($_POST['lokasi']);
     $tanggal_mulai = $_POST['tanggal_mulai'];
     $tanggal_selesai = $_POST['tanggal_selesai'];
-    $id_admin = $_SESSION['id_admin'];
-    
+    // $id_admin sudah didefinisikan di atas
+
     // Validation
     if (empty($judul_agenda) || empty($tanggal_mulai)) {
         $error_msg = "Judul agenda dan tanggal mulai harus diisi!";
@@ -53,6 +73,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             );
             
             if ($update_result) {
+                // --- LOGGING UPDATE ---
+                $safe_item_title = pg_escape_literal($conn, $judul_agenda);
+                $log_query = "
+                    INSERT INTO aktivitas_log (id_admin, item_type, item_title, action)
+                    VALUES ($id_admin, 'agenda', $safe_item_title, 'diperbarui.')
+                ";
+                pg_query($conn, $log_query);
+                // ----------------------
+
                 header("Location: ?page=agenda&success=" . urlencode("Agenda berhasil diperbarui!"));
                 exit();
             } else {
@@ -66,6 +95,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             );
             
             if ($insert_result) {
+                // --- LOGGING INSERT ---
+                $safe_item_title = pg_escape_literal($conn, $judul_agenda);
+                $log_query = "
+                    INSERT INTO aktivitas_log (id_admin, item_type, item_title, action)
+                    VALUES ($id_admin, 'agenda', $safe_item_title, 'ditambahkan.')
+                ";
+                pg_query($conn, $log_query);
+                // ----------------------
+
                 header("Location: ?page=agenda&success=" . urlencode("Agenda berhasil ditambahkan!"));
                 exit();
             } else {
@@ -78,6 +116,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 // Get success message from URL
 if (isset($_GET['success'])) {
     $success_msg = $_GET['success'];
+}
+// Get error message from URL (ditambahkan untuk menangani error dari redirect delete)
+if (isset($_GET['error'])) {
+    $error_msg = $_GET['error'];
 }
 
 // Pagination
@@ -122,13 +164,20 @@ if (count($where_conditions) > 0) {
 }
 
 // Get total records
+// Perlu bantuan fungsi str_replace_once untuk penomoran parameter yang benar jika lebih dari 1 parameter
+$count_query_str = "SELECT COUNT(*) as total FROM agenda $where_clause";
 if (count($query_params) > 0) {
-    $count_query_str = "SELECT COUNT(*) as total FROM agenda $where_clause";
-    $count_query_str = str_replace('$param_count', '$' . $param_count, $count_query_str);
-    for ($i = $param_count - 1; $i >= 1; $i--) {
-        $count_query_str = str_replace('$param_count', '$' . $i, $count_query_str);
+    $temp_str = $count_query_str;
+    $j = 1;
+    // Ganti $$param_count dengan penomoran PostgreSQL ($1, $2, ...)
+    foreach (array_keys($query_params) as $k) {
+        if (($pos = strpos($temp_str, '$$param_count')) !== false) {
+            $temp_str = substr_replace($temp_str, '$' . $j, $pos, strlen('$$param_count'));
+            $j++;
+        }
     }
-    $count_query = pg_query_params($conn, $count_query_str, $query_params);
+    $count_query = pg_query_params($conn, $temp_str, $query_params);
+
 } else {
     $count_query = pg_query($conn, "SELECT COUNT(*) as total FROM agenda $where_clause");
 }
@@ -136,13 +185,18 @@ $total_records = pg_fetch_assoc($count_query)['total'];
 $total_pages = ceil($total_records / $limit);
 
 // Get data
+$agenda_query_str = "SELECT * FROM agenda $where_clause ORDER BY tanggal_mulai DESC LIMIT $limit OFFSET $offset";
 if (count($query_params) > 0) {
-    $agenda_query_str = "SELECT * FROM agenda $where_clause ORDER BY tanggal_mulai DESC LIMIT $limit OFFSET $offset";
-    $agenda_query_str = str_replace('$param_count', '$' . $param_count, $agenda_query_str);
-    for ($i = $param_count - 1; $i >= 1; $i--) {
-        $agenda_query_str = str_replace('$param_count', '$' . $i, $agenda_query_str);
+    $temp_str = $agenda_query_str;
+    $j = 1;
+    // Ganti $$param_count dengan penomoran PostgreSQL ($1, $2, ...)
+    foreach (array_keys($query_params) as $k) {
+        if (($pos = strpos($temp_str, '$$param_count')) !== false) {
+            $temp_str = substr_replace($temp_str, '$' . $j, $pos, strlen('$$param_count'));
+            $j++;
+        }
     }
-    $agenda_result = pg_query_params($conn, $agenda_query_str, $query_params);
+    $agenda_result = pg_query_params($conn, $temp_str, $query_params);
 } else {
     $agenda_result = pg_query($conn, "SELECT * FROM agenda $where_clause ORDER BY tanggal_mulai DESC LIMIT $limit OFFSET $offset");
 }
@@ -168,7 +222,6 @@ $bulan_indo = [
 ];
 ?>
 
-<!-- Success/Error Messages -->
 <?php if (!empty($success_msg)): ?>
     <div class="alert alert-success alert-dismissible fade show" role="alert">
         <i class="fas fa-check-circle me-2"></i><?= htmlspecialchars($success_msg) ?>
@@ -183,7 +236,6 @@ $bulan_indo = [
     </div>
 <?php endif; ?>
 
-<!-- Header -->
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h4 class="mb-1 fw-bold">Agenda Kegiatan</h4>
@@ -194,7 +246,6 @@ $bulan_indo = [
     </button>
 </div>
 
-<!-- Search & Filter -->
 <div class="card mb-4" style="border: none; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
     <div class="card-body">
         <form method="GET" action="">
@@ -232,7 +283,6 @@ $bulan_indo = [
     </div>
 </div>
 
-<!-- Agenda List -->
 <div class="row g-4 mb-4">
     <?php if (pg_num_rows($agenda_result) > 0): ?>
         <?php while($row = pg_fetch_assoc($agenda_result)): ?>
@@ -306,7 +356,6 @@ $bulan_indo = [
     <?php endif; ?>
 </div>
 
-<!-- Pagination -->
 <?php if ($total_pages > 1): ?>
     <nav>
         <ul class="pagination justify-content-center">
@@ -333,7 +382,6 @@ $bulan_indo = [
     </nav>
 <?php endif; ?>
 
-<!-- Modal Add/Edit -->
 <div class="modal fade" id="modalAgenda" tabindex="-1" <?= $edit_data ? 'data-bs-show="true"' : '' ?>>
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -355,7 +403,7 @@ $bulan_indo = [
                     <div class="mb-3">
                         <label for="deskripsi" class="form-label">Deskripsi</label>
                         <textarea class="form-control" name="deskripsi" rows="4" 
-                                  placeholder="Deskripsikan agenda secara detail..."><?= $edit_data ? htmlspecialchars($edit_data['deskripsi']) : '' ?></textarea>
+                                     placeholder="Deskripsikan agenda secara detail..."><?= $edit_data ? htmlspecialchars($edit_data['deskripsi']) : '' ?></textarea>
                     </div>
                     
                     <div class="mb-3">
@@ -369,13 +417,13 @@ $bulan_indo = [
                         <div class="col-md-6 mb-3">
                             <label for="tanggal_mulai" class="form-label">Tanggal Mulai <span class="text-danger">*</span></label>
                             <input type="date" class="form-control" name="tanggal_mulai" 
-                                   value="<?= $edit_data ? $edit_data['tanggal_mulai'] : '' ?>" required>
+                                       value="<?= $edit_data ? $edit_data['tanggal_mulai'] : '' ?>" required>
                         </div>
                         
                         <div class="col-md-6 mb-3">
                             <label for="tanggal_selesai" class="form-label">Tanggal Selesai</label>
                             <input type="date" class="form-control" name="tanggal_selesai" 
-                                   value="<?= $edit_data ? $edit_data['tanggal_selesai'] : '' ?>">
+                                       value="<?= $edit_data ? $edit_data['tanggal_selesai'] : '' ?>">
                             <small class="text-muted">Kosongkan jika agenda 1 hari</small>
                         </div>
                     </div>
@@ -394,8 +442,13 @@ $bulan_indo = [
 <?php if ($edit_data): ?>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        var myModal = new bootstrap.Modal(document.getElementById('modalAgenda'));
-        myModal.show();
+        if (typeof bootstrap !== 'undefined') {
+            var modalElement = document.getElementById('modalAgenda');
+            if (!modalElement.classList.contains('show')) {
+                var myModal = new bootstrap.Modal(modalElement);
+                myModal.show();
+            }
+        }
     });
 </script>
 <?php endif; ?>

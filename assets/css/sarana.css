@@ -3,7 +3,7 @@
 .page-header-sarana {
     background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
     color: #fff;
-    padding: 3rem 0 3rem;
+    padding: 1rem 0 3rem;
     text-align: center;
 }
 

@@ -35,7 +35,7 @@ $profil = pg_fetch_assoc($profil_query);
                     <!-- VISI -->
                     <div class="content-box-visi-misi">
                         <h3 class="text-primary mb-4">
-                            <i class="fas fa-eye me-2"></i>Visi
+                           Visi
                         </h3>
 
                         <div style="text-align: justify; line-height: 2;">
@@ -46,7 +46,7 @@ $profil = pg_fetch_assoc($profil_query);
                     <!-- MISI -->
                     <div class="content-box-visi-misi">
                         <h3 class="text-primary mb-4">
-                            <i class="fas fa-bullseye me-2"></i>Misi
+                            Misi
                         </h3>
 
                         <?php
