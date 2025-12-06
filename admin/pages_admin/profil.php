@@ -22,9 +22,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $misi = trim($_POST['misi']);
     $id_admin = $_SESSION['id_admin'];
     
-    // Handle logo upload
-    $logo_path = '/uploads/profil/' . $new_file_name;
-    if (isset($_FILES['logo']) && $_FILES['logo']['error'] == 0) {
+    // Inisialisasi logo_path dengan path lama (jika ada)
+    $logo_path = $profil_data['logo_path'] ?? '';
+    $new_logo_uploaded = false;
+    
+    // Handle logo upload HANYA jika file baru diupload dan tidak ada error
+    if (isset($_FILES['logo']) && $_FILES['logo']['error'] == 0 && !empty($_FILES['logo']['name'])) {
         $allowed_ext = ['jpg', 'jpeg', 'png', 'gif'];
         $file_name = $_FILES['logo']['name'];
         $file_size = $_FILES['logo']['size'];
@@ -42,11 +45,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
             
             $new_file_name = 'logo_' . time() . '.' . $file_ext;
-            $logo_path = $upload_dir . $new_file_name;
+            $temp_logo_path = $upload_dir . $new_file_name;
             
-            if (!move_uploaded_file($file_tmp, $logo_path)) {
+            if (move_uploaded_file($file_tmp, $temp_logo_path)) {
+                $logo_path = $temp_logo_path; // Ganti path lama dengan path baru
+                $new_logo_uploaded = true;
+            } else {
                 $error_msg = "Gagal mengupload logo!";
-                $logo_path = '';
+                $logo_path = $profil_data['logo_path'] ?? ''; // Pertahankan path lama jika upload gagal
             }
         }
     }
@@ -54,17 +60,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (empty($error_msg)) {
         if ($profil_data) {
             // Update existing profil
-            if (!empty($logo_path)) {
-                // Delete old logo
+            
+            if ($new_logo_uploaded) {
+                // Hapus logo lama jika upload logo baru berhasil
                 if (!empty($profil_data['logo_path']) && file_exists($profil_data['logo_path'])) {
                     unlink($profil_data['logo_path']);
                 }
                 
+                // Update dengan logo baru
                 $update_result = pg_query_params($conn, 
                     "UPDATE profil SET sejarah = $1, visi = $2, misi = $3, logo_path = $4, id_admin = $5, updated_at = NOW() WHERE id_profil = $6",
                     [$sejarah, $visi, $misi, $logo_path, $id_admin, $profil_data['id_profil']]
                 );
             } else {
+                // Update tanpa mengubah logo_path (menggunakan path lama yang sudah diinisialisasi)
                 $update_result = pg_query_params($conn, 
                     "UPDATE profil SET sejarah = $1, visi = $2, misi = $3, id_admin = $4, updated_at = NOW() WHERE id_profil = $5",
                     [$sejarah, $visi, $misi, $id_admin, $profil_data['id_profil']]
@@ -78,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $error_msg = "Gagal memperbarui profil!";
             }
         } else {
-            // Insert new profil
+            // Insert new profil (Hanya jalankan jika ada logo_path baru atau kosong jika tidak ada)
             $insert_result = pg_query_params($conn, 
                 "INSERT INTO profil (sejarah, visi, misi, logo_path, id_admin, updated_at) VALUES ($1, $2, $3, $4, $5, NOW())",
                 [$sejarah, $visi, $misi, $logo_path, $id_admin]
@@ -151,101 +160,108 @@ $profil_data = pg_fetch_assoc($profil_query);
         </div>
     </div>
 <?php elseif (isset($_GET['edit'])): ?>
-    <!-- Form Edit/Add -->
-    <div class="card">
-        <div class="card-header bg-white">
-            <h5 class="mb-0">
-                <i class="fas fa-edit me-2 text-primary"></i>
-                <?= $profil_data ? 'Edit Profil' : 'Tambah Profil' ?>
-            </h5>
-        </div>
-        <div class="card-body">
-            <form method="POST" enctype="multipart/form-data">
-                <div class="row">
-                    <!-- Logo Section -->
-                    <div class="col-md-4 mb-4">
-                        <div class="text-center">
-                            <label class="form-label fw-bold">Logo Organisasi</label>
-                            <div class="border rounded p-3 bg-light">
+<!-- Form Edit/Add -->
+<div class="card">
+    <div class="card-header bg-white">
+        <h5 class="mb-0">
+            <i class="fas fa-edit me-2 text-primary"></i>
+            <?= $profil_data ? 'Edit Profil' : 'Tambah Profil' ?>
+        </h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" enctype="multipart/form-data">
+            <div class="row">
+
+                <!-- Logo Section -->
+                <div class="col-md-4 mb-4">
+                    <div class="text-center">
+                        <label class="form-label fw-bold">Logo Organisasi</label>
+                        <div class="border rounded p-3 bg-light">
+
+                            <!-- FIX PREVIEW WRAPPER -->
+                            <div id="preview-wrapper" class="mb-3 text-center">
                                 <?php if ($profil_data && !empty($profil_data['logo_path'])): ?>
                                     <img src="<?= htmlspecialchars($profil_data['logo_path']) ?>" 
-                                         alt="Logo" 
-                                         class="img-fluid mb-3" 
-                                         style="max-height: 200px; object-fit: contain;"
-                                         id="preview-logo">
+                                        alt="Logo" 
+                                        class="img-fluid" 
+                                        style="max-height: 200px; object-fit: contain;">
                                 <?php else: ?>
-                                    <div class="mb-3" id="preview-logo">
-                                        <i class="fas fa-image text-muted" style="font-size: 4rem;"></i>
-                                        <p class="text-muted mt-2">Belum ada logo</p>
+                                    <div class="text-muted">
+                                        <i class="fas fa-image" style="font-size: 4rem;"></i>
+                                        <p class="mt-2">Belum ada logo</p>
                                     </div>
                                 <?php endif; ?>
-                                
-                                <input type="file" 
-                                       class="form-control" 
-                                       id="logo" 
-                                       name="logo" 
-                                       accept="image/*"
-                                       onchange="previewImage(this)">
-                                <small class="text-muted d-block mt-2">Format: JPG, PNG, GIF | Max: 5MB</small>
                             </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Content Section -->
-                    <div class="col-md-8">
-                        <!-- Sejarah -->
-                        <div class="mb-4">
-                            <label for="sejarah" class="form-label fw-bold">
-                                <i class="fas fa-history text-primary me-2"></i>Sejarah
-                            </label>
-                            <textarea class="form-control" 
-                                      id="sejarah" 
-                                      name="sejarah" 
-                                      rows="5" 
-                                      placeholder="Tuliskan sejarah organisasi..."><?= $profil_data ? htmlspecialchars($profil_data['sejarah']) : '' ?></textarea>
-                        </div>
-                        
-                        <!-- Visi -->
-                        <div class="mb-4">
-                            <label for="visi" class="form-label fw-bold">
-                                <i class="fas fa-eye text-primary me-2"></i>Visi
-                            </label>
-                            <textarea class="form-control" 
-                                      id="visi" 
-                                      name="visi" 
-                                      rows="4" 
-                                      placeholder="Tuliskan visi organisasi..."><?= $profil_data ? htmlspecialchars($profil_data['visi']) : '' ?></textarea>
-                        </div>
-                        
-                        <!-- Misi -->
-                        <div class="mb-4">
-                            <label for="misi" class="form-label fw-bold">
-                                <i class="fas fa-bullseye text-primary me-2"></i>Misi
-                            </label>
-                            <textarea class="form-control" 
-                                      id="misi" 
-                                      name="misi" 
-                                      rows="6" 
-                                      placeholder="Tuliskan misi organisasi (gunakan enter untuk pemisah)..."><?= $profil_data ? htmlspecialchars($profil_data['misi']) : '' ?></textarea>
-                            <small class="text-muted">Tips: Pisahkan setiap misi dengan baris baru</small>
+
+                            <!-- FILE INPUT -->
+                            <input type="file" 
+                                   class="form-control" 
+                                   id="logo" 
+                                   name="logo" 
+                                   accept="image/*"
+                                   onchange="previewImage(this)">
+                            <small class="text-muted d-block mt-2">Format: JPG, PNG, GIF | Max: 5MB</small>
                         </div>
                     </div>
                 </div>
-                
-                <!-- Action Buttons -->
-                <div class="border-top pt-3 mt-4">
-                    <div class="d-flex justify-content-end gap-2">
-                        <a href="?page=profil" class="btn btn-secondary">
-                            <i class="fas fa-times me-2"></i>Batal
-                        </a>
-                        <button type="submit" class="btn btn-primary-custom">
-                            <i class="fas fa-save me-2"></i>Simpan Profil
-                        </button>
+
+                <!-- Content Section -->
+                <div class="col-md-8">
+
+                    <!-- Sejarah -->
+                    <div class="mb-4">
+                        <label for="sejarah" class="form-label fw-bold">
+                            <i class="fas fa-history text-primary me-2"></i>Sejarah
+                        </label>
+                        <textarea class="form-control" 
+                                  id="sejarah" 
+                                  name="sejarah" 
+                                  rows="5" 
+                                  placeholder="Tuliskan sejarah organisasi..."><?= $profil_data ? htmlspecialchars($profil_data['sejarah']) : '' ?></textarea>
+                    </div>
+
+                    <!-- Visi -->
+                    <div class="mb-4">
+                        <label for="visi" class="form-label fw-bold">
+                            <i class="fas fa-eye text-primary me-2"></i>Visi
+                        </label>
+                        <textarea class="form-control" 
+                                  id="visi" 
+                                  name="visi" 
+                                  rows="4" 
+                                  placeholder="Tuliskan visi organisasi..."><?= $profil_data ? htmlspecialchars($profil_data['visi']) : '' ?></textarea>
+                    </div>
+
+                    <!-- Misi -->
+                    <div class="mb-4">
+                        <label for="misi" class="form-label fw-bold">
+                            <i class="fas fa-bullseye text-primary me-2"></i>Misi
+                        </label>
+                        <textarea class="form-control" 
+                                  id="misi" 
+                                  name="misi" 
+                                  rows="6" 
+                                  placeholder="Tuliskan misi organisasi (gunakan enter untuk pemisah)..."><?= $profil_data ? htmlspecialchars($profil_data['misi']) : '' ?></textarea>
+                        <small class="text-muted">Tips: Pisahkan setiap misi dengan baris baru</small>
                     </div>
                 </div>
-            </form>
-        </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="border-top pt-3 mt-4">
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="?page=profil" class="btn btn-secondary">
+                        <i class="fas fa-times me-2"></i>Batal
+                    </a>
+                    <button type="submit" class="btn btn-primary-custom">
+                        <i class="fas fa-save me-2"></i>Simpan Profil
+                    </button>
+                </div>
+            </div>
+        </form>
     </div>
+</div>
+
 <?php else: ?>
     <!-- View Mode -->
     <div class="row g-4">
@@ -359,19 +375,25 @@ $profil_data = pg_fetch_assoc($profil_query);
 
 <script>
 function previewImage(input) {
-    const preview = document.getElementById('preview-logo');
-    
+    const wrapper = document.getElementById('preview-wrapper');
+
     if (input.files && input.files[0]) {
         const reader = new FileReader();
-        
+
         reader.onload = function(e) {
-            preview.innerHTML = '<img src="' + e.target.result + '" class="img-fluid mb-3" style="max-height: 200px; object-fit: contain;" alt="Preview">';
+            wrapper.innerHTML = `
+                <img src="${e.target.result}" 
+                     class="img-fluid" 
+                     style="max-height: 200px; object-fit: contain;" 
+                     alt="Preview">
+            `;
         }
-        
+
         reader.readAsDataURL(input.files[0]);
     }
 }
 </script>
+
 
 <style>
 .card-header {

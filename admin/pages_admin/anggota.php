@@ -343,18 +343,17 @@ if (!empty($search)) {
                     <div class="row">
                         <div class="col-md-4 text-center mb-3">
                             <label class="form-label fw-bold">Foto <span class="text-danger">*</span></label>
-                            <div class="border rounded p-2 bg-light">
-                                <?php if ($edit_data && !empty($edit_data['foto_path'])): ?>
-                                    <img src="<?= htmlspecialchars($edit_data['foto_path']) ?>"
-                                        class="img-fluid mb-2"
-                                        style="max-height: 200px; object-fit: cover;"
-                                        id="preview-foto">
-                                <?php else: ?>
-                                    <div id="preview-foto" class="mb-2">
-                                        <i class="fas fa-user text-muted" style="font-size: 4rem;"></i>
-                                    </div>
-                                <?php endif; ?>
-                                <input type="file" class="form-control form-control-sm" name="foto" accept="image/*" onchange="previewImage(this)" required>
+                            <div class="border rounded p-2 bg-light text-center">
+                                <img id="preview-foto"
+                                    src="<?= ($edit_data && !empty($edit_data['foto_path']))
+                                                ? htmlspecialchars($edit_data['foto_path'])
+                                                : 'assets/img/no-user.png' ?>"
+                                    class="img-fluid mb-2"
+                                    style="max-height: 200px; object-fit: cover;">
+
+                                <input type="file" class="form-control form-control-sm"
+                                    name="foto" accept="image/*" onchange="previewImage(this)"
+                                    <?= $edit_data ? '' : 'required' ?>>
                                 <small class="text-muted">Max: 5MB</small>
                             </div>
                         </div>
@@ -371,12 +370,13 @@ if (!empty($search)) {
                                 <input type="number" class="form-control" name="nip_nim"
                                     value="<?= $edit_data ? htmlspecialchars($edit_data['nip_nim']) : '' ?>" required>
                             </div>
-
                             <div class="mb-3">
                                 <label for="jabatan" class="form-label">Jabatan</label>
-                                <input type="text" class="form-control" name="jabatan"
-                                    value="<?= $edit_data ? htmlspecialchars($edit_data['jabatan']) : '' ?>"
-                                    placeholder="Contoh: Ketua, Sekretaris, Anggota">
+                            <select name="jabatan" class="form-control" style="max-height: 120px; overflow-y: auto;">
+                                <option value="">-- Pilih Jabatan --</option>
+                                <option value="Peneliti" <?php if ($edit_data && $edit_data['jabatan'] == 'Peneliti') echo 'selected'; ?>>Peneliti</option>
+                                <option value="Ketua Lab" <?php if ($edit_data && $edit_data['jabatan'] == 'Ketua Lab') echo 'selected'; ?>>Ketua Lab</option>
+                            </select>
                             </div>
                         </div>
                     </div>
@@ -432,7 +432,7 @@ if (!empty($search)) {
         if (input.files && input.files[0]) {
             const reader = new FileReader();
             reader.onload = function(e) {
-                preview.innerHTML = '<img src="' + e.target.result + '" class="img-fluid mb-2" style="max-height: 200px; object-fit: cover;">';
+                preview.src = e.target.result;
             }
             reader.readAsDataURL(input.files[0]);
         }

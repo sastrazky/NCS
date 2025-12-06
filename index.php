@@ -17,19 +17,22 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
     <link href="assets/css/agenda.css" rel="stylesheet">
     <link href="assets/css/footer.css" rel="stylesheet">
     <link href="assets/css/galeri.css" rel="stylesheet">
+    <link href="assets/css/sejarah.css" rel="stylesheet">
+    <link href="assets/css/visi-misi.css" rel="stylesheet">
     <style>
         .top-header-bar {
             background-color: #34597E;
             padding: 8px 0;
             font-size: 0.9rem;
+            border-top: 5px solid #34597E;
         }
         
         .top-header-bar a {
-            color: #ffffffff;
+            color: #fff;
             text-decoration: none;
-            padding: 0 15px;
-            font-weight: 500;
-            transition: color 0.3s;
+            padding: 2px 15px 0 15px; 
+            font-weight: 700;
+            transition: color 1.1s;
         }
         
         .top-header-bar a:hover {
@@ -61,7 +64,7 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
     </style>
 </head>
 <body>
-    <!-- Top Header Links Bar (Yellow) -->
+    <!-- Top Header Links Bar (Biru) -->
     <div class="top-header-bar ">
         <div class="container">
             <div class="d-flex justify-content-between align-items-center">

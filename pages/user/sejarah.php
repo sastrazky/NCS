@@ -2,10 +2,21 @@
 // pages/user/sejarah.php
 $profil_query = pg_query($conn, "SELECT * FROM profil LIMIT 1");
 $profil = pg_fetch_assoc($profil_query);
-?>
 
+// logika logo
+if ($profil && !empty($profil['logo_path'])) {
+    $logo_path = "admin/" . $profil['logo_path'];
+} else {
+    $logo_path = "assets/images/logo-ncs.png";
+}
+
+// Jika file tidak ada → fallback
+if (!file_exists($logo_path)) {
+    $logo_path = "assets/images/logo-ncs.png";
+}
+?>
 <!-- Page Header -->
-<section class="page-header">
+<section class="page-header-sejarah">
     <div class="container">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
@@ -20,30 +31,28 @@ $profil = pg_fetch_assoc($profil_query);
 </section>
 
 <!-- Content -->
-<section class="section">
+<section class="section-sejarah">
     <div class="container">
         <div class="row">
-        
+
             <!-- Main Content -->
-            <div class="col-lg-9">
+            <div class="col-lg-9 mx-auto">
                 <?php if ($profil): ?>
-                    <h3 class="text-primary mb-4">
-                            <i class="fas fa-history me-2"></i>Sejarah Lab Network and Cyber Security
-                        </h3>
-                        <div class="content-box">
-                        <?php if (!empty($profil['logo_path'])): ?>
-                            <div class="text-center mb-4">
-                                <img src="<?= htmlspecialchars($profil['logo_path']) ?>" 
-                                     alt="Logo NCS" 
-                                     class="img-fluid" 
-                                     style="max-height: 300px;">
-                            </div>
-                        <?php endif; ?>
-                        
+                    <div class="content-box-sejarah">
+                        <!-- Logo fix -->
+                        <div class="text-center mb-4">
+                            <img src="<?= htmlspecialchars($logo_path) ?>"
+                                alt="Logo NCS"
+                                class="img-fluid"
+                                style="max-height: 300px;"
+                                onerror="this.src='assets/images/logo-ncs.png'">
+                        </div>
+
                         <div style="text-align: justify; line-height: 2;">
                             <?= nl2br(htmlspecialchars($profil['sejarah'])) ?>
                         </div>
                     </div>
+
                 <?php else: ?>
                     <div class="alert alert-info">
                         <i class="fas fa-info-circle me-2"></i>
@@ -53,4 +62,4 @@ $profil = pg_fetch_assoc($profil_query);
             </div>
         </div>
     </div>
-</section>  
+</section>

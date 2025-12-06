@@ -1,65 +1,52 @@
 <?php
-// Query sesuai struktur tabel
-$query = pg_query($conn, "SELECT * FROM anggota ORDER BY id_anggota DESC");
+// Urutkan dari urutan ASC (1,2,3,...)
+$query = pg_query($conn, "SELECT * FROM anggota ORDER BY urutan ASC");
 ?>
 
-<div class="container my-4">
-    <h3 class="mb-4 text-center fw-bold">Anggota Tim</h3>
+<section class="page-header-anggota">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="?page=home">Beranda</a></li>
+                <li class="breadcrumb-item"><a href="?page=sejarah">Profil</a></li>
+                <li class="breadcrumb-item active">Anggota Tim</li>
+            </ol>
+        </nav>
+        <h1>Anggota Tim</h1>
+        <p>Para Anggota TIM Lab Network and Cyber Security</p>
+    </div>
+</section>
 
-    <div class="row">
-        <?php while ($row = pg_fetch_assoc($query)) : ?>
+<section class="section-anggota">
+    <div class="container">
+        <div class="row justify-content-center">
 
-            <?php
-            // Ambil path foto dari database
-            $foto = $row['foto_path'];
+            <?php while ($row = pg_fetch_assoc($query)) : ?>
 
-            // Path foto untuk user
-            // Admin upload → admin/uploads/anggota/xxx.jpg
-            // User akses → admin/uploads/anggota/xxx.jpg (karena index.php ada di root)
-            if (!empty($foto)) {
-                $file_path = "admin/" . $foto;
-            } else {
-                $file_path = "assets/images/no-image.jpg";
-            }
+                <?php
+                $foto = $row['foto_path'];
+                $file_path = (!empty($foto)) ? "admin/" . $foto : "assets/images/no-image.jpg";
+                if (!file_exists($file_path)) $file_path = "assets/images/no-image.jpg";
+                ?>
 
-            // Jika file tidak ada
-            if (!file_exists($file_path)) {
-                $file_path = "assets/images/no-image.jpg";
-            }
-            ?>
+                <div class="col-lg-4 col-md-6 col-sm-12 mb-4">
+                    <div class="member-card">
+                        
+                        <div class="image-wrapper">
+                            <img src="<?= htmlspecialchars($file_path) ?>"
+                                alt="Foto Anggota"
+                                class="member-photo">
+                        </div>
 
-            <div class="col-md-4 mb-4">
-                <div class="card shadow-sm border-0" style="min-height: 450px;">
-
-                    <img src="<?= htmlspecialchars($file_path) ?>"
-                         alt="Foto Anggota"
-                         class="card-img-top"
-                         style="height: 250px; object-fit: cover;">
-
-                    <div class="card-body">
-                        <h5 class="card-title fw-bold">
-                            <?= htmlspecialchars($row['nama_lengkap']) ?>
-                        </h5>
-
-                        <p class="card-text mb-1">
-                            <strong>NIP/NIM:</strong> <?= htmlspecialchars($row['nip_nim']) ?>
-                        </p>
-
-                        <p class="card-text mb-1">
-                            <strong>Jabatan:</strong> <?= htmlspecialchars($row['jabatan']) ?>
-                        </p>
-
-                        <p class="card-text mb-1">
-                            <strong>Email:</strong> <?= htmlspecialchars($row['email']) ?>
-                        </p>
-
-                        <p class="card-text">
-                            <strong>Urutan:</strong> <?= htmlspecialchars($row['urutan']) ?>
-                        </p>
+                        <div class="card-body text-center">
+                            <h5 class="fw-bold mb-2"><?= htmlspecialchars($row['nama_lengkap']) ?></h5>
+                            <p class="mb-1"><strong>Jabatan:</strong> <?= htmlspecialchars($row['jabatan']) ?></p>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-        <?php endwhile; ?>
+            <?php endwhile; ?>
+
+        </div>
     </div>
-</div>
+</section>

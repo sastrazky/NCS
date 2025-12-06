@@ -27,12 +27,9 @@ $stats = [
                 <h1><?= htmlspecialchars($profil['nama_profil'] ?? "Lab Network and Cyber Security") ?></h1>
                 <p><?= nl2br(htmlspecialchars($profil['deskripsi_singkat'] ?? "Teknologi Informasi Polinema")) ?></p>
                 <div class="mt-4">
-                    <a href="?page=profil" class="btn btn-light btn-lg me-2">
-                        <i class="fas fa-info-circle me-2"></i>Selengkapnya
-                    </a>
-                    <a href="?page=galeri&tab=kegiatan" class="btn btn-outline-light btn-lg">
-                        <i class="fas fa-images me-2"></i>Galeri
-                    </a>
+                <!--    <a href="?page=contact" class="btn btn-outline-primary">
+                        Hubungi Kami <i class="fas fa-envelope ms-2"></i>
+                    </a> -->
                 </div>
             </div>
 
@@ -135,8 +132,8 @@ $stats = [
 <section class="section bg-light">
     <div class="container">
         <div class="section-title">
-            <h2>Agenda Mendatang</h2>
-            <p>Jadwal kegiatan dan event Lab NCS</p>
+            <h2>Jadwal Agenda Lab NCS</h2>
+            <p>Lihat semua agenda, baik yang akan datang maupun yang sedang berjalan.</p>
         </div>
 
         <div class="row g-4">

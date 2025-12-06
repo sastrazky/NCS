@@ -219,13 +219,14 @@ body {
 }
 
 /* Content Box */
-.content-box {
-    background: white;
+.content-box{
+    background: rgb(195, 195, 195);
     padding: 2rem;
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    margin-bottom: 2rem;
+    box-shadow: 0 2px 8px rgba(110, 119, 250, 0.08);
+    margin: 10px auto 2rem auto;
     width: 100%;
+    max-width: 900px;        
 }
 
 .content-box h3 {
