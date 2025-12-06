@@ -19,6 +19,7 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
     <link href="assets/css/galeri.css" rel="stylesheet">
     <link href="assets/css/sejarah.css" rel="stylesheet">
     <link href="assets/css/visi-misi.css" rel="stylesheet">
+    <link href="assets/css/sarana.css" rel="stylesheet">
     <style>
         .top-header-bar {
             background-color: #34597E;
