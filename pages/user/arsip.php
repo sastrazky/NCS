@@ -44,26 +44,44 @@ if (!empty($query_params)) {
 }
 
 // Get statistics
-$stats_query = pg_query($conn, "
-    SELECT 
-        COUNT(*) as total,
-        COUNT(CASE WHEN kategori = 'Penelitian' THEN 1 END) as penelitian,
-        COUNT(CASE WHEN kategori = 'Pengabdian' THEN 1 END) as pengabdian,
-        COUNT(CASE WHEN EXTRACT(YEAR FROM tanggal) = EXTRACT(YEAR FROM CURRENT_DATE) THEN 1 END) as tahun_ini
-    FROM arsip
-");
+// PERBAIKAN - Get statistics - Total dokumen
+$total_query = pg_query($conn, "SELECT COUNT(*) as total FROM arsip");
+$total_docs = pg_fetch_assoc($total_query)['total'];
 
-$stats = pg_fetch_assoc($stats_query);
-
-// Get year statistics
-$year_query = pg_query($conn, "
+// Get year statistics - Dinamis untuk 3 tahun terakhir berdasarkan field tanggal
+$year_stats_query = pg_query($conn, "
     SELECT 
-        EXTRACT(YEAR FROM created_at) as tahun,
+        EXTRACT(YEAR FROM tanggal) as tahun,
         COUNT(*) as jumlah
     FROM arsip
-    GROUP BY EXTRACT(YEAR FROM created_at)
+    WHERE tanggal IS NOT NULL
+    GROUP BY EXTRACT(YEAR FROM tanggal)
     ORDER BY tahun DESC
+    LIMIT 3
 ");
+
+$year_stats = [];
+while ($row = pg_fetch_assoc($year_stats_query)) {
+    $year_stats[(int)$row['tahun']] = (int)$row['jumlah'];
+}
+
+// Jika tidak ada data, set default 3 tahun terakhir dengan nilai 0
+if (empty($year_stats)) {
+    $current_year = date('Y');
+    $year_stats[$current_year] = 0;
+    $year_stats[$current_year - 1] = 0;
+    $year_stats[$current_year - 2] = 0;
+}
+
+// Ambil 3 tahun terakhir yang ada datanya
+$years = array_keys($year_stats);
+$year1 = $years[0] ?? date('Y');
+$year2 = $years[1] ?? (date('Y') - 1);
+$year3 = $years[2] ?? (date('Y') - 2);
+
+$count1 = $year_stats[$year1] ?? 0;
+$count2 = $year_stats[$year2] ?? 0;
+$count3 = $year_stats[$year3] ?? 0;
 ?>
 
 <!-- Page Header -->
@@ -164,10 +182,10 @@ $year_query = pg_query($conn, "
                             </small>
                         </td>
                         <td class="text-center">
-                            <a href="download.php?id=<?= $arsip['id_arsip'] ?>" class="btn btn-sm btn-primary" style="white-space: nowrap;">
-                                <i class="fas fa-download me-1"></i> Download
-                            </a>
-                        </td>
+                        <a href="?action=download&id=<?= $arsip['id_arsip'] ?>" class="btn btn-sm btn-primary" style="white-space: nowrap;">
+                            <i class="fas fa-download me-1"></i> Download
+                         </a>
+                    </td>
                     </tr>
                 <?php endwhile; ?>
             </tbody>
@@ -209,43 +227,43 @@ $year_query = pg_query($conn, "
         <?php endif; ?>
 
         <!-- Statistics Cards -->
-        <div class="row g-4 mt-5">
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body text-center">
-                        <h5 class="text-muted mb-2">Total Dokumen</h5>
-                        <h2 class="fw-bold text-primary mb-0"><?= $stats['total'] ?> Dokumen</h2>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body text-center">
-                        <h5 class="text-muted mb-2">Publikasi <?= date('Y') ?></h5>
-                        <h2 class="fw-bold text-primary mb-0"><?= $stats['tahun_ini'] ?> Dokumen</h2>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm text-center">
-                    <div class="card-body">
-                        <h5 class="text-muted mb-2">Publikasi <?= date('Y') - 1 ?></h5>
-                        <h2 class="fw-bold text-primary mb-0">
-                            <?php
-                            $last_year = 0;
-                            pg_result_seek($year_query, 0);
-                            while($year = pg_fetch_assoc($year_query)) {
-                                if ($year['tahun'] == date('Y') - 1) {
-                                    $last_year = $year['jumlah'];
-                                    break;
-                                }
-                            }
-                            echo $last_year;
-                            ?> Dokumen
-                        </h2>
-                    </div>
-                </div>
+<div class="row g-4 mt-5">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h5 class="text-muted mb-2">Total Dokumen</h5>
+                <h2 class="fw-bold text-primary mb-0"><?= $total_docs ?></h2>
+                <small class="text-muted">Semua Kategori</small>
             </div>
         </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h5 class="text-muted mb-2">Publikasi <?= $year1 ?></h5>
+                <h2 class="fw-bold text-primary mb-0"><?= $count1 ?></h2>
+                <small class="text-muted">Dokumen</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h5 class="text-muted mb-2">Publikasi <?= $year2 ?></h5>
+                <h2 class="fw-bold text-primary mb-0"><?= $count2 ?></h2>
+                <small class="text-muted">Dokumen</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h5 class="text-muted mb-2">Publikasi <?= $year3 ?></h5>
+                <h2 class="fw-bold text-primary mb-0"><?= $count3 ?></h2>
+                <small class="text-muted">Dokumen</small>
+            </div>
+        </div>
+    </div>
+    </div>
     </div>
 </section>
