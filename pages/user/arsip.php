@@ -182,9 +182,12 @@ $count3 = $year_stats[$year3] ?? 0;
                             </small>
                         </td>
                         <td class="text-center">
-                        <a href="?action=download&id=<?= $arsip['id_arsip'] ?>" class="btn btn-sm btn-primary" style="white-space: nowrap;">
-                            <i class="fas fa-download me-1"></i> Download
-                         </a>
+                        <a href="/NCS/admin/pages_admin/download.php?id=<?= $arsip['id_arsip'] ?>" 
+   class="btn btn-sm btn-primary">
+   <i class="fas fa-download me-1"></i> Download
+</a>
+
+
                     </td>
                     </tr>
                 <?php endwhile; ?>
