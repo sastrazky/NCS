@@ -339,7 +339,6 @@ body {
 }
 
 .btn-group {
-    background: var(--primary-color);
     border-color: var(--primary-color);
 }
 

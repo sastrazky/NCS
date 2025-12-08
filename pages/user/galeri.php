@@ -2,8 +2,7 @@
 // pages/user/galeri.php
 
 // Filter - default ke Agenda
-$filter_tab = isset($_GET['tab']) ? $_GET['tab'] : 'agenda';
-
+$filter_tab = isset($_GET['tab']) ? (string)$_GET['tab'] : 'agenda'; // Tambahkan (string)
 // Pagination
 $limit = 3;
 $page_num = isset($_GET['p']) ? (int)$_GET['p'] : 1;
@@ -29,19 +28,19 @@ if ($filter_tab == 'agenda') {
 function getAgendaStatus($tanggal_mulai, $tanggal_selesai)
 {
     $today = date('Y-m-d');
+    $end_date = !empty($tanggal_selesai) ? $tanggal_selesai : $tanggal_mulai;
 
     if ($tanggal_mulai > $today) {
-        return ['status' => 'Akan Datang', 'class' => 'badge-upcoming'];
-    } else if ($tanggal_mulai <= $today && (empty($tanggal_selesai) || $tanggal_selesai >= $today)) {
-        return ['status' => 'Sedang Berlangsung', 'class' => 'badge-ongoing'];
+        return ['status' => 'Akan Datang', 'class' => 'bg-primary'];
+    } else if ($end_date < $today) {
+        return ['status' => 'Selesai', 'class' => 'bg-secondary'];
     } else {
-        return ['status' => 'Selesai', 'class' => 'badge-completed'];
+        return ['status' => 'Berlangsung', 'class' => 'bg-success'];
     }
 }
 ?>
 
-<!-- Page Header -->
-<section class="page-header">
+<section class="page-header-galeri">
     <div class="container">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
@@ -54,66 +53,65 @@ function getAgendaStatus($tanggal_mulai, $tanggal_selesai)
     </div>
 </section>
 
-<!-- Content -->
-<section class="section">
+<section class="section-galeri">
     <div class="container">
-        <!-- Filter Tabs -->
-        <div class="text-center mb-5">
-            <div class="btn-group shadow-sm" role="group">
-                <a href="?page=galeri&tab=agenda" class="btn <?= $filter_tab == 'agenda' ? 'btn-primary' : 'btn-outline-secondary' ?> px-5 py-2">
-                    Agenda
-                </a>
-                <a href="?page=galeri&tab=kegiatan" class="btn <?= $filter_tab == 'kegiatan' ? 'btn-primary' : 'btn-outline-secondary' ?> px-5 py-2">
-                    Kegiatan
-                </a>
-            </div>
-        </div>
+<div class="text-center mb-5">
+    <div class="btn-group shadow-sm" role="group">
+        <a href="?page=galeri&tab=agenda" class="btn <?= $filter_tab == 'agenda' ? 'btn-primary' : 'btn-outline-secondary' ?> px-5 py-2">
+            <i class="fas fa-calendar-alt me-2"></i> Agenda
+        </a>
+        <a href="?page=galeri&tab=kegiatan" class="btn <?= $filter_tab == 'kegiatan' ? 'btn-primary' : 'btn-outline-secondary' ?> px-5 py-2">
+            <i class="fas fa-images me-2"></i> Kegiatan
+        </a>
+    </div>
+</div>
 
         <?php if ($filter_tab == 'agenda'): ?>
-            <!-- AGENDA VIEW -->
             <?php if (pg_num_rows($data_query) > 0): ?>
-                <div class="row g-4">
+                <div class="row g-4 justify-content-center">
                     <?php while ($agenda = pg_fetch_assoc($data_query)): ?>
                         <?php
                         $status_info = getAgendaStatus($agenda['tanggal_mulai'], $agenda['tanggal_selesai']);
                         $tgl_mulai = new DateTime($agenda['tanggal_mulai']);
-                        $tgl_selesai = !empty($agenda['tanggal_selesai']) ? new DateTime($agenda['tanggal_selesai']) : null;
                         ?>
-                        <div class="col-12">
-                            <div class="card border-0 shadow-sm">
-                                <div class="card-body">
+                        <div class="col-lg-10">
+                            <div class="card-custom agenda-card h-100">
+                                <div class="card-body p-4">
                                     <div class="row align-items-center">
-                                        <!-- Date Box -->
-                                        <div class="col-auto">
-                                            <div class="date-box">
+                                        <div class="col-auto mb-3 mb-md-0">
+                                            <div class="date-box shadow-sm">
                                                 <div class="date-day"><?= $tgl_mulai->format('d') ?></div>
                                                 <div class="date-month"><?= $tgl_mulai->format('M') ?></div>
                                                 <div class="date-year"><?= $tgl_mulai->format('Y') ?></div>
                                             </div>
                                         </div>
 
-                                        <!-- Content -->
                                         <div class="col">
-                                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                                <h5 class="fw-bold mb-0"><?= htmlspecialchars($agenda['judul_agenda']) ?></h5>
-                                                <span class="badge badge-custom <?= $status_info['class'] ?>">
+                                            <div class="d-flex justify-content-between align-items-start mb-2 flex-wrap gap-2">
+                                                <h5 class="fw-bold mb-0 text-dark"><?= htmlspecialchars($agenda['judul_agenda']) ?></h5>
+                                                <span class="badge rounded-pill <?= $status_info['class'] ?>">
                                                     <?= $status_info['status'] ?>
                                                 </span>
                                             </div>
 
                                             <?php if (!empty($agenda['deskripsi'])): ?>
-                                                <p class="text-muted mb-2">
-                                                    <?= htmlspecialchars(substr($agenda['deskripsi'], 0, 150)) ?>
-                                                    <?= strlen($agenda['deskripsi']) > 150 ? '...' : '' ?>
+                                                <p class="text-muted mb-3 desc-agenda">
+                                                    <?= htmlspecialchars($agenda['deskripsi']) ?>
                                                 </p>
                                             <?php endif; ?>
 
-                                            <div class="d-flex align-items-center gap-3 text-muted small">
-
+                                            <div class="d-flex align-items-center gap-4 text-secondary small">
                                                 <?php if (!empty($agenda['lokasi'])): ?>
                                                     <span>
-                                                        <i class="fas fa-map-marker-alt me-1"></i>
+                                                        <i class="fas fa-map-marker-alt me-2 text-danger"></i>
                                                         <?= htmlspecialchars($agenda['lokasi']) ?>
+                                                    </span>
+                                                <?php endif; ?>
+                                                
+                                                <?php if(!empty($agenda['waktu_mulai'])): ?>
+                                                    <span>
+                                                        <i class="far fa-clock me-2 text-primary"></i>
+                                                        <?= date('H:i', strtotime($agenda['waktu_mulai'])) ?> WIB
                                                     </span>
                                                 <?php endif; ?>
                                             </div>
@@ -132,71 +130,70 @@ function getAgendaStatus($tanggal_mulai, $tanggal_selesai)
             <?php endif; ?>
 
         <?php else: ?>
-            <!-- KEGIATAN VIEW -->
             <?php if (pg_num_rows($data_query) > 0): ?>
                 <div class="row g-4">
                     <?php while ($galeri = pg_fetch_assoc($data_query)): ?>
                         <?php
-                        // ---------- START: media path logic (minimal, non-destructive) ----------
+                        // Media Logic
                         $original_media = !empty($galeri['media_path']) ? $galeri['media_path'] : '';
                         $media_path = $original_media ? "admin/" . $original_media : "assets/images/no-image.jpg";
-
-                        // Jika file di server tidak ada, fallback ke no-image
                         if (!file_exists($media_path)) {
                             $media_path = "assets/images/no-image.jpg";
                         }
-                        // ---------- END: media path logic ----------
+                        
+                        $is_video = ($galeri['tipe_media'] == 'Video');
                         ?>
 
                         <div class="col-md-4">
-                            <div class="card-custom">
-                                <div class="gallery-item" onclick="viewMedia('<?= htmlspecialchars($media_path) ?>', '<?= $galeri['tipe_media'] ?>', '<?= htmlspecialchars(addslashes($galeri['judul'])) ?>')">
-
-                                    <?php if ($galeri['tipe_media'] == 'Foto' && !empty($galeri['media_path']) && file_exists($media_path)): ?>
-                                        <img src="<?= htmlspecialchars($media_path) ?>" alt="<?= htmlspecialchars($galeri['judul']) ?>">
-                                    <?php elseif ($galeri['tipe_media'] == 'Video' && !empty($galeri['media_path']) && file_exists($media_path)): ?>
-                                        <video style="width: 100%; height: 100%; object-fit: cover;">
-                                            <source src="<?= htmlspecialchars($media_path) ?>" type="video/mp4">
+                            <div class="card-custom galeri-card h-100" 
+                                onclick="showGaleriDetail(
+                                    '<?= htmlspecialchars(addslashes($galeri['judul'])) ?>', 
+                                    '<?= htmlspecialchars(addslashes($galeri['deskripsi'])) ?>', 
+                                    '<?= htmlspecialchars($galeri['tanggal_kegiatan'] ?? $galeri['created_at']) ?>',
+                                    '<?= htmlspecialchars($media_path) ?>',
+                                    '<?= $galeri['tipe_media'] ?>'
+                                )"
+                                style="cursor: pointer;">
+                                
+                                <div class="galeri-image-wrapper">
+                                    <?php if ($is_video): ?>
+                                        <div class="video-overlay-icon">
+                                            <i class="fas fa-play-circle"></i>
+                                        </div>
+                                        <video class="galeri-img-content">
+                                            <source src="<?= htmlspecialchars($media_path) ?>#t=0.5" type="video/mp4">
                                         </video>
-                                        <div class="position-absolute top-50 start-50 translate-middle">
-                                            <i class="fas fa-play-circle" style="font-size: 3rem; color: white; opacity: 0.8;"></i>
-                                        </div>
                                     <?php else: ?>
-                                        <div class="bg-secondary d-flex align-items-center justify-content-center" style="height: 100%;">
-                                            <i class="fas fa-image text-white" style="font-size: 3rem;"></i>
-                                        </div>
+                                        <img src="<?= htmlspecialchars($media_path) ?>" 
+                                            alt="<?= htmlspecialchars($galeri['judul']) ?>" 
+                                            class="galeri-img-content">
                                     <?php endif; ?>
 
-                                    <div class="gallery-overlay">
-                                        <i class="fas fa-search-plus"></i>
+                                    <div class="galeri-content-overlay">
+                                        <small class="text-white d-block mb-1 text-shadow">
+                                            <i class="far fa-calendar-alt me-1"></i>
+                                            <?= date('d M Y', strtotime($galeri['tanggal_kegiatan'] ?? $galeri['created_at'])) ?>
+                                        </small>
+                                        
+                                        <h5 class="card-title-galeri text-white text-shadow mb-0">
+                                            <?= htmlspecialchars($galeri['judul']) ?>
+                                        </h5>
                                     </div>
-
-                                    <div class="gallery-info">
-                                        <div class="d-flex justify-content-between align-items-start">
-                                            <div>
-                                                <h6 class="mb-1 fw-bold"><?= htmlspecialchars($galeri['judul']) ?></h6>
-                                                <?php if (!empty($galeri['tanggal_kegiatan'])): ?>
-                                                    <small>
-                                                        <i class="fas fa-calendar me-1"></i>
-                                                        <?= date('d M Y', strtotime($galeri['tanggal_kegiatan'])) ?>
-                                                    </small>
-                                                <?php endif; ?>
-                                            </div>
-                                            <span class="badge <?= $galeri['tipe_media'] == 'Foto' ? 'bg-primary' : 'bg-danger' ?>">
-                                                <?= $galeri['tipe_media'] ?>
-                                            </span>
-                                        </div>
+                                    <div class="position-absolute bottom-0 end-0 m-3">
+                                        <span class="badge bg-dark bg-opacity-75">
+                                            <i class="fas <?= $is_video ? 'fa-video' : 'fa-camera' ?> me-1"></i>
+                                            <?= $galeri['tipe_media'] ?>
+                                        </span>
                                     </div>
                                 </div>
 
-                                <?php if (!empty($galeri['deskripsi'])): ?>
-                                    <div class="card-body">
-                                        <p class="card-text text-muted mb-0" style="font-size: 0.9rem;">
-                                            <?= htmlspecialchars(substr($galeri['deskripsi'], 0, 100)) ?>
-                                            <?= strlen($galeri['deskripsi']) > 100 ? '...' : '' ?>
+                                <div class="card-body-galeri">
+                                    <?php if (!empty($galeri['deskripsi'])): ?>
+                                        <p class="desc-galeri">
+                                            <?= htmlspecialchars($galeri['deskripsi']) ?>
                                         </p>
-                                    </div>
-                                <?php endif; ?>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                         </div>
                     <?php endwhile; ?>
@@ -208,8 +205,7 @@ function getAgendaStatus($tanggal_mulai, $tanggal_selesai)
                 </div>
             <?php endif; ?>
         <?php endif; ?>
-
-        <!-- Pagination -->
+        
         <?php if ($total_pages > 1): ?>
             <nav class="mt-5">
                 <ul class="pagination justify-content-center">
@@ -238,133 +234,94 @@ function getAgendaStatus($tanggal_mulai, $tanggal_selesai)
     </div>
 </section>
 
-<!-- Modal View Media (untuk Kegiatan) -->
 <div class="modal fade" id="modalViewMedia" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content" style="background: transparent; border: none;">
-            <div class="modal-header border-0">
-                <h5 class="modal-title text-white" id="viewMediaTitle"></h5>
+        <div class="modal-content bg-transparent border-0">
+            <div class="modal-header border-0 pt-0 pb-2">
+                <h5 class="modal-title text-white fw-bold text-shadow" id="viewMediaTitle"></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body text-center" id="viewMediaBody">
+            <div class="modal-body text-center p-0" id="viewMediaBody">
+                </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalGaleriDetail" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="galeriModalTitle"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            
+            <div class="modal-body pt-0">
+                <div class="text-center mb-3">
+                    <div id="galeriMediaViewer" class="rounded shadow-sm" style="max-height: 400px; overflow: hidden; margin: 0 auto; width: 100%;">
+                        </div>
+                </div>
+                
+                <h6 class="fw-bold mb-1 mt-3">Tanggal Kegiatan:</h6>
+                <p id="galeriModalDate" class="mb-3 text-muted"></p>
+
+                <h6 class="fw-bold mb-1">Deskripsi:</h6>
+                <p id="galeriModalDescription" class="text-muted"></p>
+            </div>
+            
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
             </div>
         </div>
     </div>
 </div>
 
+
 <script>
+    // Fungsi MODAL LAMA (Hanya Media Besar) - Dijaga untuk kompatibilitas
     function viewMedia(path, type, title) {
         document.getElementById('viewMediaTitle').textContent = title;
         const body = document.getElementById('viewMediaBody');
 
         if (type === 'Foto') {
-            body.innerHTML = `
-            <img src="${path}" class="img-fluid" 
-                 style="max-height: 85vh; border-radius: 8px;">
-        `;
+            body.innerHTML = `<img src="${path}" class="img-fluid shadow-lg rounded" style="max-height: 85vh;">`;
         } else if (type === 'Video') {
             body.innerHTML = `
-            <video controls autoplay style="max-height: 85vh; width: 100%; border-radius: 8px;">
+            <video controls autoplay class="shadow-lg rounded" style="max-height: 85vh; max-width: 100%;">
                 <source src="${path}" type="video/mp4">
                 Browser kamu ga support video 😢
-            </video>
-        `;
-        } else {
-            body.innerHTML = `
-            <div class="text-white">Media tidak tersedia 🤷‍♂️</div>
-        `;
+            </video>`;
         }
-
         const myModal = new bootstrap.Modal(document.getElementById('modalViewMedia'));
         myModal.show();
     }
-</script>
-
-<style>
-.pagination {
-    margin-top: 1.5rem;
-    gap: 0.25rem;
-}
-
-.pagination .page-link {
-    color: var(--primary-color);
-    background-color: white;
-    border: 1px solid #e2e8f0;
-    padding: 0.5rem 0.75rem;
-    margin: 0 3px;
-    border-radius: 8px;
-    font-weight: 500;
-    font-size: 0.9rem;
-    transition: all 0.2s ease;
-    min-width: 40px;
-    text-align: center;
-}
-
-.pagination .page-link:hover {
-    background-color: #f1f5f9;
-    border-color: var(--primary-color);
-    color: #2563eb;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
-}
-
-.pagination .page-link:focus {
-    box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.15);
-    outline: none;
-    z-index: 3;
-}
-
-.pagination .page-link:active {
-    background-color: #e0e7ff;
-    border-color: var(--primary-color);
-}
-
-.pagination .page-item.active .page-link {
-    background: linear-gradient(135deg, var(--primary-color), #2563eb);
-    border-color: var(--primary-color);
-    color: white;
-    font-weight: 600;
-    box-shadow: 0 3px 8px rgba(59, 130, 246, 0.25);
-    transform: translateY(-1px);
-    z-index: 3;
-}
-
-.pagination .page-item.active .page-link:hover {
-    background: linear-gradient(135deg, #2563eb, #1e40af);
-    transform: translateY(-1px);
-}
-
-.pagination .page-item.disabled .page-link {
-    color: #cbd5e1;
-    pointer-events: none;
-    cursor: not-allowed;
-    background-color: #f8fafc;
-    border-color: #e2e8f0;
-    opacity: 0.6;
-}
-
-/* Ellipsis styling */
-.pagination .page-item.disabled .page-link[disabled] {
-    background-color: transparent;
-    border-color: transparent;
-}
-
-/* Icon arrows */
-.pagination .page-link i {
-    font-size: 0.85rem;
-    vertical-align: middle;
-}
-
-/* Responsive */
-@media (max-width: 576px) {
-    .pagination .page-link {
-        padding: 0.4rem 0.6rem;
-        font-size: 0.85rem;
-        min-width: 36px;
-    }
     
-    .pagination {
-        gap: 0.15rem;
+    // Fungsi MODAL BARU (Detail Card, sesuai permintaan)
+    function showGaleriDetail(judul, deskripsi, tanggal, mediaPath, tipeMedia) {
+        // Update Modal content
+        document.getElementById('galeriModalTitle').textContent = judul;
+        document.getElementById('galeriModalDescription').textContent = deskripsi;
+        
+        // Format Tanggal
+        const dateObj = new Date(tanggal);
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('galeriModalDate').textContent = dateObj.toLocaleDateString('id-ID', options);
+
+        // Update Media Viewer
+        const viewer = document.getElementById('galeriMediaViewer');
+        
+        if (tipeMedia === 'Video') {
+            viewer.innerHTML = `
+                <video controls style="width: 100%; height: 100%; object-fit: cover;">
+                    <source src="${mediaPath}" type="video/mp4">
+                    Browser kamu ga support video 😢
+                </video>
+            `;
+        } else {
+            viewer.innerHTML = `<img src="${mediaPath}" class="img-fluid" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">`;
+        }
+
+        // Show Modal
+        const myModal = new bootstrap.Modal(document.getElementById('modalGaleriDetail'));
+        myModal.show();
     }
-}
-</style>
+</script>
