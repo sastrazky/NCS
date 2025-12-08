@@ -1,9 +1,15 @@
 <?php
 // pages/galeri.php
 
+// Pastikan $conn tersedia dan SESSION dimulai
+if (!isset($conn) || !isset($_SESSION['id_admin'])) {
+    // Diasumsikan koneksi dan session sudah dicek di index.php
+}
+
 // Handle success/error messages
 $success_msg = '';
 $error_msg = '';
+$id_admin = (int)$_SESSION['id_admin']; // Ambil ID Admin yang sedang login
 
 // Get data for edit
 $edit_data = null;
@@ -17,26 +23,40 @@ if (isset($_GET['edit'])) {
 if (isset($_GET['delete'])) {
     $id_galeri = (int)$_GET['delete'];
     
-    // Get file path before deleting
-    $file_query = pg_query_params($conn, "SELECT media_path FROM galeri WHERE id_galeri = $1", [$id_galeri]);
-    
+    // --- LANGKAH 1 (DELETE): Ambil Judul Item untuk Log ---
+    $file_query = pg_query_params($conn, "SELECT judul, media_path FROM galeri WHERE id_galeri = $1", [$id_galeri]);
+    $item_title = 'Galeri ID ' . $id_galeri; // Default title
+
     if ($file_row = pg_fetch_assoc($file_query)) {
+        $item_title = $file_row['judul']; // Ambil judul media untuk log
+
         // Delete file if exists
         if (!empty($file_row['media_path']) && file_exists($file_row['media_path'])) {
-            unlink($file_row['media_path']);
+            @unlink($file_row['media_path']);
         }
         
         // Delete from database
         $delete_result = pg_query_params($conn, "DELETE FROM galeri WHERE id_galeri = $1", [$id_galeri]);
         
         if ($delete_result) {
+            // --- LANGKAH 2 (DELETE): Catat Log Aktivitas ---
+            $safe_item_title = pg_escape_literal($conn, $item_title);
+            $log_query = "
+                INSERT INTO aktivitas_log (id_admin, item_type, item_title, action)
+                VALUES ($id_admin, 'galeri', $safe_item_title, 'dihapus')
+            ";
+            pg_query($conn, $log_query);
+            // ------------------------------------------------
             $success_msg = "Galeri berhasil dihapus!";
         } else {
             $error_msg = "Gagal menghapus galeri!";
         }
+    } else {
+        $error_msg = "Gagal mengambil data galeri untuk dihapus!";
     }
     
-    header("Location: ?page=galeri&success=" . urlencode($success_msg));
+    // Perbaikan: Redirect menggunakan success/error message
+    header("Location: ?page=galeri" . (!empty($success_msg) ? "&success=" . urlencode($success_msg) : "") . (!empty($error_msg) ? "&error=" . urlencode($error_msg) : ""));
     exit();
 }
 
@@ -45,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $id_galeri = isset($_POST['id_galeri']) ? (int)$_POST['id_galeri'] : 0;
     $judul = trim($_POST['judul']);
     $deskripsi = trim($_POST['deskripsi']);
-    $tipe_media = $_POST['tipe_media'];
+    $tipe_media = $_POST['tipe_media']; // Nilai default, akan di-overwrite oleh tipe file
     $tanggal_kegiatan = !empty($_POST['tanggal_kegiatan']) ? $_POST['tanggal_kegiatan'] : null;
     $id_admin = $_SESSION['id_admin'];
     
@@ -59,6 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
         
         $media_path = '';
+        $new_media_uploaded = false;
         
         // Handle file upload
         if (isset($_FILES['media']) && $_FILES['media']['error'] == 0) {
@@ -86,34 +107,52 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 if (!move_uploaded_file($file_tmp, $media_path)) {
                     $error_msg = "Gagal mengupload media!";
                     $media_path = '';
+                } else {
+                    $new_media_uploaded = true;
                 }
             }
+        } else if ($id_galeri > 0) {
+             // Jika Edit tapi tidak upload file baru, ambil tipe media lama
+            $old_data_query = pg_query_params($conn, "SELECT tipe_media FROM galeri WHERE id_galeri = $1", [$id_galeri]);
+            $old_data = pg_fetch_assoc($old_data_query);
+            $tipe_media = $old_data['tipe_media'] ?? $_POST['tipe_media'];
         }
         
         if (empty($error_msg)) {
             if ($id_galeri > 0) {
                 // Update
-                if (!empty($media_path)) {
+                $update_query_fields = "judul = $1, deskripsi = $2, tipe_media = $3, tanggal_kegiatan = $4";
+                $params = [$judul, $deskripsi, $tipe_media, $tanggal_kegiatan, $id_galeri]; // 5 params
+
+                if ($new_media_uploaded) {
                     // Get old file and delete it
                     $old_file_query = pg_query_params($conn, "SELECT media_path FROM galeri WHERE id_galeri = $1", [$id_galeri]);
                     if ($old_file_row = pg_fetch_assoc($old_file_query)) {
                         if (!empty($old_file_row['media_path']) && file_exists($old_file_row['media_path'])) {
-                            unlink($old_file_row['media_path']);
+                            @unlink($old_file_row['media_path']);
                         }
                     }
                     
-                    $update_result = pg_query_params($conn, 
-                        "UPDATE galeri SET judul = $1, deskripsi = $2, media_path = $3, tipe_media = $4, tanggal_kegiatan = $5 WHERE id_galeri = $6",
-                        [$judul, $deskripsi, $media_path, $tipe_media, $tanggal_kegiatan, $id_galeri]
-                    );
-                } else {
-                    $update_result = pg_query_params($conn, 
-                        "UPDATE galeri SET judul = $1, deskripsi = $2, tipe_media = $3, tanggal_kegiatan = $4 WHERE id_galeri = $5",
-                        [$judul, $deskripsi, $tipe_media, $tanggal_kegiatan, $id_galeri]
-                    );
+                    // Update query dan params dengan media_path baru
+                    $update_query_fields = "judul = $1, deskripsi = $2, media_path = $3, tipe_media = $4, tanggal_kegiatan = $5";
+                    $params = [$judul, $deskripsi, $media_path, $tipe_media, $tanggal_kegiatan, $id_galeri]; // 6 params
                 }
                 
+                // Eksekusi Update
+                $update_result = pg_query_params($conn, 
+                    "UPDATE galeri SET $update_query_fields, updated_at = NOW() WHERE id_galeri = $" . count($params),
+                    $params
+                );
+                
                 if ($update_result) {
+                    // --- LOGGING UPDATE ---
+                    $safe_item_title = pg_escape_literal($conn, $judul);
+                    $log_query = "
+                        INSERT INTO aktivitas_log (id_admin, item_type, item_title, action)
+                        VALUES ($id_admin, 'galeri', $safe_item_title, 'diperbarui')
+                    ";
+                    pg_query($conn, $log_query);
+                    // ----------------------
                     header("Location: ?page=galeri&success=" . urlencode("Galeri berhasil diperbarui!"));
                     exit();
                 } else {
@@ -130,6 +169,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     );
                     
                     if ($insert_result) {
+                        // --- LOGGING INSERT ---
+                        $safe_item_title = pg_escape_literal($conn, $judul);
+                        $log_query = "
+                            INSERT INTO aktivitas_log (id_admin, item_type, item_title, action)
+                            VALUES ($id_admin, 'galeri', $safe_item_title, 'ditambahkan')
+                        ";
+                        pg_query($conn, $log_query);
+                        // ----------------------
                         header("Location: ?page=galeri&success=" . urlencode("Galeri berhasil ditambahkan!"));
                         exit();
                     } else {
@@ -145,9 +192,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 if (isset($_GET['success'])) {
     $success_msg = $_GET['success'];
 }
+// Get error message from URL
+if (isset($_GET['error'])) {
+    $error_msg = $_GET['error'];
+}
+
+// Fungsi pembantu untuk mengganti hanya kemunculan pertama (diperlukan karena menggunakan $$param_count)
+function str_replace_once($search, $replace, $text) {
+    $pos = strpos($text, $search);
+    return $pos !== false ? substr_replace($text, $replace, $pos, strlen($search)) : $text;
+}
+
 
 // Pagination
-$limit = 12;
+$limit = 4;
 $page_num = isset($_GET['p']) ? (int)$_GET['p'] : 1;
 $offset = ($page_num - 1) * $limit;
 
@@ -176,34 +234,46 @@ if (count($where_conditions) > 0) {
     $where_clause = 'WHERE ' . implode(' AND ', $where_conditions);
 }
 
-// Get total records
-if (count($query_params) > 0) {
-    $count_query_str = "SELECT COUNT(*) as total FROM galeri $where_clause";
-    $count_query_str = str_replace('$param_count', '$' . $param_count, $count_query_str);
-    for ($i = $param_count - 1; $i >= 1; $i--) {
-        $count_query_str = str_replace('$param_count', '$' . $i, $count_query_str);
+// Penomoran Parameter PostgreSQL (diperbaiki agar sesuai)
+function apply_pg_params($query_str, $query_params) {
+    if (empty($query_params)) return $query_str;
+    
+    $j = 1;
+    $temp_str = $query_str;
+    // Ganti semua $$param_count secara berurutan dengan $1, $2, ...
+    foreach ($query_params as $param) {
+        $pos = strpos($temp_str, '$$param_count');
+        if ($pos !== false) {
+            $temp_str = substr_replace($temp_str, '$' . $j, $pos, strlen('$$param_count'));
+            $j++;
+        }
     }
-    $count_query = pg_query_params($conn, $count_query_str, $query_params);
+    return $temp_str;
+}
+
+// Get total records
+$count_query_str = "SELECT COUNT(*) as total FROM galeri $where_clause";
+$count_query_str_fixed = apply_pg_params($count_query_str, $query_params);
+
+if (count($query_params) > 0) {
+    $count_query = pg_query_params($conn, $count_query_str_fixed, $query_params);
 } else {
-    $count_query = pg_query($conn, "SELECT COUNT(*) as total FROM galeri");
+    $count_query = pg_query($conn, "SELECT COUNT(*) as total FROM galeri $where_clause");
 }
 $total_records = pg_fetch_assoc($count_query)['total'];
 $total_pages = ceil($total_records / $limit);
 
 // Get data
+$galeri_query_str = "SELECT * FROM galeri $where_clause ORDER BY created_at DESC LIMIT $limit OFFSET $offset";
+$galeri_query_str_fixed = apply_pg_params($galeri_query_str, $query_params);
+
 if (count($query_params) > 0) {
-    $galeri_query_str = "SELECT * FROM galeri $where_clause ORDER BY created_at DESC LIMIT $limit OFFSET $offset";
-    $galeri_query_str = str_replace('$param_count', '$' . $param_count, $galeri_query_str);
-    for ($i = $param_count - 1; $i >= 1; $i--) {
-        $galeri_query_str = str_replace('$param_count', '$' . $i, $galeri_query_str);
-    }
-    $galeri_result = pg_query_params($conn, $galeri_query_str, $query_params);
+    $galeri_result = pg_query_params($conn, $galeri_query_str_fixed, $query_params);
 } else {
-    $galeri_result = pg_query($conn, "SELECT * FROM galeri ORDER BY created_at DESC LIMIT $limit OFFSET $offset");
+    $galeri_result = pg_query($conn, "SELECT * FROM galeri $where_clause ORDER BY created_at DESC LIMIT $limit OFFSET $offset");
 }
 ?>
 
-<!-- Success/Error Messages -->
 <?php if (!empty($success_msg)): ?>
     <div class="alert alert-success alert-dismissible fade show" role="alert">
         <i class="fas fa-check-circle me-2"></i><?= htmlspecialchars($success_msg) ?>
@@ -218,7 +288,6 @@ if (count($query_params) > 0) {
     </div>
 <?php endif; ?>
 
-<!-- Header -->
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h4 class="mb-1 fw-bold">Galeri</h4>
@@ -229,7 +298,6 @@ if (count($query_params) > 0) {
     </button>
 </div>
 
-<!-- Search & Filter -->
 <div class="card mb-4" style="border: none; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
     <div class="card-body">
         <form method="GET" action="">
@@ -258,7 +326,6 @@ if (count($query_params) > 0) {
     </div>
 </div>
 
-<!-- Galeri Grid -->
 <div class="row g-4 mb-4">
     <?php if (pg_num_rows($galeri_result) > 0): ?>
         <?php while($row = pg_fetch_assoc($galeri_result)): ?>
@@ -339,7 +406,6 @@ if (count($query_params) > 0) {
     <?php endif; ?>
 </div>
 
-<!-- Pagination -->
 <?php if ($total_pages > 1): ?>
     <nav>
         <ul class="pagination justify-content-center">
@@ -366,7 +432,6 @@ if (count($query_params) > 0) {
     </nav>
 <?php endif; ?>
 
-<!-- Modal Add/Edit -->
 <div class="modal fade" id="modalGaleri" tabindex="-1" <?= $edit_data ? 'data-bs-show="true"' : '' ?>>
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -381,28 +446,28 @@ if (count($query_params) > 0) {
                     <div class="mb-3 text-center">
                         <label class="form-label fw-bold">Upload Foto/Video <?= !$edit_data ? '<span class="text-danger">*</span>' : '' ?></label>
                         <div class="border rounded p-3 bg-light">
-                            <?php if ($edit_data && !empty($edit_data['media_path'])): ?>
-                                <?php if ($edit_data['tipe_media'] == 'Foto'): ?>
-                                    <img src="<?= htmlspecialchars($edit_data['media_path']) ?>" 
-                                         class="img-fluid mb-2" 
-                                         style="max-height: 200px; object-fit: cover;"
-                                         id="preview-media">
-                                <?php else: ?>
-                                    <video class="img-fluid mb-2" style="max-height: 200px;" controls id="preview-media">
-                                        <source src="<?= htmlspecialchars($edit_data['media_path']) ?>" type="video/mp4">
-                                    </video>
-                                <?php endif; ?>
-                            <?php else: ?>
-                                <div id="preview-media" class="mb-2">
-                                    <i class="fas fa-images text-muted" style="font-size: 4rem;"></i>
-                                </div>
-                            <?php endif; ?>
+                            <?php 
+                            $initial_preview_content = '';
+                            if ($edit_data && !empty($edit_data['media_path'])): 
+                                $path = htmlspecialchars($edit_data['media_path']);
+                                if ($edit_data['tipe_media'] == 'Foto') {
+                                    $initial_preview_content = '<img src="' . $path . '" class="img-fluid mb-2" style="max-height: 200px; object-fit: cover;">';
+                                } else {
+                                    $initial_preview_content = '<video class="img-fluid mb-2" style="max-height: 200px;" controls><source src="' . $path . '" type="video/mp4"></video>';
+                                }
+                            else: 
+                                $initial_preview_content = '<i class="fas fa-images text-muted" style="font-size: 4rem;"></i>';
+                            endif;
+                            ?>
+                            <div id="preview-media" class="mb-2">
+                                <?= $initial_preview_content ?>
+                            </div>
                             <input type="file" class="form-control" name="media" accept="image/*,video/*" onchange="previewMedia(this)" <?= !$edit_data ? 'required' : '' ?>>
                             <small class="text-muted">Format: JPG, PNG, GIF, MP4, AVI, MOV | Max: 50MB</small>
                         </div>
                     </div>
                     
-                    <input type="hidden" name="tipe_media" value="Foto">
+                    <input type="hidden" name="tipe_media" value="<?= $edit_data ? $edit_data['tipe_media'] : 'Foto' ?>">
                     
                     <div class="mb-3">
                         <label for="judul" class="form-label">Judul <span class="text-danger">*</span></label>
@@ -414,7 +479,7 @@ if (count($query_params) > 0) {
                     <div class="mb-3">
                         <label for="deskripsi" class="form-label">Deskripsi</label>
                         <textarea class="form-control" name="deskripsi" rows="3" 
-                                  placeholder="Deskripsikan media..."><?= $edit_data ? htmlspecialchars($edit_data['deskripsi']) : '' ?></textarea>
+                                     placeholder="Deskripsikan media..."><?= $edit_data ? htmlspecialchars($edit_data['deskripsi']) : '' ?></textarea>
                     </div>
                     
                     <div class="mb-3">
@@ -434,7 +499,6 @@ if (count($query_params) > 0) {
     </div>
 </div>
 
-<!-- Modal View Media -->
 <div class="modal fade" id="modalViewMedia" tabindex="-1">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
@@ -451,8 +515,13 @@ if (count($query_params) > 0) {
 <?php if ($edit_data): ?>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        var myModal = new bootstrap.Modal(document.getElementById('modalGaleri'));
-        myModal.show();
+        if (typeof bootstrap !== 'undefined') {
+            var modalElement = document.getElementById('modalGaleri');
+            if (!modalElement.classList.contains('show')) {
+                var myModal = new bootstrap.Modal(modalElement);
+                myModal.show();
+            }
+        }
     });
 </script>
 <?php endif; ?>
@@ -466,14 +535,31 @@ function previewMedia(input) {
         const reader = new FileReader();
         
         reader.onload = function(e) {
+            // Update the hidden input for tipe_media based on file type
+            let tipeMedia;
+            let previewContent;
+
             if (file.type.startsWith('image/')) {
-                preview.innerHTML = '<img src="' + e.target.result + '" class="img-fluid mb-2" style="max-height: 200px; object-fit: cover;">';
+                tipeMedia = 'Foto';
+                previewContent = '<img src="' + e.target.result + '" class="img-fluid mb-2" style="max-height: 200px; object-fit: cover;">';
             } else if (file.type.startsWith('video/')) {
-                preview.innerHTML = '<video class="img-fluid mb-2" style="max-height: 200px;" controls><source src="' + e.target.result + '" type="' + file.type + '"></video>';
+                tipeMedia = 'Video';
+                previewContent = '<video class="img-fluid mb-2" style="max-height: 200px;" controls><source src="' + e.target.result + '" type="' + file.type + '"></video>';
+            } else {
+                tipeMedia = 'Lainnya'; // Fallback
+                previewContent = '<i class="fas fa-exclamation-triangle text-warning" style="font-size: 4rem;"></i><p>Tipe file tidak didukung</p>';
             }
+
+            document.querySelector('input[name="tipe_media"]').value = tipeMedia;
+            preview.innerHTML = previewContent;
         }
         
         reader.readAsDataURL(file);
+    } else {
+        // Jika file dibatalkan/dihapus, kembalikan preview ke konten awal (atau icon default jika Insert)
+        preview.innerHTML = '<?php echo $initial_preview_content; ?>';
+        // Reset hidden type field
+        document.querySelector('input[name="tipe_media"]').value = '<?= $edit_data ? $edit_data['tipe_media'] : 'Foto' ?>';
     }
 }
 
@@ -481,10 +567,17 @@ function viewMedia(path, type, title) {
     document.getElementById('viewMediaTitle').textContent = title;
     const body = document.getElementById('viewMediaBody');
     
+    // Stop any currently playing video before replacing content
+    const existingMedia = body.querySelector('video');
+    if (existingMedia) {
+        existingMedia.pause();
+    }
+
     if (type === 'foto') {
         body.innerHTML = '<img src="' + path + '" class="img-fluid" style="max-height: 80vh;">';
     } else {
-        body.innerHTML = '<video class="img-fluid" style="max-height: 80vh;" controls><source src="' + path + '" type="video/mp4"></video>';
+        // Ensure video tag has appropriate type for playback
+        body.innerHTML = '<video class="img-fluid" style="max-height: 80vh;" controls autoplay><source src="' + path + '" type="video/mp4"></video>';
     }
     
     var modal = new bootstrap.Modal(document.getElementById('modalViewMedia'));
@@ -493,6 +586,92 @@ function viewMedia(path, type, title) {
 </script>
 
 <style>
+.pagination {
+    margin-top: 1.5rem;
+    gap: 0.25rem;
+}
+
+.pagination .page-link {
+    color: var(--primary-color);
+    background-color: white;
+    border: 1px solid #e2e8f0;
+    padding: 0.5rem 0.75rem;
+    margin: 0 3px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    min-width: 40px;
+    text-align: center;
+}
+
+.pagination .page-link:hover {
+    background-color: #f1f5f9;
+    border-color: var(--primary-color);
+    color: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
+}
+
+.pagination .page-link:focus {
+    box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.15);
+    outline: none;
+    z-index: 3;
+}
+
+.pagination .page-link:active {
+    background-color: #e0e7ff;
+    border-color: var(--primary-color);
+}
+
+.pagination .page-item.active .page-link {
+    background: linear-gradient(135deg, var(--primary-color), #2563eb);
+    border-color: var(--primary-color);
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 3px 8px rgba(59, 130, 246, 0.25);
+    transform: translateY(-1px);
+    z-index: 3;
+}
+
+.pagination .page-item.active .page-link:hover {
+    background: linear-gradient(135deg, #2563eb, #1e40af);
+    transform: translateY(-1px);
+}
+
+.pagination .page-item.disabled .page-link {
+    color: #cbd5e1;
+    pointer-events: none;
+    cursor: not-allowed;
+    background-color: #f8fafc;
+    border-color: #e2e8f0;
+    opacity: 0.6;
+}
+
+/* Ellipsis styling */
+.pagination .page-item.disabled .page-link[disabled] {
+    background-color: transparent;
+    border-color: transparent;
+}
+
+/* Icon arrows */
+.pagination .page-link i {
+    font-size: 0.85rem;
+    vertical-align: middle;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+    .pagination .page-link {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.85rem;
+        min-width: 36px;
+    }
+    
+    .pagination {
+        gap: 0.15rem;
+    }
+}
 .galeri-card {
     transition: all 0.3s;
 }

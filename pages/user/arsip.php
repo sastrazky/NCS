@@ -16,13 +16,14 @@ $query_params = [];
 if (!empty($filter_kategori)) {
     // Map kategori display ke kategori database
     $kategori_map = [
-        'Penelitian' => ['Laporan', 'Proposal'],
-        'Pengabdian' => ['Dokumentasi', 'Surat']
+        'Penelitian' => ['Penelitian'],
+        'Pengabdian' => ['Pengabdian']
     ];
     
     if (isset($kategori_map[$filter_kategori])) {
-        $where_clause = "WHERE kategori = ANY($1)";
-        $query_params[] = '{' . implode(',', $kategori_map[$filter_kategori]) . '}';
+       $where_clause = "WHERE kategori = $1";
+        $query_params[] = $filter_kategori;
+
     }
 }
 
@@ -43,25 +44,44 @@ if (!empty($query_params)) {
 }
 
 // Get statistics
-$stats_query = pg_query($conn, "
-    SELECT 
-        COUNT(*) as total,
-        COUNT(CASE WHEN kategori IN ('Laporan', 'Proposal') THEN 1 END) as penelitian,
-        COUNT(CASE WHEN kategori IN ('Dokumentasi', 'Surat') THEN 1 END) as pengabdian,
-        COUNT(CASE WHEN EXTRACT(YEAR FROM created_at) = EXTRACT(YEAR FROM CURRENT_DATE) THEN 1 END) as tahun_ini
-    FROM arsip
-");
-$stats = pg_fetch_assoc($stats_query);
+// PERBAIKAN - Get statistics - Total dokumen
+$total_query = pg_query($conn, "SELECT COUNT(*) as total FROM arsip");
+$total_docs = pg_fetch_assoc($total_query)['total'];
 
-// Get year statistics
-$year_query = pg_query($conn, "
+// Get year statistics - Dinamis untuk 3 tahun terakhir berdasarkan field tanggal
+$year_stats_query = pg_query($conn, "
     SELECT 
-        EXTRACT(YEAR FROM created_at) as tahun,
+        EXTRACT(YEAR FROM tanggal) as tahun,
         COUNT(*) as jumlah
     FROM arsip
-    GROUP BY EXTRACT(YEAR FROM created_at)
+    WHERE tanggal IS NOT NULL
+    GROUP BY EXTRACT(YEAR FROM tanggal)
     ORDER BY tahun DESC
+    LIMIT 3
 ");
+
+$year_stats = [];
+while ($row = pg_fetch_assoc($year_stats_query)) {
+    $year_stats[(int)$row['tahun']] = (int)$row['jumlah'];
+}
+
+// Jika tidak ada data, set default 3 tahun terakhir dengan nilai 0
+if (empty($year_stats)) {
+    $current_year = date('Y');
+    $year_stats[$current_year] = 0;
+    $year_stats[$current_year - 1] = 0;
+    $year_stats[$current_year - 2] = 0;
+}
+
+// Ambil 3 tahun terakhir yang ada datanya
+$years = array_keys($year_stats);
+$year1 = $years[0] ?? date('Y');
+$year2 = $years[1] ?? (date('Y') - 1);
+$year3 = $years[2] ?? (date('Y') - 2);
+
+$count1 = $year_stats[$year1] ?? 0;
+$count2 = $year_stats[$year2] ?? 0;
+$count3 = $year_stats[$year3] ?? 0;
 ?>
 
 <!-- Page Header -->
@@ -94,67 +114,83 @@ $year_query = pg_query($conn, "
         </div>
 
         <!-- Table -->
-        <?php if (pg_num_rows($arsip_query) > 0): ?>
-            <div class="table-responsive bg-white rounded shadow-sm">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th style="width: 50px;">No</th>
-                            <th>Judul Dokumen</th>
-                            <th style="width: 200px;">Penulis</th>
-                            <th style="width: 100px;">Tahun</th>
-                            <th style="width: 100px;">Ukuran</th>
-                            <th style="width: 120px;">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php $no = $offset + 1; ?>
-                        <?php while($arsip = pg_fetch_assoc($arsip_query)): ?>
-                            <tr>
-                                <td class="text-center"><?= $no++ ?></td>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <i class="fas fa-file-pdf text-danger me-3" style="font-size: 1.5rem;"></i>
-                                        <div>
-                                            <strong class="d-block"><?= htmlspecialchars($arsip['judul_dokumen']) ?></strong>
-                                            <?php if (!empty($arsip['deskripsi'])): ?>
-                                                <small class="text-muted">
-                                                    <?= htmlspecialchars(substr($arsip['deskripsi'], 0, 80)) ?>
-                                                    <?= strlen($arsip['deskripsi']) > 80 ? '...' : '' ?>
-                                                </small>
-                                            <?php endif; ?>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <small class="text-muted">
-                                        <?php
-                                        // Simulate author from description or use placeholder
-                                        $authors = ['Dr. Ahmad Syahputra, M.Kom', 'Budi Santoso, S.Kom, M.T', 'Siti Rahayu, S.T, M.Sc', 'Prof. Dr. Andi Wijaya'];
-                                        echo $authors[array_rand($authors)];
-                                        ?>
-                                    </small>
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge bg-secondary">
-                                        <?= date('Y', strtotime($arsip['created_at'])) ?>
-                                    </span>
-                                </td>
-                                <td class="text-center">
-                                    <small class="text-muted">
-                                        <?= number_format($arsip['ukuran_file_mb'], 1) ?> MB
-                                    </small>
-                                </td>
-                                <td class="text-center">
-                                    <a href="download.php?id=<?= $arsip['id_arsip'] ?>" class="btn btn-sm btn-primary">
-                                        <i class="fas fa-download me-1"></i> Download
-                                    </a>
-                                </td>
-                            </tr>
-                        <?php endwhile; ?>
-                    </tbody>
-                </table>
-            </div>
+<?php if (pg_num_rows($arsip_query) > 0): ?>
+    <div class="table-responsive bg-white rounded shadow-sm">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 50px;">No</th>
+                    <th style="width: 40%;">Judul Dokumen</th>
+                    <th style="width: 180px;">Penulis</th>
+                    <th style="width: 120px;">Tanggal</th>
+                    <th style="width: 100px;">Ukuran</th>
+                    <th style="width: 120px;">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php $no = $offset + 1; ?>
+                <?php while($arsip = pg_fetch_assoc($arsip_query)): ?>
+                    <tr>
+                        <td class="text-center"><?= $no++ ?></td>
+                        <td>
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-file-pdf text-danger me-3 mt-1" style="font-size: 1.5rem; flex-shrink: 0;"></i>
+                                <div style="min-width: 0; flex: 1;">
+                                    <strong class="d-block" style="
+                                        overflow: hidden;
+                                        text-overflow: ellipsis;
+                                        display: -webkit-box;
+                                        -webkit-line-clamp: 2;
+                                        -webkit-box-orient: vertical;
+                                        line-height: 1.4;
+                                        word-break: break-word;
+                                    "><?= htmlspecialchars($arsip['judul_dokumen']) ?></strong>
+                                    <?php if (!empty($arsip['deskripsi'])): ?>
+                                        <small class="text-muted" style="
+                                            overflow: hidden;
+                                            text-overflow: ellipsis;
+                                            display: -webkit-box;
+                                            -webkit-line-clamp: 1;
+                                            -webkit-box-orient: vertical;
+                                        ">
+                                            <?= htmlspecialchars($arsip['deskripsi']) ?>
+                                        </small>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <small class="text-muted" style="
+                                overflow: hidden;
+                                text-overflow: ellipsis;
+                                display: -webkit-box;
+                                -webkit-line-clamp: 2;
+                                -webkit-box-orient: vertical;
+                                word-break: break-word;
+                            ">
+                                <?= htmlspecialchars($arsip['penulis'] ?? 'Admin Lab NCS') ?>
+                            </small>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-secondary" style="white-space: nowrap;">
+                               <?= !empty($arsip['tanggal']) ? date('d-m-Y', strtotime($arsip['tanggal'])) : date('d-m-Y', strtotime($arsip['created_at'])) ?>
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <small class="text-muted" style="white-space: nowrap;">
+                                <?= number_format($arsip['ukuran_file_mb'], 1) ?> MB
+                            </small>
+                        </td>
+                        <td class="text-center">
+                        <a href="?action=download&id=<?= $arsip['id_arsip'] ?>" class="btn btn-sm btn-primary" style="white-space: nowrap;">
+                            <i class="fas fa-download me-1"></i> Download
+                         </a>
+                    </td>
+                    </tr>
+                <?php endwhile; ?>
+            </tbody>
+        </table>
+    </div>
 
             <!-- Pagination -->
             <?php if ($total_pages > 1): ?>
@@ -191,43 +227,43 @@ $year_query = pg_query($conn, "
         <?php endif; ?>
 
         <!-- Statistics Cards -->
-        <div class="row g-4 mt-5">
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body text-center">
-                        <h5 class="text-muted mb-2">Total Dokumen</h5>
-                        <h2 class="fw-bold text-primary mb-0"><?= $stats['total'] ?> Dokumen</h2>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body text-center">
-                        <h5 class="text-muted mb-2">Publikasi <?= date('Y') ?></h5>
-                        <h2 class="fw-bold text-primary mb-0"><?= $stats['tahun_ini'] ?> Dokumen</h2>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body text-center">
-                        <h5 class="text-muted mb-2">Publikasi <?= date('Y') - 1 ?></h5>
-                        <h2 class="fw-bold text-primary mb-0">
-                            <?php
-                            $last_year = 0;
-                            pg_result_seek($year_query, 0);
-                            while($year = pg_fetch_assoc($year_query)) {
-                                if ($year['tahun'] == date('Y') - 1) {
-                                    $last_year = $year['jumlah'];
-                                    break;
-                                }
-                            }
-                            echo $last_year;
-                            ?> Dokumen
-                        </h2>
-                    </div>
-                </div>
+<div class="row g-4 mt-5">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h5 class="text-muted mb-2">Total Dokumen</h5>
+                <h2 class="fw-bold text-primary mb-0"><?= $total_docs ?></h2>
+                <small class="text-muted">Semua Kategori</small>
             </div>
         </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h5 class="text-muted mb-2">Publikasi <?= $year1 ?></h5>
+                <h2 class="fw-bold text-primary mb-0"><?= $count1 ?></h2>
+                <small class="text-muted">Dokumen</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h5 class="text-muted mb-2">Publikasi <?= $year2 ?></h5>
+                <h2 class="fw-bold text-primary mb-0"><?= $count2 ?></h2>
+                <small class="text-muted">Dokumen</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h5 class="text-muted mb-2">Publikasi <?= $year3 ?></h5>
+                <h2 class="fw-bold text-primary mb-0"><?= $count3 ?></h2>
+                <small class="text-muted">Dokumen</small>
+            </div>
+        </div>
+    </div>
+    </div>
     </div>
 </section>

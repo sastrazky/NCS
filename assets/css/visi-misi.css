@@ -1,0 +1,49 @@
+.page-header-visi-misi {
+    background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+    color: white;
+    padding: 1rem 0 3rem;
+    text-align: center;
+}
+.section-visi-misi::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); 
+    z-index: 1; 
+}
+.section-visi-misi {
+    background: url('../../assets/image/JTIWEB.png') no-repeat center center;
+    background-size: 100%; 
+    position: relative; 
+    padding-top: 50px;
+    padding-bottom: 50px; 
+}
+.section-visi-misi .container {
+    position: relative;
+    z-index: 2; 
+}
+
+.content-box-visi-misi {
+    background: #fff;
+    padding: 2.2rem;
+    border-radius: 18px;
+    border: 1px solid rgba(0,0,0,0.05);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    margin: 2.5rem auto;
+    width: 100%;
+    max-width: 900px;
+    border-left: 5px solid var(--primary-color); 
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    animation: fadeUp 0.6s ease forwards;
+    opacity: 0;
+}
+
+@keyframes fadeUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+}
+
+

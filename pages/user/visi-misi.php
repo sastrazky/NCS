@@ -9,7 +9,7 @@ $profil = pg_fetch_assoc($profil_query);
 ?>
 
 <!-- Page Header -->
-<section class="page-header">
+<section class="page-header-visi-misi">
     <div class="container">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
@@ -24,18 +24,18 @@ $profil = pg_fetch_assoc($profil_query);
 </section>
 
 <!-- Content -->
-<section class="section">
+<section class="section-visi-misi">
     <div class="container">
         <div class="row">
 
             <!-- Main Content -->
-            <div class="col-lg-9">
+            <div class="col-lg-9 mx-auto">
                 <?php if ($profil): ?>
 
                     <!-- VISI -->
-                    <div class="content-box">
+                    <div class="content-box-visi-misi">
                         <h3 class="text-primary mb-4">
-                            <i class="fas fa-eye me-2"></i>Visi
+                           Visi
                         </h3>
 
                         <div style="text-align: justify; line-height: 2;">
@@ -44,9 +44,9 @@ $profil = pg_fetch_assoc($profil_query);
                     </div>
 
                     <!-- MISI -->
-                    <div class="content-box">
+                    <div class="content-box-visi-misi">
                         <h3 class="text-primary mb-4">
-                            <i class="fas fa-bullseye me-2"></i>Misi
+                            Misi
                         </h3>
 
                         <?php

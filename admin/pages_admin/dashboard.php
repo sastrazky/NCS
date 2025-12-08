@@ -1,7 +1,14 @@
 <?php
-// pages/dashboard.php
+// pages_admin/dashboard.php
 
-// Get statistics from database
+// Pastikan koneksi ($conn) sudah tersedia dari index.php
+if (!isset($conn)) {
+    die("Error: Koneksi database tidak tersedia.");
+}
+
+// ===============================================
+// 1. Get statistics from database (STAT CARDS)
+// ===============================================
 $stats = [];
 
 // Total Profil
@@ -36,67 +43,29 @@ $stats['arsip'] = pg_fetch_assoc($arsip_result)['total'];
 $link_result = pg_query($conn, "SELECT COUNT(*) as total FROM link_eksternal");
 $stats['link'] = pg_fetch_assoc($link_result)['total'];
 
-// Get recent activities (last 10 updates/additions)
+// ===============================================
+// 2. Get recent activities (AKTIVITAS LOG)
+// ===============================================
+
 $activity_query = "
-    SELECT 'profil' AS type, 'Profil' AS title,
-           updated_at AS date,
-           'diperbarui' AS action
-    FROM profil
-    WHERE updated_at IS NOT NULL
-
-    UNION ALL
-    SELECT 'anggota', nama_lengkap,
-           COALESCE(updated_at, created_at),
-           CASE WHEN updated_at IS NULL THEN 'ditambahkan' ELSE 'diperbarui' END
-    FROM anggota
-
-    UNION ALL
-    SELECT 'produk', judul,
-           COALESCE(updated_at, created_at),
-           CASE WHEN updated_at IS NULL THEN 'ditambahkan' ELSE 'diperbarui' END
-    FROM produk_layanan
-
-    UNION ALL
-    SELECT 'sarana', nama_fasilitas,
-           updated_at,
-           'diperbarui'
-    FROM sarana_prasarana
-    WHERE updated_at IS NOT NULL
-
-    UNION ALL
-    SELECT 'agenda', judul_agenda,
-           COALESCE(updated_at, created_at),
-           CASE WHEN updated_at IS NULL THEN 'ditambahkan' ELSE 'diperbarui' END
-    FROM agenda
-
-    UNION ALL
-    SELECT 'galeri', judul,
-           created_at,
-           'ditambahkan'
-    FROM galeri
-
-    UNION ALL
-    SELECT 'arsip', judul_dokumen,
-           COALESCE(updated_at, created_at),
-           CASE WHEN updated_at IS NULL THEN 'ditambahkan' ELSE 'diperbarui' END
-    FROM arsip
-
-    UNION ALL
-    SELECT 'link', nama_link,
-           created_at,
-           'ditambahkan'
-    FROM link_eksternal
-
-    ORDER BY date DESC NULLS LAST
+    SELECT 
+        al.item_type AS type,
+        al.item_title AS title,
+        al.action_time AS date,
+        al.action AS action,
+        a.nama_lengkap AS admin_name
+    FROM
+        aktivitas_log al
+    LEFT JOIN
+        admin a ON al.id_admin = a.id_admin
+    ORDER BY
+        al.action_time DESC 
     LIMIT 10
 ";
-
-
 
 $activities_result = pg_query($conn, $activity_query);
 ?>
 
-<!-- Statistics Cards -->
 <div class="row g-4 mb-4">
     <div class="col-md-3">
         <div class="stat-card">
@@ -237,12 +206,11 @@ $activities_result = pg_query($conn, $activity_query);
     </div>
 </div>
 
-<!-- Recent Activities -->
 <div class="activity-card">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
             <h5 class="mb-1 fw-bold">Aktivitas Terkini</h5>
-            <small class="text-muted">Konten yang baru ditambahkan atau diperbarui</small>
+            <small class="text-muted">10 konten terbaru yang ditambahkan, diperbarui, atau dihapus</small>
         </div>
         <span class="badge bg-primary"><?= pg_num_rows($activities_result) ?> aktivitas</span>
     </div>
@@ -256,12 +224,13 @@ $activities_result = pg_query($conn, $activity_query);
                 switch($activity['type']) {
                     case 'profil': $dot_color = 'blue'; break;
                     case 'anggota': $dot_color = 'purple'; break;
-                    case 'produk': $dot_color = 'green'; break;
+                    case 'produk': $dot_color = 'green'; break; 
                     case 'sarana': $dot_color = 'orange'; break;
-                    case 'agenda': $dot_color = 'orange'; break;
+                    case 'agenda': $dot_color = 'pink'; break;
                     case 'galeri': $dot_color = 'blue'; break;
                     case 'arsip': $dot_color = 'blue'; break;
                     case 'link': $dot_color = 'green'; break;
+                    default: $dot_color = 'secondary';
                 }
                 
                 // Format date
@@ -295,9 +264,12 @@ $activities_result = pg_query($conn, $activity_query);
                             <h6 class="mb-1"><?= htmlspecialchars($activity['title']) ?></h6>
                             <small class="text-muted">
                                 <span class="badge badge-category <?= $badge_class ?>">
-                                    <?= strtoupper($activity['type']) ?>
+                                    <?= strtoupper(str_replace('_', ' ', $activity['type'])) ?> 
                                 </span>
                                 <span class="ms-2"><?= ucfirst($activity['action']) ?></span>
+                                <?php if (!empty($activity['admin_name'])): ?>
+                                    <span class="ms-2 text-dark">oleh <?= htmlspecialchars($activity['admin_name']) ?></span>
+                                <?php endif; ?>
                             </small>
                         </div>
                         <small class="text-muted"><?= $time_ago ?></small>

@@ -258,10 +258,11 @@ $activities_result = pg_query($conn, $activity_query);
                     case 'anggota': $dot_color = 'purple'; break;
                     case 'produk': $dot_color = 'green'; break;
                     case 'sarana': $dot_color = 'orange'; break;
-                    case 'agenda': $dot_color = 'orange'; break;
+                    case 'agenda': $dot_color = 'pink'; break;
                     case 'galeri': $dot_color = 'blue'; break;
                     case 'arsip': $dot_color = 'blue'; break;
                     case 'link': $dot_color = 'green'; break;
+                    default: $dot_color = 'secondary';
                 }
                 
                 // Format date

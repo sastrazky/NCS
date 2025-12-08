@@ -42,10 +42,12 @@ if (isset($_GET['delete'])) {
 
 // Handle Add/Edit
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $id_arsip = isset($_POST['id_arsip']) ? (int)$_POST['id_arsip'] : 0;
-    $judul_dokumen = trim($_POST['judul_dokumen']);
+   $id_arsip = isset($_POST['id_arsip']) ? (int)$_POST['id_arsip'] : 0;
+        $judul_dokumen = trim($_POST['judul_dokumen']);
     $deskripsi = trim($_POST['deskripsi']);
     $kategori = trim($_POST['kategori']);
+    $penulis = trim($_POST['penulis']); 
+    $tanggal = trim($_POST['tanggal']); 
     $id_admin = $_SESSION['id_admin'];
     
     // Validation
@@ -70,8 +72,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             
             if (!in_array($file_ext, $allowed_ext)) {
                 $error_msg = "Hanya file PDF yang diperbolehkan!";
-            } else if ($file_size > 50 * 1024 * 1024) { // 50MB max
-                $error_msg = "Ukuran file maksimal 50MB!";
+            } else if ($file_size > 10 * 1024 * 1024) { // 10MB max
+                $error_msg = "Ukuran file maksimal 10MB!";
             } else {
                 $new_file_name = 'arsip_' . time() . '_' . uniqid() . '.pdf';
                 $file_pdf_path = $upload_dir . $new_file_name;
@@ -96,15 +98,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         }
                     }
                     
-                    $update_result = pg_query_params($conn, 
-                        "UPDATE arsip SET judul_dokumen = $1, deskripsi = $2, kategori = $3, file_pdf_path = $4, ukuran_file_mb = $5, updated_at = NOW() WHERE id_arsip = $6",
-                        [$judul_dokumen, $deskripsi, $kategori, $file_pdf_path, $ukuran_file_mb, $id_arsip]
-                    );
+                   $update_result = pg_query_params($conn, 
+    "UPDATE arsip SET judul_dokumen = $1, deskripsi = $2, kategori = $3, file_pdf_path = $4, ukuran_file_mb = $5, penulis = $6, tanggal = $7, updated_at = NOW() WHERE id_arsip = $8",
+    [$judul_dokumen, $deskripsi, $kategori, $file_pdf_path, $ukuran_file_mb, $penulis, $tanggal, $id_arsip]
+    );
                 } else {
-                    $update_result = pg_query_params($conn, 
-                        "UPDATE arsip SET judul_dokumen = $1, deskripsi = $2, kategori = $3, updated_at = NOW() WHERE id_arsip = $4",
-                        [$judul_dokumen, $deskripsi, $kategori, $id_arsip]
-                    );
+                   $update_result = pg_query_params($conn, 
+    "UPDATE arsip SET judul_dokumen = $1, deskripsi = $2, kategori = $3, penulis = $4, tanggal = $5, updated_at = NOW() WHERE id_arsip = $6",
+    [$judul_dokumen, $deskripsi, $kategori, $penulis, $tanggal, $id_arsip]
+    );
                 }
                 
                 if ($update_result) {
@@ -118,10 +120,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 if (empty($file_pdf_path)) {
                     $error_msg = "File PDF harus diupload!";
                 } else {
-                    $insert_result = pg_query_params($conn, 
-                        "INSERT INTO arsip (judul_dokumen, deskripsi, file_pdf_path, ukuran_file_mb, kategori, id_admin, created_at) VALUES ($1, $2, $3, $4, $5, $6, NOW())",
-                        [$judul_dokumen, $deskripsi, $file_pdf_path, $ukuran_file_mb, $kategori, $id_admin]
-                    );
+                  $insert_result = pg_query_params($conn, 
+    "INSERT INTO arsip (judul_dokumen, deskripsi, file_pdf_path, ukuran_file_mb, kategori, penulis, tanggal, id_admin, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())",
+    [$judul_dokumen, $deskripsi, $file_pdf_path, $ukuran_file_mb, $kategori, $penulis, $tanggal, $id_admin]
+    );
                     
                     if ($insert_result) {
                         header("Location: ?page=arsip&success=" . urlencode("Arsip berhasil ditambahkan!"));
@@ -372,36 +374,51 @@ if (!empty($search)) {
                         <label for="deskripsi" class="form-label">Deskripsi</label>
                         <textarea class="form-control" id="deskripsi" name="deskripsi" rows="3"><?= $edit_data ? htmlspecialchars($edit_data['deskripsi']) : '' ?></textarea>
                     </div>
+
+                    <div class="mb-3">
+                        <label for="penulis" class="form-label">Penulis <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="penulis" name="penulis" 
+                                value="<?= $edit_data ? htmlspecialchars($edit_data['penulis']) : '' ?>" 
+                                placeholder="Contoh: Dr. Ahmad Syahputra, M.Kom" required>
+                        <small class="text-muted">Nama penulis atau peneliti</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="tanggal" class="form-label">Tanggal Publikasi <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="tanggal" name="tanggal" 
+                            value="<?= $edit_data ? htmlspecialchars($edit_data['tanggal']) : date('Y-m-d') ?>" required>
+                        <small class="text-muted">Tanggal publikasi dokumen</small>
+                        </div>
                     
                     <div class="mb-3">
                         <label for="kategori" class="form-label">Kategori</label>
                         <select class="form-select" id="kategori" name="kategori">
-                            <option value="Umum" <?= ($edit_data && $edit_data['kategori'] == 'Umum') ? 'selected' : '' ?>>Penelitian</option>
-                            <option value="Laporan" <?= ($edit_data && $edit_data['kategori'] == 'Laporan') ? 'selected' : '' ?>>Pengabdian</option>
+                            <option value="Penelitian" <?= ($edit_data && $edit_data['kategori'] == 'Penelitian') ? 'selected' : '' ?>>Penelitian</option>
+                            <option value="Pengabdian" <?= ($edit_data && $edit_data['kategori'] == 'Pengabdian') ? 'selected' : '' ?>>Pengabdian</option>
                         </select>
                     </div>
                     
-                    <div class="mb-3">
-                        <label for="file_pdf" class="form-label">
-                            File PDF 
-                            <?php if (!$edit_data): ?>
-                                <span class="text-danger">*</span>
-                            <?php endif; ?>
-                        </label>
-                        <input type="file" class="form-control" id="file_pdf" name="file_pdf" accept=".pdf" <?= !$edit_data ? 'required' : '' ?>>
-                        <small class="text-muted">Format: PDF | Maksimal: 50MB</small>
-                        
-                        <?php if ($edit_data): ?>
-                            <div class="mt-2 alert alert-info">
-                                <small>
-                                    <i class="fas fa-info-circle me-1"></i>
-                                    File saat ini: <strong><?= htmlspecialchars($edit_data['judul_dokumen']) ?>.pdf</strong> 
-                                    (<?= number_format($edit_data['ukuran_file_mb'], 2) ?> MB)
-                                    <br>Kosongkan jika tidak ingin mengubah file
-                                </small>
-                            </div>
-                        <?php endif; ?>
-                    </div>
+    <div class="mb-3">
+    <label for="file_pdf" class="form-label">
+        File PDF 
+        <?php if (!$edit_data): ?>
+            <span class="text-danger">*</span>
+        <?php endif; ?>
+    </label>
+    <input type="file" class="form-control" id="file_pdf" name="file_pdf" accept=".pdf" <?= !$edit_data ? 'required' : '' ?>>
+    <small class="text-muted" id="file-size-label">Format: PDF | Maksimal: 10MB</small>
+    
+    <?php if ($edit_data): ?>
+        <div class="mt-2 alert alert-info">
+            <small>
+                <i class="fas fa-info-circle me-1"></i>
+                File saat ini: <strong><?= htmlspecialchars($edit_data['judul_dokumen']) ?>.pdf</strong> 
+                (<?= number_format($edit_data['ukuran_file_mb'], 2) ?> MB)
+                <br>Kosongkan jika tidak ingin mengubah file
+            </small>
+        </div>
+    <?php endif; ?>
+</div>
                 </div>
                 <div class="modal-footer">
                     <a href="?page=arsip" class="btn btn-secondary">Batal</a>
@@ -432,5 +449,30 @@ document.querySelectorAll('.btn-delete').forEach(function(btn) {
             window.location.href = this.getAttribute('data-href');
         }
     });
+});
+
+// Validasi ukuran file & tampilkan ukuran real-time
+document.getElementById('file_pdf').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+    const fileLabel = document.getElementById('file-size-label'); 
+    
+    if (file) {
+        const fileSize = file.size;
+        const fileSizeMB = (fileSize / (1024 * 1024)).toFixed(2);
+        
+        // Update label dengan ukuran file
+        fileLabel.innerHTML = `Format: PDF | Maksimal: 10MB | <strong class="text-success">File terpilih: ${fileSizeMB} MB</strong>`;
+        
+        // Validasi ukuran
+        if (fileSize > maxSize) {
+            alert('Ukuran file terlalu besar!\n\nUkuran file: ' + fileSizeMB + ' MB\nMaksimal: 10 MB\n\nSilakan pilih file yang lebih kecil.');
+            e.target.value = ''; // Reset input file
+            fileLabel.innerHTML = 'Format: PDF | Maksimal: 10MB';
+        }
+    } else {
+        // Reset label jika tidak ada file
+        fileLabel.innerHTML = 'Format: PDF | Maksimal: 10MB';
+    }
 });
 </script>

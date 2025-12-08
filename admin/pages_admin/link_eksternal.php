@@ -4,6 +4,8 @@
 // Handle success/error messages
 $success_msg = '';
 $error_msg = '';
+// Ambil ID Admin yang sedang login (Diasumsikan SESSION sudah dimulai)
+$id_admin = isset($_SESSION['id_admin']) ? (int)$_SESSION['id_admin'] : 0;
 
 // Get data for edit
 $edit_data = null;
@@ -17,15 +19,34 @@ if (isset($_GET['edit'])) {
 if (isset($_GET['delete'])) {
     $id_link = (int)$_GET['delete'];
     
-    $delete_result = pg_query_params($conn, "DELETE FROM link_eksternal WHERE id_link = $1", [$id_link]);
-    
-    if ($delete_result) {
-        $success_msg = "Link berhasil dihapus!";
+    // --- LANGKAH 1 (DELETE): Ambil Judul Item untuk Log ---
+    $link_query = pg_query_params($conn, "SELECT nama_link FROM link_eksternal WHERE id_link = $1", [$id_link]);
+    $item_title = 'Link ID ' . $id_link; // Default title
+
+    if ($link_row = pg_fetch_assoc($link_query)) {
+        $item_title = $link_row['nama_link']; // Ambil nama link untuk log
+
+        $delete_result = pg_query_params($conn, "DELETE FROM link_eksternal WHERE id_link = $1", [$id_link]);
+        
+        if ($delete_result) {
+            // --- LANGKAH 2 (DELETE): Catat Log Aktivitas ---
+            $safe_item_title = pg_escape_literal($conn, $item_title);
+            $log_query = "
+                INSERT INTO aktivitas_log (id_admin, item_type, item_title, action)
+                VALUES ($id_admin, 'link', $safe_item_title, 'dihapus')
+            ";
+            pg_query($conn, $log_query);
+            // ------------------------------------------------
+            $success_msg = "Link berhasil dihapus!";
+        } else {
+            $error_msg = "Gagal menghapus link!";
+        }
     } else {
-        $error_msg = "Gagal menghapus link!";
+        $error_msg = "Gagal mengambil data link untuk dihapus!";
     }
     
-    header("Location: ?page=link_eksternal&success=" . urlencode($success_msg));
+    // Perbaikan: Redirect menggunakan success/error message
+    header("Location: ?page=link_eksternal" . (!empty($success_msg) ? "&success=" . urlencode($success_msg) : "") . (!empty($error_msg) ? "&error=" . urlencode($error_msg) : ""));
     exit();
 }
 
@@ -46,11 +67,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($id_link > 0) {
             // Update
             $update_result = pg_query_params($conn, 
-                "UPDATE link_eksternal SET nama_link = $1, uri = $2, kategori = $3, urutan = $4 WHERE id_link = $5",
+                "UPDATE link_eksternal SET nama_link = $1, uri = $2, kategori = $3, urutan = $4, updated_at = NOW() WHERE id_link = $5",
                 [$nama_link, $uri, $kategori, $urutan, $id_link]
             );
             
             if ($update_result) {
+                // --- LOGGING UPDATE ---
+                $safe_item_title = pg_escape_literal($conn, $nama_link);
+                $log_query = "
+                    INSERT INTO aktivitas_log (id_admin, item_type, item_title, action)
+                    VALUES ($id_admin, 'link', $safe_item_title, 'diperbarui')
+                ";
+                pg_query($conn, $log_query);
+                // ----------------------
                 header("Location: ?page=link_eksternal&success=" . urlencode("Link berhasil diperbarui!"));
                 exit();
             } else {
@@ -60,10 +89,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Insert
             $insert_result = pg_query_params($conn, 
                 "INSERT INTO link_eksternal (nama_link, uri, kategori, urutan, created_at) VALUES ($1, $2, $3, $4, NOW())",
-                [$nama_link, $uri, $kategori, $urutan]
+                [$nama_link, $uri, $kategori, $urutan] 
             );
             
             if ($insert_result) {
+                // --- LOGGING INSERT ---
+                $safe_item_title = pg_escape_literal($conn, $nama_link);
+                $log_query = "
+                    INSERT INTO aktivitas_log (id_admin, item_type, item_title, action)
+                    VALUES ($id_admin, 'link', $safe_item_title, 'ditambahkan')
+                ";
+                pg_query($conn, $log_query);
+                // ----------------------
                 header("Location: ?page=link_eksternal&success=" . urlencode("Link berhasil ditambahkan!"));
                 exit();
             } else {
@@ -76,6 +113,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 // Get success message from URL
 if (isset($_GET['success'])) {
     $success_msg = $_GET['success'];
+}
+// Get error message from URL
+if (isset($_GET['error'])) {
+    $error_msg = $_GET['error'];
 }
 
 // Pagination
@@ -108,37 +149,49 @@ if (count($where_conditions) > 0) {
     $where_clause = 'WHERE ' . implode(' AND ', $where_conditions);
 }
 
-// Get total records
-if (count($query_params) > 0) {
-    $count_query_str = "SELECT COUNT(*) as total FROM link_eksternal $where_clause";
-    $count_query_str = str_replace('$param_count', '$' . $param_count, $count_query_str);
-    for ($i = $param_count - 1; $i >= 1; $i--) {
-        $count_query_str = str_replace('$param_count', '$' . $i, $count_query_str);
+// Fungsi pembantu untuk penomoran parameter PostgreSQL
+function apply_pg_params($query_str, $query_params) {
+    if (empty($query_params)) return $query_str;
+    
+    $j = 1;
+    $temp_str = $query_str;
+    // Ganti semua $$param_count secara berurutan dengan $1, $2, ...
+    foreach ($query_params as $param) {
+        $pos = strpos($temp_str, '$$param_count');
+        if ($pos !== false) {
+            $temp_str = substr_replace($temp_str, '$' . $j, $pos, strlen('$$param_count'));
+            $j++;
+        }
     }
-    $count_query = pg_query_params($conn, $count_query_str, $query_params);
+    return $temp_str;
+}
+
+// Get total records
+$count_query_str = "SELECT COUNT(*) as total FROM link_eksternal $where_clause";
+$count_query_str_fixed = apply_pg_params($count_query_str, $query_params);
+
+if (count($query_params) > 0) {
+    $count_query = pg_query_params($conn, $count_query_str_fixed, $query_params);
 } else {
-    $count_query = pg_query($conn, "SELECT COUNT(*) as total FROM link_eksternal");
+    $count_query = pg_query($conn, "SELECT COUNT(*) as total FROM link_eksternal $where_clause");
 }
 $total_records = pg_fetch_assoc($count_query)['total'];
 $total_pages = ceil($total_records / $limit);
 
 // Get data
+$link_query_str = "SELECT * FROM link_eksternal $where_clause ORDER BY urutan ASC, created_at DESC LIMIT $limit OFFSET $offset";
+$link_query_str_fixed = apply_pg_params($link_query_str, $query_params);
+
 if (count($query_params) > 0) {
-    $link_query_str = "SELECT * FROM link_eksternal $where_clause ORDER BY urutan ASC, created_at DESC LIMIT $limit OFFSET $offset";
-    $link_query_str = str_replace('$param_count', '$' . $param_count, $link_query_str);
-    for ($i = $param_count - 1; $i >= 1; $i--) {
-        $link_query_str = str_replace('$param_count', '$' . $i, $link_query_str);
-    }
-    $link_result = pg_query_params($conn, $link_query_str, $query_params);
+    $link_result = pg_query_params($conn, $link_query_str_fixed, $query_params);
 } else {
-    $link_result = pg_query($conn, "SELECT * FROM link_eksternal ORDER BY urutan ASC, created_at DESC LIMIT $limit OFFSET $offset");
+    $link_result = pg_query($conn, "SELECT * FROM link_eksternal $where_clause ORDER BY urutan ASC, created_at DESC LIMIT $limit OFFSET $offset");
 }
 
 // Get kategori for filter
 $kategori_result = pg_query($conn, "SELECT DISTINCT kategori FROM link_eksternal WHERE kategori IS NOT NULL ORDER BY kategori");
 ?>
 
-<!-- Success/Error Messages -->
 <?php if (!empty($success_msg)): ?>
     <div class="alert alert-success alert-dismissible fade show" role="alert">
         <i class="fas fa-check-circle me-2"></i><?= htmlspecialchars($success_msg) ?>
@@ -153,7 +206,6 @@ $kategori_result = pg_query($conn, "SELECT DISTINCT kategori FROM link_eksternal
     </div>
 <?php endif; ?>
 
-<!-- Header -->
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h4 class="mb-1 fw-bold">Link Eksternal</h4>
@@ -164,7 +216,6 @@ $kategori_result = pg_query($conn, "SELECT DISTINCT kategori FROM link_eksternal
     </button>
 </div>
 
-<!-- Search & Filter -->
 <div class="card mb-4" style="border: none; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
     <div class="card-body">
         <form method="GET" action="">
@@ -199,7 +250,6 @@ $kategori_result = pg_query($conn, "SELECT DISTINCT kategori FROM link_eksternal
     </div>
 </div>
 
-<!-- Link Table -->
 <div class="table-responsive">
     <table class="table">
         <thead>
@@ -276,7 +326,6 @@ $kategori_result = pg_query($conn, "SELECT DISTINCT kategori FROM link_eksternal
     </table>
 </div>
 
-<!-- Pagination -->
 <?php if ($total_pages > 1): ?>
     <nav>
         <ul class="pagination justify-content-center">
@@ -303,7 +352,6 @@ $kategori_result = pg_query($conn, "SELECT DISTINCT kategori FROM link_eksternal
     </nav>
 <?php endif; ?>
 
-<!-- Modal Add/Edit -->
 <div class="modal fade" id="modalLink" tabindex="-1" <?= $edit_data ? 'data-bs-show="true"' : '' ?>>
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -348,7 +396,7 @@ $kategori_result = pg_query($conn, "SELECT DISTINCT kategori FROM link_eksternal
                         <div class="col-md-4 mb-3">
                             <label for="urutan" class="form-label">Urutan</label>
                             <input type="number" class="form-control" name="urutan" 
-                                   value="<?= $edit_data ? $edit_data['urutan'] : '0' ?>" min="0">
+                                       value="<?= $edit_data ? $edit_data['urutan'] : '0' ?>" min="0">
                             <small class="text-muted">Urutan tampil</small>
                         </div>
                     </div>
@@ -367,8 +415,13 @@ $kategori_result = pg_query($conn, "SELECT DISTINCT kategori FROM link_eksternal
 <?php if ($edit_data): ?>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        var myModal = new bootstrap.Modal(document.getElementById('modalLink'));
-        myModal.show();
+        if (typeof bootstrap !== 'undefined') {
+            var modalElement = document.getElementById('modalLink');
+            if (!modalElement.classList.contains('show')) {
+                var myModal = new bootstrap.Modal(modalElement);
+                myModal.show();
+            }
+        }
     });
 </script>
 <?php endif; ?>
