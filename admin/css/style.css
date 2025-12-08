@@ -225,6 +225,7 @@ body {
 .activity-dot.orange { background: #f59e0b; }
 .activity-dot.purple { background: #a855f7; }
 .activity-dot.pink { background: #ec4899; }
+.activity-dot.yellow { background: #f4c471; }
 
 .badge-category {
     font-size: 0.75rem;

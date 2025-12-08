@@ -259,7 +259,7 @@ $activities_result = pg_query($conn, $activity_query);
                     case 'produk': $dot_color = 'green'; break;
                     case 'sarana': $dot_color = 'orange'; break;
                     case 'agenda': $dot_color = 'orange'; break;
-                    case 'galeri': $dot_color = 'blue'; break;
+                    case 'galeri': $dot_color = 'yellow'; break;
                     case 'arsip': $dot_color = 'blue'; break;
                     case 'link': $dot_color = 'green'; break;
                 }

@@ -21,6 +21,7 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
     <link href="assets/css/sejarah.css" rel="stylesheet">
     <link href="assets/css/visi-misi.css" rel="stylesheet">
     <link href="assets/css/sarana.css" rel="stylesheet">
+    <link href="assets/css/detail_anggota.css" rel="stylesheet">   
     <style>
         .top-header-bar {
             background-color: #34597E;
@@ -68,7 +69,6 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
 </head>
 
 <body>
-    <!-- Top Header Links Bar (Biru) -->
     <div class="top-header-bar ">
         <div class="container">
             <div class="d-flex justify-content-between align-items-center">
@@ -99,10 +99,8 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
                 </div>
             </div>
         </div>
-
     </div>
 
-    <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top shadow-sm">
         <div class="container">
             <?php
@@ -140,7 +138,7 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
                         <a class="nav-link <?= $page == 'beranda' ? 'active' : '' ?>" href="?page=beranda">Beranda</a>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle <?= in_array($page, ['sejarah', 'visi-misi', 'anggota']) ? 'active' : '' ?>"
+                        <a class="nav-link dropdown-toggle <?= in_array($page, ['sejarah', 'visi-misi', 'anggota', 'detail_anggota']) ? 'active' : '' ?>"
                             href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
                             Profil
                         </a>
@@ -167,7 +165,6 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
         </div>
     </nav>
 
-    <!-- Main Content -->
     <main>
         <?php
         switch ($page) {
@@ -182,6 +179,9 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
                 break;
             case 'anggota':
                 include 'pages/user/anggota.php';
+                break;
+            case 'detail_anggota': // <--- BARIS BARU DITAMBAHKAN
+                include 'pages/user/detail_anggota.php';
                 break;
             case 'sarana':
                 include 'pages/user/sarana.php';
@@ -201,7 +201,6 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
         ?>
     </main>
 
-    <!-- Footer -->
     <footer class="footer">
         <div class="container">
             <div class="row g-4">
