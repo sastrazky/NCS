@@ -1,0 +1,53 @@
+.profile-title {
+    margin: 0;
+    font-size: 1.8rem;
+}
+.sidebar-info {
+    padding: 15px;
+    border-right: 1px solid #eee;
+    height: 100%;
+}
+.profile-photo {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+.sidebar-info h6 {
+    font-size: 0.9rem;
+    color: #495057;
+    margin-bottom: 0;
+    font-weight: bold;
+}
+.sidebar-info p {
+    margin-bottom: 15px;
+    font-size: 1rem;
+}
+.tag-list .badge {
+    padding: 0.5em 0.8em;
+    font-size: 0.9em;
+    border-radius: 15px;
+    background-color: #3498db !important;
+}
+.link-list .btn-outline-primary {
+    border-radius: 20px;
+    border-width: 2px;
+}
+.link-list .btn-outline-primary:hover {
+    background-color: #0d6efd;
+    color: white;
+}
+.card {
+    border: 1px solid #eee;
+}
+
+/* KODE CSS BARU UNTUK MENGHILANGKAN BULLET */
+.detail-no-bullet {
+    list-style-type: none;
+    padding-left: 0;
+}
+/* Memastikan list item tidak memiliki background image/icon */
+.detail-no-bullet li {
+    padding-left: 0; 
+    background-image: none !important;
+}

@@ -24,29 +24,53 @@ $query = pg_query($conn, "SELECT * FROM anggota ORDER BY urutan ASC");
             <?php while ($row = pg_fetch_assoc($query)) : ?>
 
                 <?php
+                $id_anggota = $row['id_anggota']; // Ambil ID Anggota
                 $foto = $row['foto_path'];
                 $file_path = (!empty($foto)) ? "admin/" . $foto : "assets/images/no-image.jpg";
                 if (!file_exists($file_path)) $file_path = "assets/images/no-image.jpg";
                 ?>
 
                 <div class="col-lg-4 col-md-6 col-sm-12 mb-4">
-                    <div class="member-card">
-                        
-                        <div class="image-wrapper">
-                            <img src="<?= htmlspecialchars($file_path) ?>"
-                                alt="Foto Anggota"
-                                class="member-photo">
-                        </div>
+                    <a href="?page=detail_anggota&id=<?= htmlspecialchars($id_anggota) ?>" class="member-card-link">
+                        <div class="member-card">
+                            
+                            <div class="image-wrapper">
+                                <img src="<?= htmlspecialchars($file_path) ?>"
+                                    alt="Foto Anggota"
+                                    class="member-photo">
+                            </div>
 
-                        <div class="card-body text-center">
-                            <h5 class="fw-bold mb-2"><?= htmlspecialchars($row['nama_lengkap']) ?></h5>
-                            <p class="mb-1"><strong>Jabatan:</strong> <?= htmlspecialchars($row['jabatan']) ?></p>
+                            <div class="card-body text-center">
+                                <h5 class="fw-bold mb-2"><?= htmlspecialchars($row['nama_lengkap']) ?></h5>
+                                <p class="mb-1">
+                                    <small class="text-muted d-block">
+                                        <strong>NIP:</strong> <?= htmlspecialchars($row['nip']) ?>
+                                    </small>
+                                    
+                                    <?php if (!empty($row['nidn'])): ?>
+                                    <small class="text-muted d-block">
+                                        <strong>NIDN:</strong> <?= htmlspecialchars($row['nidn']) ?>
+                                    </small>
+                                    <?php endif; ?>
+                                    </p>
+                                <p class="mb-1"><strong>Jabatan:</strong> <?= htmlspecialchars($row['jabatan']) ?></p>
+                            </div>
                         </div>
+                    </a>
                     </div>
-                </div>
 
             <?php endwhile; ?>
 
         </div>
     </div>
 </section>
+
+<style>
+.member-card-link {
+    text-decoration: none; /* Hilangkan garis bawah default tautan */
+    color: inherit; /* Pastikan teks menggunakan warna default */
+    display: block; /* Agar tautan mengisi seluruh kolom */
+    height: 100%;
+}
+
+</style>
