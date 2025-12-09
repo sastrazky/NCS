@@ -303,7 +303,8 @@ if (!empty($search)) {
                                 <a href="?page=arsip&edit=<?= $row['id_arsip'] ?>" class="btn btn-sm btn-edit" title="Edit">
                                      <i class="fas fa-edit"></i>
                                 </a>
-                                <button class="btn btn-sm btn-delete" onclick="confirmDelete('<?= htmlspecialchars(addslashes($row['judul_dokumen'])) ?>', <?= $row['id_arsip'] ?>)" title="Hapus">
+                                <button class="btn btn-sm btn-delete" onclick="return confirm('Apakah Anda yakin ingin menghapus arsip \'<?= htmlspecialchars(addslashes($row['judul_dokumen'])) ?>\'?')" 
+                                        data-href="?page=arsip&delete=<?= $row['id_arsip'] ?>" title="Hapus">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
