@@ -22,50 +22,6 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
     <link href="assets/css/visi-misi.css" rel="stylesheet">
     <link href="assets/css/sarana.css" rel="stylesheet">
     <link href="assets/css/detail_anggota.css" rel="stylesheet">   
-    <style>
-        .top-header-bar {
-            background-color: #34597E;
-            padding: 8px 0;
-            font-size: 0.9rem;
-            border-top: 5px solid #34597E;
-        }
-
-        .top-header-bar a {
-            color: #fff;
-            text-decoration: none;
-            padding: 2px 15px 0 15px;
-            font-weight: 700;
-            transition: color 0.3s, background-color 0.3s;
-        }
-
-        .top-header-bar a:hover {
-            color: #d1ecf1;
-            border-radius: 4px;
-        }
-
-        .top-header-bar .separator {
-            color: #2C3E50;
-            margin: 0 5px;
-        }
-
-        .language-selector {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .language-selector img {
-            width: 20px;
-            height: auto;
-        }
-
-        /* Top Contact Bar - Dark Blue */
-        .top-bar {
-            background-color: #3d5a80;
-            padding: 10px 0;
-            font-size: 0.9rem;
-        }
-    </style>
 </head>
 
 <body>
