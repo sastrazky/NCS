@@ -117,16 +117,16 @@ $count3 = $year_stats[$year3] ?? 0;
 <?php if (pg_num_rows($arsip_query) > 0): ?>
     <div class="table-responsive bg-white rounded shadow-sm">
         <table class="table table-hover mb-0">
-            <thead class="table-light">
-                <tr>
-                    <th style="width: 50px;">No</th>
-                    <th style="width: 40%;">Judul Dokumen</th>
-                    <th style="width: 180px;">Penulis</th>
-                    <th style="width: 120px;">Tanggal</th>
-                    <th style="width: 100px;">Ukuran</th>
-                    <th style="width: 120px;">Aksi</th>
-                </tr>
-            </thead>
+           <thead class="table-light">
+    <tr>
+        <th style="width: 50px;" class="text-center">No</th>
+        <th style="width: 40%;">Judul Dokumen</th>
+        <th style="width: 180px;">Penulis</th>
+        <th style="width: 120px;" class="text-center">Tanggal</th>
+        <th style="width: 100px;" class="text-center">Ukuran</th>
+        <th style="width: 120px;" class="text-center">Aksi</th>
+    </tr>
+</thead>
             <tbody>
                 <?php $no = $offset + 1; ?>
                 <?php while($arsip = pg_fetch_assoc($arsip_query)): ?>
