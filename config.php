@@ -21,4 +21,44 @@ if (!$conn) {
 pg_query($conn, "SET TIMEZONE='Asia/Jakarta'");
 date_default_timezone_set('Asia/Jakarta');
 
+if (isset($_GET['download'])) {
+
+    $id_arsip = (int)$_GET['download'];
+
+    // Ambil data file
+    $q = pg_query_params($conn, "
+        SELECT file_pdf_path, judul_dokumen 
+        FROM arsip 
+        WHERE id_arsip = $1
+    ", [$id_arsip]);
+
+    $data = pg_fetch_assoc($q);
+
+    if ($data) {
+
+        $filepath = $data['file_pdf_path'];
+
+        // Cek apakah file ada
+        if (file_exists($filepath)) {
+
+            // Update jumlah download
+            pg_query_params($conn, "
+                UPDATE arsip 
+                SET jumlah_download = jumlah_download + 1 
+                WHERE id_arsip = $1
+            ", [$id_arsip]);
+
+            // Header download
+            header("Content-Type: application/pdf");
+            header("Content-Disposition: attachment; filename=\"" . $data['judul_dokumen'] . ".pdf\"");
+            header("Content-Length: " . filesize($filepath));
+
+            readfile($filepath);
+            exit;
+        }
+    }
+
+    echo "<script>alert('File tidak ditemukan!'); history.back();</script>";
+    exit;
+}
 ?>

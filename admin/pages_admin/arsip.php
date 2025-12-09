@@ -72,8 +72,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             
             if (!in_array($file_ext, $allowed_ext)) {
                 $error_msg = "Hanya file PDF yang diperbolehkan!";
-            } else if ($file_size > 10 * 1024 * 1024) { // 10MB max
-                $error_msg = "Ukuran file maksimal 10MB!";
+            } else if ($file_size > 5 * 1024 * 1024) { // 5MB max
+                $error_msg = "Ukuran file maksimal 5MB!";
             } else {
                 $new_file_name = 'arsip_' . time() . '_' . uniqid() . '.pdf';
                 $file_pdf_path = $upload_dir . $new_file_name;
@@ -252,24 +252,24 @@ if (!empty($search)) {
 
 <!-- Arsip Table -->
 <div class="table-responsive">
-    <table class="table">
+    <table class="table table-hover align-middle">
         <thead>
-            <tr>
-                <th style="width: 50px;">No</th>
-                <th>Dokumen</th>
-                <th>Kategori</th>
-                <th>Ukuran</th>
-                <th>Download</th>
-                <th>Tanggal</th>
-                <th style="width: 200px;">Aksi</th>
-            </tr>
-        </thead>
+    <tr>
+        <th style="width: 50px;" class="text-center">No</th>
+        <th style="width: 35%;">Dokumen</th>
+        <th style="width: 120px;" class="text-center">Kategori</th>
+        <th style="width: 100px;" class="text-center">Ukuran</th>
+        <th style="width: 100px;" class="text-center">Download</th>
+        <th style="width: 110px;" class="text-center">Tanggal</th>
+        <th style="width: 150px;" class="text-center">Aksi</th>
+    </tr>
+</thead>
         <tbody>
             <?php if (pg_num_rows($arsip_result) > 0): ?>
                 <?php $no = $offset + 1; ?>
                 <?php while($row = pg_fetch_assoc($arsip_result)): ?>
                     <tr>
-                        <td><?= $no++ ?></td>
+                        <td class="text-center"><?= $no++ ?></td>
                         <td>
                             <div class="d-flex align-items-center gap-3">
                                 <div class="file-icon">
@@ -281,30 +281,29 @@ if (!empty($search)) {
                                 </div>
                             </div>
                         </td>
-                        <td>
+                        <td class="text-center">
                             <span class="badge badge-category badge-arsip">
                                 <?= htmlspecialchars($row['kategori'] ?? 'Umum') ?>
                             </span>
                         </td>
-                        <td><?= number_format($row['ukuran_file_mb'], 2) ?> MB</td>
-                        <td>
-                            <span class="badge bg-success">
-                                <i class="fas fa-download me-1"></i><?= number_format($row['jumlah_download']) ?>
-                            </span>
+                       <td class="text-center"><?= number_format($row['ukuran_file_mb'], 2) ?> MB</td>
+<td class="text-center">
+    <span class="badge bg-success" style="min-width: 50px;">
+        <i class="fas fa-download me-1"></i><?= number_format($row['jumlah_download']) ?>
+    </span>
+</td>
+                        <td class="text-center">
+                            <small style="white-space: nowrap;"><?= date('d M Y', strtotime($row['created_at'])) ?></small>
                         </td>
-                        <td>
-                            <small><?= date('d M Y', strtotime($row['created_at'])) ?></small>
-                        </td>
-                        <td>
-                            <div class="btn-group" role="group">
+                        <td class="text-center">
+                            <div class="btn-group btn-group-sm" role="group">
                                 <a href="?page=arsip&download=<?= $row['id_arsip'] ?>" class="btn btn-sm btn-download" title="Download">
-                                    <i class="fas fa-download"></i>
+                                     <i class="fas fa-download"></i>
                                 </a>
                                 <a href="?page=arsip&edit=<?= $row['id_arsip'] ?>" class="btn btn-sm btn-edit" title="Edit">
-                                    <i class="fas fa-edit"></i>
+                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <button class="btn btn-sm btn-delete" onclick="return confirm('Apakah Anda yakin ingin menghapus arsip \'<?= htmlspecialchars(addslashes($row['judul_dokumen'])) ?>\'?')" 
-                                        data-href="?page=arsip&delete=<?= $row['id_arsip'] ?>" title="Hapus">
+                                <button class="btn btn-sm btn-delete" onclick="confirmDelete('<?= htmlspecialchars(addslashes($row['judul_dokumen'])) ?>', <?= $row['id_arsip'] ?>)" title="Hapus">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
@@ -406,7 +405,7 @@ if (!empty($search)) {
         <?php endif; ?>
     </label>
     <input type="file" class="form-control" id="file_pdf" name="file_pdf" accept=".pdf" <?= !$edit_data ? 'required' : '' ?>>
-    <small class="text-muted" id="file-size-label">Format: PDF | Maksimal: 10MB</small>
+    <small class="text-muted" id="file-size-label">Format: PDF | Maksimal: 5MB</small>
     
     <?php if ($edit_data): ?>
         <div class="mt-2 alert alert-info">
@@ -454,7 +453,7 @@ document.querySelectorAll('.btn-delete').forEach(function(btn) {
 // Validasi ukuran file & tampilkan ukuran real-time
 document.getElementById('file_pdf').addEventListener('change', function(e) {
     const file = e.target.files[0];
-    const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
     const fileLabel = document.getElementById('file-size-label'); 
     
     if (file) {
@@ -462,17 +461,17 @@ document.getElementById('file_pdf').addEventListener('change', function(e) {
         const fileSizeMB = (fileSize / (1024 * 1024)).toFixed(2);
         
         // Update label dengan ukuran file
-        fileLabel.innerHTML = `Format: PDF | Maksimal: 10MB | <strong class="text-success">File terpilih: ${fileSizeMB} MB</strong>`;
+        fileLabel.innerHTML = `Format: PDF | Maksimal: 5MB | <strong class="text-success">File terpilih: ${fileSizeMB} MB</strong>`;
         
         // Validasi ukuran
         if (fileSize > maxSize) {
-            alert('Ukuran file terlalu besar!\n\nUkuran file: ' + fileSizeMB + ' MB\nMaksimal: 10 MB\n\nSilakan pilih file yang lebih kecil.');
+            alert('Ukuran file terlalu besar!\n\nUkuran file: ' + fileSizeMB + ' MB\nMaksimal: 5 MB\n\nSilakan pilih file yang lebih kecil.');
             e.target.value = ''; // Reset input file
-            fileLabel.innerHTML = 'Format: PDF | Maksimal: 10MB';
+            fileLabel.innerHTML = 'Format: PDF | Maksimal: 5MB';
         }
     } else {
         // Reset label jika tidak ada file
-        fileLabel.innerHTML = 'Format: PDF | Maksimal: 10MB';
+        fileLabel.innerHTML = 'Format: PDF | Maksimal: 5MB';
     }
 });
 </script>
