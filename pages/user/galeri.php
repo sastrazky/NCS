@@ -4,7 +4,7 @@
 // Filter - default ke Agenda
 $filter_tab = isset($_GET['tab']) ? (string)$_GET['tab'] : 'agenda'; // Tambahkan (string)
 // Pagination
-$limit = 3;
+$limit = 6;
 $page_num = isset($_GET['p']) ? (int)$_GET['p'] : 1;
 $offset = ($page_num - 1) * $limit;
 
@@ -265,8 +265,12 @@ function getAgendaStatus($tanggal_mulai, $tanggal_selesai)
                 <p id="galeriModalDate" class="mb-3 text-muted"></p>
 
                 <h6 class="fw-bold mb-1">Deskripsi:</h6>
-                <p id="galeriModalDescription" class="text-muted"></p>
-            </div>
+
+                <div id="descWrapper" class="desc-scroll">
+                    <p id="galeriModalDescription" class="text-muted"></p>
+                </div>
+
+
             
             <div class="modal-footer border-0 pt-0">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>

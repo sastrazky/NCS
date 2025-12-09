@@ -290,7 +290,7 @@ if (count($query_params) > 0) {
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h4 class="mb-1 fw-bold">Galeri</h4>
+        <h4 class="mb-1 fw-bold">Galeri Kegiatan</h4>
         <small class="text-muted">Kelola foto dan video kegiatan NCS</small>
     </div>
     <button class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#modalGaleri">
@@ -673,7 +673,9 @@ function viewMedia(path, type, title) {
     }
 }
 .galeri-card {
-    transition: all 0.3s;
+    overflow: hidden;        /* WAJIB supaya hover tidak keluar */
+    border-radius: 12px;     /* sama seperti card kedua */
+    transition: all 0.3s ease;
 }
 
 .galeri-card:hover {
