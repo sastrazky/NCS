@@ -131,6 +131,19 @@
     opacity: 1;
 }
 
+.galeri-card {
+    border: 1px solid rgba(0, 0, 0, 0.08);   /* garis tipis */
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    transition: 0.3s ease;
+}
+
+.galeri-card:hover {
+    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+    transform: translateY(-4px);
+}
+
 /* Video Icon Overlay */
 .video-overlay-icon {
     position: absolute;

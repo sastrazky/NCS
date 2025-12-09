@@ -125,7 +125,7 @@ $bulan_indo = [
                     $tgl_selesai = !empty($agenda['tanggal_selesai']) ? new DateTime($agenda['tanggal_selesai']) : null;
                     ?>
                     <div class="col-md-6">
-                        <div class="card-custom">
+                        <div class="card-custom agenda-card">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-start mb-3">
                                     <div class="agenda-date" style="font-size: 0.9rem;">
