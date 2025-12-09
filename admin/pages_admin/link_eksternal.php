@@ -67,8 +67,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($id_link > 0) {
             // Update
             $update_result = pg_query_params($conn, 
-                "UPDATE link_eksternal SET nama_link = $1, uri = $2, kategori = $3, urutan = $4, updated_at = NOW() WHERE id_link = $5",
-                [$nama_link, $uri, $kategori, $urutan, $id_link]
+                "UPDATE link_eksternal SET nama_link = $1, uri = $2, kategori = $3, urutan = $4, id_admin = $5, updated_at = NOW() WHERE id_link = $6",
+                [$nama_link, $uri, $kategori, $urutan, $id_admin, $id_link]
             );
             
             if ($update_result) {
@@ -88,8 +88,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         } else {
             // Insert
             $insert_result = pg_query_params($conn, 
-                "INSERT INTO link_eksternal (nama_link, uri, kategori, urutan, created_at) VALUES ($1, $2, $3, $4, NOW())",
-                [$nama_link, $uri, $kategori, $urutan] 
+                "INSERT INTO link_eksternal (nama_link, uri, kategori, urutan, created_at, id_admin) VALUES ($1, $2, $3, $4, NOW(), $5)",
+                [$nama_link, $uri, $kategori, $urutan, $id_admin] 
             );
             
             if ($insert_result) {
@@ -297,9 +297,6 @@ $kategori_result = pg_query($conn, "SELECT DISTINCT kategori FROM link_eksternal
                         </td>
                         <td>
                             <div class="btn-group" role="group">
-                                <a href="<?= htmlspecialchars($row['uri']) ?>" target="_blank" class="btn btn-sm btn-download" title="Buka Link">
-                                    <i class="fas fa-external-link-alt"></i>
-                                </a>
                                 <a href="?page=link_eksternal&edit=<?= $row['id_link'] ?>" class="btn btn-sm btn-edit" title="Edit">
                                     <i class="fas fa-edit"></i>
                                 </a>

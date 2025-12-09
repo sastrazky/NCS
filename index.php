@@ -151,16 +151,20 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
                         </ul>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link <?= $page == 'sarana' ? 'active' : '' ?>" href="?page=sarana">Fasilitas</a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link <?= $page == 'galeri' ? 'active' : '' ?>" href="?page=galeri">Galeri</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link <?= $page == 'arsip' ? 'active' : '' ?>" href="?page=arsip">Arsip</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link <?= $page == 'produk' ? 'active' : '' ?>" href="?page=produk">Produk & Layanan</a>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle <?= in_array($page, ['sarana', 'produk-layanan']) ? 'active' : '' ?>"
+                            href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            Layanan
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="?page=sarana">Sarana & Prasarana</a></li>
+                            <li><a class="dropdown-item" href="?page=produk">Layanan Konsultatif</a></li>
+                        </ul>
                     </li>
                 </ul>
             </div>
@@ -246,7 +250,7 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
                     </p>
                 </div>
                 <div class="col-md-4">
-                    <h5 class="text-white mb-3">Link Cepat</h5>
+                    <h5 class="text-white mb-3">Tentang Kami</h5>
                     <ul class="list-unstyled">
                         <li><a href="?page=beranda" class="text-light text-decoration-none">Beranda</a></li>
                         <li><a href="?page=sejarah" class="text-light text-decoration-none">Profil</a></li>
