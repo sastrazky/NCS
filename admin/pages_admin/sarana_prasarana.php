@@ -45,7 +45,7 @@ if (isset($_GET['delete'])) {
                 INSERT INTO aktivitas_log (id_admin, item_type, item_title, action)
                 VALUES ($id_admin, 'sarana', $safe_item_title, 'dihapus')
             ";
-            
+
             pg_query($conn, $log_query);
             // ------------------------------------------------
             $success_msg = "Sarana/Prasarana berhasil dihapus!";
@@ -126,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $update_query_fields = "nama_fasilitas = $1, deskripsi = $2, jumlah = $3, gambar_path = $4, updated_at = NOW()";
                     $params = [$nama_fasilitas, $deskripsi, $jumlah, $gambar_path, $id_sarana];
                 }
-                
+
                 // Eksekusi Update
                 $update_result = pg_query_params(
                     $conn,
@@ -143,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     ";
                     pg_query($conn, $log_query);
                     // ----------------------
-                    
+
                     header("Location: ?page=sarana_prasarana&success=" . urlencode("Sarana/Prasarana berhasil diperbarui!"));
                     exit();
                 } else {
@@ -167,7 +167,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     ";
                     pg_query($conn, $log_query);
                     // ----------------------
-                    
+
                     header("Location: ?page=sarana_prasarana&success=" . urlencode("Sarana/Prasarana berhasil ditambahkan!"));
                     exit();
                 } else {
@@ -353,8 +353,8 @@ if (count($query_params) > 0) {
                         <tr>
                             <td colspan="6" class="text-center py-5">
                                 <div class="empty-state">
-                                    <i class="fas fa-warehouse mb-3" style="font-size: 3rem; color: #ddd;"></i>
-                                    <p class="text-muted mb-0">Tidak ada data sarana/prasarana</p>
+                                    <i class="fas fa-warehouse"></i>
+                                    <p>Tidak ada data sarana/prasarana</p>
                                     <?php if (!empty($search)): ?>
                                         <small class="text-muted">Coba ubah kata kunci pencarian</small>
                                     <?php endif; ?>
@@ -425,8 +425,8 @@ if (count($query_params) > 0) {
                         <div class="border rounded p-3 bg-light">
                             <img id="preview-gambar"
                                 src="<?= $edit_data && !empty($edit_data['gambar_path'])
-                                                ? htmlspecialchars($edit_data['gambar_path'])
-                                                : '' ?>"
+                                            ? htmlspecialchars($edit_data['gambar_path'])
+                                            : '' ?>"
                                 class="img-fluid mb-2 <?= $edit_data && !empty($edit_data['gambar_path']) ? '' : 'd-none' ?>"
                                 style="max-height: 200px; object-fit: cover;">
 
@@ -524,7 +524,7 @@ if (count($query_params) > 0) {
             var imageModal = new bootstrap.Modal(document.getElementById('imageModal'));
             imageModal.show();
         } else {
-             alert("Bootstrap JS tidak dimuat. Gambar tidak dapat ditampilkan dalam modal.");
+            alert("Bootstrap JS tidak dimuat. Gambar tidak dapat ditampilkan dalam modal.");
         }
     }
 </script>
@@ -532,20 +532,22 @@ if (count($query_params) > 0) {
 <style>
     .btn-primary-custom {
         color: #fff;
-        background-color: #0d6efd; /* Warna default Bootstrap Primary */
+        background-color: #0d6efd;
+        /* Warna default Bootstrap Primary */
         border-color: #0d6efd;
     }
 
     .btn-primary-custom:hover {
-        background-color: #0b5ed7; 
+        background-color: #0b5ed7;
         border-color: #0a58ca;
     }
-    
+
     .btn-edit {
         color: #0d6efd;
         border: none;
         background: transparent;
     }
+
     .btn-edit:hover {
         color: #0b5ed7;
         background-color: #f1f5f9;
@@ -557,6 +559,7 @@ if (count($query_params) > 0) {
         border: none;
         background: transparent;
     }
+
     .btn-delete:hover {
         color: #bb2d3b;
         background-color: #f1f5f9;
