@@ -250,13 +250,14 @@ if (!empty($search)) {
 <!-- Arsip Table -->
 <div class="table-responsive">
     <table class="table table-hover align-middle">
-        <thead>
+      <thead>
     <tr>
         <th style="width: 50px;" class="text-center">No</th>
-        <th style="width: 35%;">Dokumen</th>
-        <th style="width: 120px;" class="text-center">Kategori</th>
-        <th style="width: 100px;" class="text-center">Ukuran</th>
-        <th style="width: 110px;" class="text-center">Tanggal</th>
+        <th style="width: 30%;">Dokumen</th>
+        <th style="width: 150px;" class="text-center">Penulis</th>
+        <th style="width: 100px;" class="text-center">Kategori</th>
+        <th style="width: 80px;" class="text-center">Ukuran</th>
+        <th style="width: 100px;" class="text-center">Tanggal</th>
         <th style="width: 150px;" class="text-center">Aksi</th>
     </tr>
 </thead>
@@ -265,27 +266,57 @@ if (!empty($search)) {
                 <?php $no = $offset + 1; ?>
                 <?php while($row = pg_fetch_assoc($arsip_result)): ?>
                     <tr>
-                        <td class="text-center"><?= $no++ ?></td>
-                        <td>
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="file-icon">
-                                    <i class="fas fa-file-pdf"></i>
-                                </div>
-                                <div>
-                                    <strong class="d-block"><?= htmlspecialchars($row['judul_dokumen']) ?></strong>
-                                    <small class="text-muted"><?= htmlspecialchars($row['deskripsi'] ?? '-') ?></small>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="text-center">
-                            <span class="badge badge-category badge-arsip">
-                                <?= htmlspecialchars($row['kategori'] ?? 'Umum') ?>
-                            </span>
-                        </td>
-                       <td class="text-center"><?= number_format($row['ukuran_file_mb'], 2) ?> MB</td>
-                        <td class="text-center">
-                            <small style="white-space: nowrap;"><?= date('d M Y', strtotime($row['created_at'])) ?></small>
-                        </td>
+                        <tr>
+    <td class="text-center"><?= $no++ ?></td>
+    <td>
+        <div class="d-flex align-items-center gap-3">
+            <div class="file-icon">
+                <i class="fas fa-file-pdf"></i>
+            </div>
+            <div>
+                <strong class="d-block"><?= htmlspecialchars($row['judul_dokumen']) ?></strong>
+                <small class="text-muted"><?= htmlspecialchars($row['deskripsi'] ?? '-') ?></small>
+            </div>
+        </div>
+    </td>
+   <td class="text-center align-middle" style="vertical-align: middle;">
+    <div style="
+        max-width: 160px;
+        margin: 0 auto;
+        text-align: center;
+        word-wrap: break-word;
+        line-height: 1.6;
+        padding: 8px 4px;">
+        <small class="text-muted" style="font-size: 0.85rem;">
+            <?php 
+            $penulis = $row['penulis'] ?? 'Admin Lab NCS';
+            // Pisahkan berdasarkan enter/newline
+            $penulis_array = array_filter(array_map('trim', explode("\n", $penulis)));
+            
+            // Jika lebih dari 2 nama, tampilkan 2 nama + "dan X lainnya"
+            if (count($penulis_array) > 2) {
+                echo htmlspecialchars($penulis_array[0]) . '<br>';
+                echo htmlspecialchars($penulis_array[1]) . '<br>';
+                echo '<span style="font-style: italic; color: #6c757d;">dan ' . (count($penulis_array) - 2) . ' lainnya</span>';
+            } else {
+                // Tampilkan semua jika 2 atau kurang
+                echo nl2br(htmlspecialchars($penulis));
+            }
+            ?>
+        </small>
+    </div>
+</td>
+    <td class="text-center">
+        <span class="badge badge-category badge-arsip">
+            <?= htmlspecialchars($row['kategori'] ?? 'Umum') ?>
+        </span>
+    </td>
+   <td class="text-center"><?= sprintf('%.2f', (float)$row['ukuran_file_mb']) ?> MB</td>
+    <td class="text-center">
+        <small style="white-space: nowrap;">
+            <?= !empty($row['tanggal']) ? date('d M Y', strtotime($row['tanggal'])) : date('d M Y', strtotime($row['created_at'])) ?>
+        </small>
+    </td>
                         <td class="text-center">
                             <div class="btn-group btn-group-sm" role="group">
                                 <a href="?page=arsip&download=<?= $row['id_arsip'] ?>" class="btn btn-sm btn-download" title="Download">
@@ -317,30 +348,77 @@ if (!empty($search)) {
 </div>
 
 <!-- Pagination -->
-<?php if ($total_pages > 1): ?>
-    <nav>
-        <ul class="pagination justify-content-center">
-            <li class="page-item <?= $page_num <= 1 ? 'disabled' : '' ?>">
-                <a class="page-link" href="?page=arsip&p=<?= $page_num - 1 ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>">
-                    <i class="fas fa-chevron-left"></i>
-                </a>
-            </li>
-            
-            <?php for($i = 1; $i <= $total_pages; $i++): ?>
-                <li class="page-item <?= $i == $page_num ? 'active' : '' ?>">
-                    <a class="page-link" href="?page=arsip&p=<?= $i ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>">
-                        <?= $i ?>
+<?php if ($total_pages > 0): ?>
+    <div class="d-flex justify-content-center align-items-center mt-4">
+        <nav>
+            <ul class="pagination mb-0">
+                <!-- Previous Button -->
+                <li class="page-item <?= $page_num <= 1 ? 'disabled' : '' ?>">
+                    <a class="page-link" href="?page=arsip&p=<?= $page_num - 1 ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>" 
+                       style="border-radius: 8px 0 0 8px; border-right: none;">
+                        <i class="fas fa-chevron-left"></i>
                     </a>
                 </li>
-            <?php endfor; ?>
-            
-            <li class="page-item <?= $page_num >= $total_pages ? 'disabled' : '' ?>">
-                <a class="page-link" href="?page=arsip&p=<?= $page_num + 1 ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>">
-                    <i class="fas fa-chevron-right"></i>
-                </a>
-            </li>
-        </ul>
-    </nav>
+                
+                <?php
+                // Pagination logic - show max 5 pages
+                $start_page = max(1, $page_num - 2);
+                $end_page = min($total_pages, $page_num + 2);
+                
+                // Adjust if at beginning
+                if ($page_num <= 3) {
+                    $end_page = min(5, $total_pages);
+                }
+                
+                // Adjust if at end
+                if ($page_num > $total_pages - 3) {
+                    $start_page = max(1, $total_pages - 4);
+                }
+                
+                // First page
+                if ($start_page > 1): ?>
+                    <li class="page-item">
+                        <a class="page-link" href="?page=arsip&p=1<?= !empty($search) ? '&search=' . urlencode($search) : '' ?>">1</a>
+                    </li>
+                    <?php if ($start_page > 2): ?>
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                    <?php endif; ?>
+                <?php endif; ?>
+                
+                <!-- Page Numbers -->
+                <?php for($i = $start_page; $i <= $end_page; $i++): ?>
+                    <li class="page-item <?= $i == $page_num ? 'active' : '' ?>">
+                        <a class="page-link" href="?page=arsip&p=<?= $i ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>" 
+                           style="<?= $i == $page_num ? 'background-color: #2563eb; border-color: #2563eb; color: white;' : '' ?>">
+                            <?= $i ?>
+                        </a>
+                    </li>
+                <?php endfor; ?>
+                
+                <!-- Last page -->
+                <?php if ($end_page < $total_pages): ?>
+                    <?php if ($end_page < $total_pages - 1): ?>
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                    <?php endif; ?>
+                    <li class="page-item">
+                        <a class="page-link" href="?page=arsip&p=<?= $total_pages ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>"><?= $total_pages ?></a>
+                    </li>
+                <?php endif; ?>
+                
+                <!-- Next Button -->
+                <li class="page-item <?= $page_num >= $total_pages ? 'disabled' : '' ?>">
+                    <a class="page-link" href="?page=arsip&p=<?= $page_num + 1 ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>" 
+                       style="border-radius: 0 8px 8px 0; border-left: none;">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
 <?php endif; ?>
 
 <!-- Modal Add/Edit -->
@@ -368,10 +446,13 @@ if (!empty($search)) {
 
                     <div class="mb-3">
                         <label for="penulis" class="form-label">Penulis <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="penulis" name="penulis" 
-                                value="<?= $edit_data ? htmlspecialchars($edit_data['penulis']) : '' ?>" 
-                                placeholder="Contoh: Dr. Ahmad Syahputra, M.Kom" required>
-                        <small class="text-muted">Nama penulis atau peneliti</small>
+                    <textarea class="form-control" id="penulis" name="penulis" rows="4" maxlength="200"
+                        placeholder="Contoh:&#10;Dr. Ahmad Syahputra, M.Kom&#10;Dr. Budi Santoso, M.T" 
+                        required><?= $edit_data ? htmlspecialchars($edit_data['penulis']) : '' ?></textarea>
+                        <small class="text-muted">Maksimal 200 karakter</small>
+                        <span id="char-count">0</span>/200 karakter
+                        <span id="char-warning" class="text-danger fw-bold" style="display: none;"> - Maksimal 200 karakter tercapai!</span>
+                    </small>
                     </div>
 
                     <div class="mb-3">
@@ -404,7 +485,7 @@ if (!empty($search)) {
             <small>
                 <i class="fas fa-info-circle me-1"></i>
                 File saat ini: <strong><?= htmlspecialchars($edit_data['judul_dokumen']) ?>.pdf</strong> 
-                (<?= number_format($edit_data['ukuran_file_mb'], 2) ?> MB)
+               (<?= sprintf('%.2f', (float)$edit_data['ukuran_file_mb']) ?> MB)
                 <br>Kosongkan jika tidak ingin mengubah file
             </small>
         </div>
@@ -466,4 +547,30 @@ document.getElementById('file_pdf').addEventListener('change', function(e) {
         fileLabel.innerHTML = 'Format: PDF | Maksimal: 5MB';
     }
 });
+
+// Counter karakter penulis dengan peringatan
+const penulisTextarea = document.getElementById('penulis');
+const charCount = document.getElementById('char-count');
+const charWarning = document.getElementById('char-warning');
+
+function updateCharCount() {
+    const currentLength = penulisTextarea.value.length;
+    charCount.textContent = currentLength;
+    
+    // Tampilkan warning jika sudah mencapai 200 karakter
+    if (currentLength >= 200) {
+        charWarning.style.display = 'inline';
+        penulisTextarea.classList.add('is-invalid');
+    } else {
+        charWarning.style.display = 'none';
+        penulisTextarea.classList.remove('is-invalid');
+    }
+}
+
+// Update counter saat halaman dimuat (untuk mode edit)
+updateCharCount();
+
+// Update counter saat mengetik
+penulisTextarea.addEventListener('input', updateCharCount);
+penulisTextarea.addEventListener('keyup', updateCharCount);
 </script>
