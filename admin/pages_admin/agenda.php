@@ -56,30 +56,32 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $deskripsi = trim($_POST['deskripsi']);
     $lokasi = trim($_POST['lokasi']);
     $tanggal_mulai = $_POST['tanggal_mulai'];
-    $tanggal_selesai = $_POST['tanggal_selesai'];
-    // $id_admin sudah didefinisikan di atas
+    $tanggal_selesai = !empty($_POST['tanggal_selesai']) ? $_POST['tanggal_selesai'] : null;
 
-// Validation
-$today = date("Y-m-d");
+    // Validation
+    $today = date("Y-m-d");
 
-if (empty($judul_agenda) || empty($tanggal_mulai)) {
-    $error_msg = "Judul agenda dan tanggal mulai harus diisi!";
+    if (empty($judul_agenda) || empty($tanggal_mulai)) {
+        $error_msg = "Judul agenda dan tanggal mulai harus diisi!";
 
-} else if ($tanggal_mulai < $today) {
-    $error_msg = "Agenda gagal ditambahkan. Tanggal tidak valid!";
+    } else if ($tanggal_mulai < $today) {
+        $error_msg = "Agenda gagal ditambahkan. Tanggal tidak valid!";
 
-} else if (!empty($tanggal_selesai) && $tanggal_selesai < $tanggal_mulai) {
-    $error_msg = "Tanggal selesai tidak boleh lebih awal dari tanggal mulai!";
+    } else if (!empty($tanggal_selesai) && $tanggal_selesai < $tanggal_mulai) {
+        $error_msg = "Tanggal selesai tidak boleh lebih awal dari tanggal mulai!";
 
-} else if (!empty($tanggal_selesai) && $tanggal_selesai < $today) {
-    $error_msg = "Agenda gagal ditambahkan. Tanggal tidak valid!";
+    } else if (!empty($tanggal_selesai) && $tanggal_selesai < $today) {
+        $error_msg = "Agenda gagal ditambahkan. Tanggal tidak valid!";
 
-} else {
-
+    } else {
+        // update
         if ($id_agenda > 0) {
-            // Update
-            $update_result = pg_query_params($conn, 
-                "UPDATE agenda SET judul_agenda = $1, deskripsi = $2, lokasi = $3, tanggal_mulai = $4, tanggal_selesai = $5, updated_at = NOW() WHERE id_agenda = $6",
+            $update_result = pg_query_params($conn,
+                "UPDATE agenda 
+                SET judul_agenda=$1, deskripsi=$2, lokasi=$3, 
+                    tanggal_mulai = $4, 
+                    tanggal_selesai = $5 
+                WHERE id_agenda=$6",
                 [$judul_agenda, $deskripsi, $lokasi, $tanggal_mulai, $tanggal_selesai, $id_agenda]
             );
             
@@ -158,15 +160,16 @@ $param_count = 0;
 
 if (!empty($search)) {
     $param_count++;
-    $where_conditions[] = "(judul_agenda ILIKE $$param_count OR lokasi ILIKE $$param_count)";
+    $where_conditions[] = "(judul_agenda ILIKE $" . $param_count . " OR lokasi ILIKE $" . $param_count . ")";
     $query_params[] = '%' . $search . '%';
 }
 
 if (!empty($filter_bulan)) {
     $param_count++;
-    $where_conditions[] = "EXTRACT(MONTH FROM tanggal_mulai) = $$param_count";
+    $where_conditions[] = "EXTRACT(MONTH FROM tanggal_mulai) = $" . $param_count;
     $query_params[] = $filter_bulan;
 }
+
 
 if (!empty($filter_status)) {
     if ($filter_status == 'akan_datang') {
