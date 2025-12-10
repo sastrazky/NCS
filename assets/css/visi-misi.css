@@ -35,7 +35,7 @@
     margin: 2.5rem auto;
     width: 100%;
     max-width: 900px;
-    border-left: 5px solid var(--primary-color); 
+    border-top: 5px solid var(--primary-color); 
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     animation: fadeUp 0.6s ease forwards;
     opacity: 0;

@@ -154,7 +154,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 // QUERY INSERT
                 $insert_result = pg_query_params(
                     $conn,
-                    "INSERT INTO sarana_prasarana (nama_fasilitas, deskripsi, jumlah, gambar_path, id_admin, created_at) VALUES ($1, $2, $3, $4, $5, NOW())",
+                    "INSERT INTO sarana_prasarana (nama_fasilitas, deskripsi, jumlah, gambar_path, id_admin) VALUES ($1, $2, $3, $4, $5)",
                     [$nama_fasilitas, $deskripsi, $jumlah, $gambar_path, $id_admin]
                 );
 
