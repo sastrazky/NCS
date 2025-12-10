@@ -13,7 +13,6 @@ $galeri_query = pg_query($conn, "SELECT * FROM galeri ORDER BY created_at DESC L
 //  stats
 $stats = [
     'anggota' => pg_fetch_assoc(pg_query($conn, "SELECT COUNT(*) as total FROM anggota"))['total'],
-    'layanan' => pg_fetch_assoc(pg_query($conn, "SELECT COUNT(*) as total FROM layanan"))['total'],
     'sarana' => pg_fetch_assoc(pg_query($conn, "SELECT COUNT(*) as total FROM sarana_prasarana"))['total'],
     'arsip' => pg_fetch_assoc(pg_query($conn, "SELECT COUNT(*) as total FROM arsip"))['total']
 ];
@@ -49,10 +48,10 @@ function getAgendaStatus($tanggal_mulai, $tanggal_selesai)
 
 <section class="stats-section section">
     <div class="container">
-        <div class="row g-4">
-            <div class="col-md-3">
-                <div class="stat-item">
-                    <div class="stat-icon">
+        <div class="row g-4 justify-content-center">
+            <div class="col-md-4 col-lg-3">
+                <div class="stat-item text-center">
+                    <div class="stat-icon mx-auto">
                         <i class="fas fa-users"></i>
                     </div>
                     <div class="stat-number"><?= number_format($stats['anggota']) ?></div>
@@ -60,19 +59,9 @@ function getAgendaStatus($tanggal_mulai, $tanggal_selesai)
                 </div>
             </div>
 
-            <div class="col-md-3">
-                <div class="stat-item">
-                    <div class="stat-icon">
-                        <i class="fas fa-box"></i>
-                    </div>
-                    <div class="stat-number"><?= number_format($stats['layanan']) ?></div>
-                    <div class="stat-label">Layanan</div>
-                </div>
-            </div>
-
-            <div class="col-md-3">
-                <div class="stat-item">
-                    <div class="stat-icon">
+            <div class="col-md-4 col-lg-3">
+                <div class="stat-item text-center">
+                    <div class="stat-icon mx-auto">
                         <i class="fas fa-warehouse"></i>
                     </div>
                     <div class="stat-number"><?= number_format($stats['sarana']) ?></div>
@@ -80,9 +69,9 @@ function getAgendaStatus($tanggal_mulai, $tanggal_selesai)
                 </div>
             </div>
 
-            <div class="col-md-3">
-                <div class="stat-item">
-                    <div class="stat-icon">
+            <div class="col-md-4 col-lg-3">
+                <div class="stat-item text-center">
+                    <div class="stat-icon mx-auto">
                         <i class="fas fa-file-pdf"></i>
                     </div>
                     <div class="stat-number"><?= number_format($stats['arsip']) ?></div>
