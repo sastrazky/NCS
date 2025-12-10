@@ -436,7 +436,12 @@ if (!empty($search)) {
                     <div class="mb-3">
                         <label for="judul_dokumen" class="form-label">Judul Dokumen <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="judul_dokumen" name="judul_dokumen" 
-                               value="<?= $edit_data ? htmlspecialchars($edit_data['judul_dokumen']) : '' ?>" required>
+                               value="<?= $edit_data ? htmlspecialchars($edit_data['judul_dokumen']) : '' ?>" 
+                               maxlength="150" required>
+                        <small class="text-muted">
+                            <span id="judul-char-count">0</span>/150 karakter
+                            <span id="judul-char-warning" class="text-danger fw-bold" style="display: none;"> - Maksimal 150 karakter tercapai!</span>
+                        </small>
                     </div>
                     
                     <div class="mb-3">
@@ -548,7 +553,33 @@ document.getElementById('file_pdf').addEventListener('change', function(e) {
     }
 });
 
-// Counter karakter penulis dengan peringatan
+// Counter karakter JUDUL DOKUMEN dengan peringatan
+const judulInput = document.getElementById('judul_dokumen');
+const judulCharCount = document.getElementById('judul-char-count');
+const judulCharWarning = document.getElementById('judul-char-warning');
+
+function updateJudulCharCount() {
+    const currentLength = judulInput.value.length;
+    judulCharCount.textContent = currentLength;
+    
+    // Tampilkan warning jika sudah mencapai 150 karakter
+    if (currentLength >= 150) {
+        judulCharWarning.style.display = 'inline';
+        judulInput.classList.add('is-invalid');
+    } else {
+        judulCharWarning.style.display = 'none';
+        judulInput.classList.remove('is-invalid');
+    }
+}
+
+// Update counter saat halaman dimuat (untuk mode edit)
+updateJudulCharCount();
+
+// Update counter saat mengetik
+judulInput.addEventListener('input', updateJudulCharCount);
+judulInput.addEventListener('keyup', updateJudulCharCount);
+
+// Counter karakter PENULIS dengan peringatan
 const penulisTextarea = document.getElementById('penulis');
 const charCount = document.getElementById('char-count');
 const charWarning = document.getElementById('char-warning');
