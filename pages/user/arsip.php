@@ -85,7 +85,7 @@ $count3 = $year_stats[$year3] ?? 0;
 ?>
 
 <!-- Page Header -->
-<section class="page-header">
+<section class="page-header-arsip">
     <div class="container">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
@@ -99,7 +99,7 @@ $count3 = $year_stats[$year3] ?? 0;
 </section>
 
 <!-- Content -->
-<section class="section">
+<section class="section-arsip">
     <div class="container">
         <!-- Filter Tabs -->
         <div class="text-center mb-5">

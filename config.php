@@ -3,7 +3,7 @@ $host = "localhost";
 $port = "5432";
 $dbname = "db_ncs";
 $user = "postgres";
-$pass = "241005";
+$pass = "123";
 
 try {
     $pdo = new PDO("pgsql:host=$host;port=$port;dbname=$dbname", $user, $pass);
