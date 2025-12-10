@@ -19,9 +19,9 @@ $stats['profil'] = pg_fetch_assoc($profil_result)['total'];
 $anggota_result = pg_query($conn, "SELECT COUNT(*) as total FROM anggota");
 $stats['anggota'] = pg_fetch_assoc($anggota_result)['total'];
 
-// Total Produk & Layanan
-$produk_result = pg_query($conn, "SELECT COUNT(*) as total FROM produk_layanan");
-$stats['produk'] = pg_fetch_assoc($produk_result)['total'];
+// Total Layanan
+$layanan_result = pg_query($conn, "SELECT COUNT(*) as total FROM layanan");
+$stats['layanan'] = pg_fetch_assoc($layanan_result)['total'];
 
 // Total Sarana Prasarana
 $sarana_result = pg_query($conn, "SELECT COUNT(*) as total FROM sarana_prasarana");
@@ -105,10 +105,10 @@ $activities_result = pg_query($conn, $activity_query);
         <div class="stat-card">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
-                    <p class="text-muted mb-1" style="font-size: 0.85rem;">Produk & Layanan</p>
-                    <h3 class="mb-0 fw-bold"><?= number_format($stats['produk']) ?></h3>
+                    <p class="text-muted mb-1" style="font-size: 0.85rem;">Layanan</p>
+                    <h3 class="mb-0 fw-bold"><?= number_format($stats['layanan']) ?></h3>
                     <small class="text-success">
-                        <i class="fas fa-box"></i> Produk
+                        <i class="fas fa-box"></i> Layanan
                     </small>
                 </div>
                 <div class="stat-icon green">
@@ -224,7 +224,7 @@ $activities_result = pg_query($conn, $activity_query);
                 switch($activity['type']) {
                     case 'profil': $dot_color = 'blue'; break;
                     case 'anggota': $dot_color = 'purple'; break;
-                    case 'produk': $dot_color = 'green'; break; 
+                    case 'layanan': $dot_color = 'green'; break; 
                     case 'sarana': $dot_color = 'orange'; break;
                     case 'agenda': $dot_color = 'pink'; break;
                     case 'galeri': $dot_color = 'yellow'; break;

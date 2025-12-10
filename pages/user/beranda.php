@@ -7,19 +7,20 @@ $profil = pg_fetch_assoc($profil_query);
 // Get latest agenda
 $agenda_query = pg_query($conn, "SELECT * FROM agenda WHERE tanggal_mulai >= CURRENT_DATE ORDER BY tanggal_mulai ASC LIMIT 3");
 
-// Get latest galeri
-$galeri_query = pg_query($conn, "SELECT * FROM galeri ORDER BY created_at DESC LIMIT 6");
+// Get latest galeri (diubah LIMIT menjadi 4 sesuai permintaan tampilan, meskipun query asli mengambil 6.
+// Jika ingin query asli tetap 6, Anda harus menghitung 4 di loop PHP)
+// Mengubah Query untuk mengambil 4 data terbaru
+$galeri_query = pg_query($conn, "SELECT * FROM galeri ORDER BY created_at DESC LIMIT 4");
 
 // Get stats
 $stats = [
     'anggota' => pg_fetch_assoc(pg_query($conn, "SELECT COUNT(*) as total FROM anggota"))['total'],
-    'produk' => pg_fetch_assoc(pg_query($conn, "SELECT COUNT(*) as total FROM produk_layanan"))['total'],
+    'layanan' => pg_fetch_assoc(pg_query($conn, "SELECT COUNT(*) as total FROM layanan"))['total'],
     'sarana' => pg_fetch_assoc(pg_query($conn, "SELECT COUNT(*) as total FROM sarana_prasarana"))['total'],
     'arsip' => pg_fetch_assoc(pg_query($conn, "SELECT COUNT(*) as total FROM arsip"))['total']
 ];
 ?>
 
-<!-- Hero Section -->
 <section class="hero">
     <div class="container hero-content">
         <div class="row align-items-center">
@@ -27,9 +28,6 @@ $stats = [
                 <h1><?= htmlspecialchars($profil['nama_profil'] ?? "Lab Network and Cyber Security") ?></h1>
                 <p><?= nl2br(htmlspecialchars($profil['deskripsi_singkat'] ?? "Teknologi Informasi Polinema")) ?></p>
                 <div class="mt-4">
-                <!--    <a href="?page=contact" class="btn btn-outline-primary">
-                        Hubungi Kami <i class="fas fa-envelope ms-2"></i>
-                    </a> -->
                 </div>
             </div>
         </div>
@@ -38,7 +36,6 @@ $stats = [
 
 
 
-<!-- Stats Section -->
 <section class="stats-section section">
     <div class="container">
         <div class="row g-4">
@@ -57,8 +54,8 @@ $stats = [
                     <div class="stat-icon">
                         <i class="fas fa-box"></i>
                     </div>
-                    <div class="stat-number"><?= number_format($stats['produk']) ?></div>
-                    <div class="stat-label">Produk & Layanan</div>
+                    <div class="stat-number"><?= number_format($stats['layanan']) ?></div>
+                    <div class="stat-label">Layanan</div>
                 </div>
             </div>
 
@@ -85,7 +82,6 @@ $stats = [
     </div>
 </section>
 
-<!-- About Section -->
 <?php if ($profil): ?>
     <section class="section">
         <div class="container">
@@ -98,8 +94,8 @@ $stats = [
                 <div class="col-lg-6 mb-4 mb-lg-0">
                     <div class="about-image-container">
                         <img src="assets/image/LABNCS.jpg" 
-                             alt="Lab NCS"
-                             class="img-fluid">
+                            alt="Lab NCS"
+                            class="img-fluid">
                     </div>
                 </div>
 
@@ -120,7 +116,6 @@ $stats = [
     </section>
 <?php endif; ?>
 
-<!-- Agenda Section -->
 <section class="section bg-light">
     <div class="container">
         <div class="section-title">
@@ -170,7 +165,7 @@ $stats = [
         </div>
 
         <div class="text-center mt-4">
-            <a href="?page=galeri" class="btn btn-primary">
+            <a href="?page=agenda" class="btn btn-primary">
                 Lihat Semua Agenda <i class="fas fa-arrow-right ms-2"></i>
             </a>
         </div>
@@ -178,8 +173,7 @@ $stats = [
     </div>
 </section>
 
-<!-- Kegiatan / galeri -->
-<section class="section">
+<section class="section-galeri">
     <div class="container">
         <div class="section-title">
             <h2>Galeri Kegiatan</h2>
@@ -190,26 +184,49 @@ $stats = [
             <?php if (pg_num_rows($galeri_query) > 0): ?>
                 <?php while ($galeri = pg_fetch_assoc($galeri_query)): ?>
                     <?php
+                    // Path media asli dari database
                     $original_media = !empty($galeri['media_path']) ? $galeri['media_path'] : '';
-                    $media_path = $original_media ? "admin/" . $original_media : "assets/images/no-image.jpg";
-                    if (!file_exists($media_path)) {
-                        $media_path = "assets/images/no-image.jpg";
+                    
+                    // Path yang digunakan untuk tampilan (default ke no-image.jpg jika media_path kosong atau file tidak ada)
+                    $media_path_display = $original_media ? "admin/" . $original_media : "assets/images/no-image.jpg";
+                    if ($original_media && !file_exists($media_path_display)) {
+                        $media_path_display = "assets/images/no-image.jpg";
+                    }
+
+                    // Tentukan link yang akan diklik (bisa ke modal atau langsung ke file)
+                    $media_link = $original_media ? "admin/" . $original_media : "#";
+
+                    // Tentukan ikon/teks jika media tidak ditemukan atau bukan foto
+                    $icon_class = 'fas fa-image'; // Default icon
+                    $media_is_photo = ($galeri['tipe_media'] === 'Foto' && !empty($original_media) && file_exists($media_path_display));
+                    
+                    if ($galeri['tipe_media'] === 'Video') {
+                        $icon_class = 'fas fa-video'; 
                     }
                     ?>
 
-                    <div class="col-md-4">
+                    <div class="col-md-3 col-sm-6">
                         <div class="gallery-item">
+                            <a href="<?= htmlspecialchars($media_link) ?>" 
+                                title="<?= htmlspecialchars($galeri['judul']) ?>" 
+                                target="_blank" 
+                                class="d-block"> 
 
-                            <?php if ($galeri['tipe_media'] === 'Foto' && !empty($galeri['media_path'])): ?>
-                                <img src="<?= htmlspecialchars($media_path) ?>"
-                                    alt="<?= htmlspecialchars($galeri['judul']) ?>">
+                                <?php if ($media_is_photo): ?>
+                                    <img src="<?= htmlspecialchars($media_path_display) ?>"
+                                        alt="<?= htmlspecialchars($galeri['judul']) ?>"
+                                        class="img-fluid" style="object-fit: cover; width: 100%; height: 200px;"> 
 
-                            <?php else: ?>
-                                <div class="bg-secondary d-flex align-items-center justify-content-center" style="height: 100%;">
-                                    <i class="fas fa-image text-white" style="font-size: 3rem;"></i>
-                                </div>
-                            <?php endif; ?>
-
+                                <?php else: ?>
+                                    <div class="bg-secondary d-flex align-items-center justify-content-center" style="height: 200px; width: 100%;">
+                                        <i class="<?= $icon_class ?> text-white" style="font-size: 3rem;"></i>
+                                    </div>
+                                <?php endif; ?>
+                            </a>
+                            <div class="p-2">
+                                <h5 class="mb-0 text-truncate"><?= htmlspecialchars($galeri['judul']) ?></h5>
+                                <small class="text-muted"><?= htmlspecialchars($galeri['tipe_media']) ?></small>
+                            </div>
                         </div>
                     </div>
                 <?php endwhile; ?>

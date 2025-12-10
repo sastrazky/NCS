@@ -281,8 +281,25 @@ function getAgendaStatus($tanggal_mulai, $tanggal_selesai)
 
 
 <script>
+    // Fungsi MODAL LAMA (Hanya Media Besar) - Dijaga untuk kompatibilitas
+    function viewMedia(path, type, title) {
+        document.getElementById('viewMediaTitle').textContent = title;
+        const body = document.getElementById('viewMediaBody');
+
+        if (type === 'Foto') {
+            body.innerHTML = `<img src="${path}" class="img-fluid shadow-lg rounded" style="max-height: 85vh;">`;
+        } else if (type === 'Video') {
+            body.innerHTML = `
+            <video controls autoplay class="shadow-lg rounded" style="max-height: 85vh; max-width: 100%;">
+                <source src="${path}" type="video/mp4">
+                Browser kamu ga support video 😢
+            </video>`;
+        }
+        const myModal = new bootstrap.Modal(document.getElementById('modalViewMedia'));
+        myModal.show();
+    }
     
-    // Fungsi MODAL BARU (Detail Card)
+    // Fungsi MODAL BARU (Detail Card, sesuai permintaan)
     function showGaleriDetail(judul, deskripsi, tanggal, mediaPath, tipeMedia) {
         // Update Modal content
         document.getElementById('galeriModalTitle').textContent = judul;
@@ -300,7 +317,7 @@ function getAgendaStatus($tanggal_mulai, $tanggal_selesai)
             viewer.innerHTML = `
                 <video controls style="width: 100%; height: 100%; object-fit: cover;">
                     <source src="${mediaPath}" type="video/mp4">
-                    Browser kamu tidak support video
+                    Browser kamu ga support video 😢
                 </video>
             `;
         } else {

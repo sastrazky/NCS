@@ -109,7 +109,7 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
                     </li>
                     <li class="nav-item">
                         <a class="nav-link <?= $page == 'arsip' ? 'active' : '' ?>" href="?page=arsip">Arsip</a>
-                    </li>
+                    </li>   
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle <?= in_array($page, ['sarana', 'produk-layanan']) ? 'active' : '' ?>"
                             href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
@@ -117,7 +117,7 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
                         </a>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="?page=sarana">Sarana & Prasarana</a></li>
-                            <li><a class="dropdown-item" href="?page=produk">Layanan Konsultatif</a></li>
+                            <li><a class="dropdown-item" href="?page=layanan">Layanan Konsultatif</a></li>
                         </ul>
                     </li>
                 </ul>
@@ -140,7 +140,7 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
             case 'anggota':
                 include 'pages/user/anggota.php';
                 break;
-            case 'detail_anggota': // <--- BARIS BARU DITAMBAHKAN
+            case 'detail_anggota': 
                 include 'pages/user/detail_anggota.php';
                 break;
             case 'sarana':
@@ -152,8 +152,8 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
             case 'arsip':
                 include 'pages/user/arsip.php';
                 break;
-            case 'produk':
-                include 'pages/user/produk-layanan.php';
+            case 'layanan':
+                include 'pages/user/layanan.php';
                 break;
             default:
                 include 'pages/user/beranda.php';

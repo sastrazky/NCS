@@ -65,9 +65,9 @@ if ($id_admin > 0 && isset($conn)) {
                 <i class="fas fa-users"></i>
                 <span>Anggota</span>
             </a>
-            <a href="?page=produk_layanan" class="<?= $page == 'produk_layanan' ? 'active' : '' ?>">
+            <a href="?page=layanan" class="<?= $page == 'layanan' ? 'active' : '' ?>">
                 <i class="fas fa-box"></i>
-                <span>Produk & Layanan</span>
+                <span>Layanan</span>
             </a>
             <a href="?page=sarana_prasarana" class="<?= $page == 'sarana_prasarana' ? 'active' : '' ?>">
                 <i class="fas fa-warehouse"></i>
@@ -133,8 +133,8 @@ if ($id_admin > 0 && isset($conn)) {
                 case 'anggota':
                     include 'pages_admin/anggota.php';
                     break;
-                case 'produk_layanan':
-                    include 'pages_admin/produk_layanan.php';
+                case 'layanan':
+                    include("pages_admin/layanan.php");
                     break;
                 case 'sarana_prasarana':
                     include 'pages_admin/sarana_prasarana.php';
