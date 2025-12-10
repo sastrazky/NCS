@@ -71,23 +71,20 @@ $categories = ["Permintaan Layanan", "Pengaduan", "Saran", "Lainnya"];
         <h4 class="mb-1 fw-bold">Daftar Pesan Layanan</h4>
         <small class="text-muted">Kelola pesan dari pengguna.</small>
     </div>
+</div>
+
+<?php if ($success_msg): ?>
+    <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+        <i class="fas fa-check-circle me-2"></i> <?= $success_msg ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
-
-    <?php if ($success_msg): ?>
-        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-            <i class="fas fa-check-circle me-2"></i> <?= $success_msg ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endif; ?>
-    <?php if ($error_msg): ?>
-        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
-            <i class="fas fa-exclamation-circle me-2"></i> <?= $error_msg ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endif; ?>
-
-
-
+<?php endif; ?>
+<?php if ($error_msg): ?>
+    <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i> <?= $error_msg ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
 
 <div class="card mb-4" style="border: none; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
     <div class="card-body">
@@ -128,106 +125,107 @@ $categories = ["Permintaan Layanan", "Pengaduan", "Saran", "Lainnya"];
     </div>
 </div>
 
-    <div class="table-responsive">
-        <table class="table table-hover">
-            <thead>
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th style="width: 30px;">No</th>
+                <th style="width: 120px;">Nama</th>
+                <th style="width: 160px;">Email</th>
+                <th style="width: 100px;">No. HP</th>
+                <th style="width: 180px;">Judul Pesan</th>
+                <th style="width: 100px;">Kategori</th>
+                <th style="width: 180px;">Isi Pesan</th>
+                <th style="width: 80px;">Tanggal</th>
+                <th style="width: 80px;" class="text-center">Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php 
+            $no = 1;
+            if (pg_num_rows($result) > 0):
+                while ($row = pg_fetch_assoc($result)): 
+            ?>
+                <tr data-row-id="<?= $row['id_layanan'] ?>">
+                    <td><?= $no++ ?></td>
+                    
+                    <td>
+                        <span class="fw-semibold text-truncate d-block" title="<?= htmlspecialchars($row['nama_lengkap']) ?>">
+                            <?= htmlspecialchars($row['nama_lengkap']) ?>
+                        </span>
+                    </td>
+
+                    <td>
+                        <small class="text-muted text-truncate d-block" title="<?= htmlspecialchars($row['email']) ?>">
+                            <?= htmlspecialchars($row['email']) ?>
+                        </small>
+                    </td>
+                    
+                    <td>
+                        <?= htmlspecialchars($row['nomor_hp'] ?: '-') ?>
+                    </td>
+                    
+                    <td>
+                        <strong class="text-truncate d-block" style="font-size: 0.85rem;" title="<?= htmlspecialchars($row['judul_pesan']) ?>">
+                            <?php 
+                            $judul = htmlspecialchars($row['judul_pesan']);
+                            echo strlen($judul) > 30 ? substr($judul, 0, 30) . '...' : $judul;
+                            ?>
+                        </strong>
+                    </td>
+                    
+                    <td>
+                        <span class="badge badge-category badge-layanan">
+                            <?= htmlspecialchars($row['kategori'] ?: 'Tidak ada') ?>
+                        </span>
+                    </td>
+                    
+                    <td>
+                        <div class="message-preview-clean" title="<?= htmlspecialchars($row['isi_pesan']) ?>">
+                            <?php 
+                            // Batasi teks menjadi 200 karakter
+                            $preview_text = htmlspecialchars($row['isi_pesan']);
+                            $max_length = 200;
+
+                            if (strlen($preview_text) > $max_length) {
+                                $preview_text = substr($preview_text, 0, $max_length) . '...';
+                            }
+                            echo nl2br($preview_text);
+                            ?>
+                        </div>
+                    </td>
+                    
+                    <td>
+                        <small class="d-block text-muted" style="font-size: 0.75rem; font-weight: 500;">
+                            <?= date('d M Y', strtotime($row['created_at'])) ?>
+                        </small>
+                    </td>
+                    
+                    <td class="text-center">
+                        <a href="?page=layanan&action=delete&id=<?= $row['id_layanan'] ?>" 
+                           class="btn btn-sm btn-danger-custom" 
+                           style="padding: 5px 8px; font-size: 0.75rem; border-radius: 6px;"
+                           onclick="return confirm('❗ Anda yakin ingin MENGHAPUS permanen pesan ini?')"
+                           title="Hapus Pesan">
+                            <i class="fas fa-trash-alt"></i>
+                        </a>
+                    </td>
+                </tr>
+            <?php 
+                endwhile;
+            else:
+            ?>
                 <tr>
-                    <th style="width: 30px;">No</th>
-                    <th style="width: 120px;">Nama</th>
-                    <th style="width: 160px;">Email</th>
-                    <th style="width: 100px;">No. HP</th>
-                    <th style="width: 180px;">Judul Pesan</th>
-                    <th style="width: 100px;">Kategori</th>
-                    <th style="width: 180px;">Isi Pesan</th>
-                    <th style="width: 80px;">Tanggal</th>
-                    <th style="width: 80px;" class="text-center">Aksi</th> </tr>
-            </thead>
-            <tbody>
-                <?php 
-                $no = 1;
-                if (pg_num_rows($result) > 0):
-                    while ($row = pg_fetch_assoc($result)): 
-                ?>
-                    <tr data-row-id="<?= $row['id_layanan'] ?>">
-                        <td><?= $no++ ?></td>
-                        
-                        <td>
-                            <span class="fw-semibold text-truncate d-block" title="<?= htmlspecialchars($row['nama_lengkap']) ?>">
-                                <i class="fas fa-user-circle me-1"></i><?= htmlspecialchars($row['nama_lengkap']) ?>
-                            </span>
-                        </td>
-
-                        <td>
-                            <small class="text-muted text-truncate d-block" title="<?= htmlspecialchars($row['email']) ?>">
-                                <i class="fas fa-envelope me-1"></i><?= htmlspecialchars($row['email']) ?>
-                            </small>
-                        </td>
-                        
-                        <td>
-                            <span class="badge bg-secondary" style="font-size: 0.7rem;">
-                                <?= htmlspecialchars($row['nomor_hp'] ?: '-') ?>
-                            </span>
-                        </td>
-                        
-                        <td>
-                            <strong class="text-truncate d-block" style="font-size: 0.85rem;" title="<?= htmlspecialchars($row['judul_pesan']) ?>">
-                                <?= htmlspecialchars($row['judul_pesan']) ?>
-                            </strong>
-                        </td>
-                        
-                        <td>
-                            <span class="badge badge-category badge-layanan">
-                                <?= htmlspecialchars($row['kategori'] ?: 'Tidak ada') ?>
-                            </span>
-                        </td>
-                        
-                        <td>
-<div class="message-preview-compact" title="<?= htmlspecialchars($row['isi_pesan']) ?>">
-<?php 
-                                    // Batasi teks menjadi 120 karakter
-                                    $preview_text = htmlspecialchars($row['isi_pesan']);
-                                    $max_length = 200;
-
-                                    if (strlen($preview_text) > $max_length) {
-                                        $preview_text = substr($preview_text, 0, $max_length) . '...';
-                                    }
-                                    echo nl2br($preview_text);
- ?>
-</div>
-</td>
-                        
-                        <td>
-                            <small class="d-block text-muted" style="font-size: 0.75rem; font-weight: 500;">
-                                <?= date('d M Y', strtotime($row['created_at'])) ?>
-                            </small>
-                        </td>
-                        
-                        <td class="text-center">
-                            <a href="?page=layanan&action=delete&id=<?= $row['id_layanan'] ?>" 
-                               class="btn btn-sm btn-danger-custom" 
-                               style="padding: 5px 8px; font-size: 0.75rem; border-radius: 6px;"
-                               onclick="return confirm('❗ Anda yakin ingin MENGHAPUS permanen pesan ini?')"
-                               title="Hapus Pesan">
-                                <i class="fas fa-trash-alt"></i>
-                            </a>
-                        </td>
-                    </tr>
-                <?php 
-                    endwhile;
-                else:
-                ?>
-                    <tr>
-                        <td colspan="9">
-                            <div class="empty-state">
-                                <i class="fas fa-inbox"></i>
-                                <p>Belum ada pesan layanan</p>
-                            </div>
-                        </td>
-                    </tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
-    </div>
+                    <td colspan="9">
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>Belum ada pesan layanan</p>
+                        </div>
+                    </td>
+                </tr>
+            <?php endif; ?>
+        </tbody>
+    </table>
 </div>
 
 <style>
@@ -273,21 +271,27 @@ $categories = ["Permintaan Layanan", "Pengaduan", "Saran", "Lainnya"];
 }
 .table-hover tbody tr:hover { background-color: #f8f9fa; }
 
-/* Message Preview */
-.message-preview-compact {
+/* Message Preview - Fixed Layout */
+.message-preview-clean {
     max-height: 70px; 
     overflow-y: auto;
-    padding: 4px 6px;
+    padding: 8px;
     background: #f8f9fa;
     border-radius: 6px;
     font-size: 0.75rem;
     line-height: 1.4;
-    white-space: pre-wrap;
     word-wrap: break-word;
     word-break: break-word;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
 }
-.message-preview-compact::-webkit-scrollbar { width: 4px; }
-.message-preview-compact::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 10px; }
+.message-preview-clean * {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+.message-preview-clean::-webkit-scrollbar { width: 4px; }
+.message-preview-clean::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 10px; }
 
 /* Badge & Empty State */
 .badge-category { padding: 3px 6px; border-radius: 5px; font-size: 0.65rem; }
