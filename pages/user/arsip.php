@@ -120,7 +120,7 @@ $count3 = $year_stats[$year3] ?? 0;
            <thead class="table-light">
             <tr>
                 <th style="width: 50px;" class="text-center">No</th>
-                <th style="width: 40%;">Judul Dokumen</th>
+                <th style="width: 40%;">Dokumen</th>
                 <th style="width: 180px;">Penulis</th>
                 <th style="width: 120px;" class="text-center">Tanggal</th>
                 <th style="width: 100px;" class="text-center">Ukuran</th>

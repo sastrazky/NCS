@@ -52,12 +52,10 @@
     transform: scale(1.05);
 }
 
-/* Body */
 .card-body-sarana {
-    padding: 1.2rem 1.3rem 1.4rem 1.3rem;  /* Bikin lebih lega */
+    padding: 1.2rem 1.3rem 1.4rem 1.3rem;  
 }
 
-/* Title */
 .card-title-sarana {
     font-weight: 700;
     font-size: 1.05rem;
@@ -78,14 +76,12 @@
 
     display: -webkit-box;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3; /* BATAS BARIS */
+    -webkit-line-clamp: 3; 
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 
-
-/* Gambar fasilitas */
 .facility-card-sarana {
     overflow: hidden;
 }

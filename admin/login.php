@@ -103,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <!-- Password -->
         <div class="mb-3 position-relative">
-            <i class="input-icon bi bi-eye-slash"></i>
+            <i class="input-icon bi bi-lock"></i>
             <input type="password" name="password" class="form-control" placeholder="Password" required>
         </div>
 
