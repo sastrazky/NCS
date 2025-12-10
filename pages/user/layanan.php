@@ -124,7 +124,7 @@ if (isset($_GET['success']) && $_GET['success'] == '1') {
                                            style="color: #495057; margin-bottom: 0.5rem; font-size: 0.95rem;">
                                         Nomor HP
                                     </label>
-                                    <input type="text" 
+                                    <input type="number" 
                                            name="nomor_hp" 
                                            id="nomor_hp" 
                                            class="form-control form-control-lg"

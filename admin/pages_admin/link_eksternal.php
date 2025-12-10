@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $id_link = isset($_POST['id_link']) ? (int)$_POST['id_link'] : 0;
     $nama_link = trim($_POST['nama_link']);
     $uri = trim($_POST['uri']);
-    $kategori = $_POST['kategori'];
+    // $kategori = $_POST['kategori']; // Dihapus
     $urutan = (int)$_POST['urutan'];
     
     // Validation
@@ -67,8 +67,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($id_link > 0) {
             // Update
             $update_result = pg_query_params($conn, 
-                "UPDATE link_eksternal SET nama_link = $1, uri = $2, kategori = $3, urutan = $4, id_admin = $5, updated_at = NOW() WHERE id_link = $6",
-                [$nama_link, $uri, $kategori, $urutan, $id_admin, $id_link]
+                "UPDATE link_eksternal SET nama_link = $1, uri = $2, urutan = $3, id_admin = $4, updated_at = NOW() WHERE id_link = $5",
+                [$nama_link, $uri, $urutan, $id_admin, $id_link]
             );
             
             if ($update_result) {
@@ -88,8 +88,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         } else {
             // Insert
             $insert_result = pg_query_params($conn, 
-                "INSERT INTO link_eksternal (nama_link, uri, kategori, urutan, created_at, id_admin) VALUES ($1, $2, $3, $4, NOW(), $5)",
-                [$nama_link, $uri, $kategori, $urutan, $id_admin] 
+                "INSERT INTO link_eksternal (nama_link, uri, urutan, created_at, id_admin) VALUES ($1, $2, $3, NOW(), $4)",
+                [$nama_link, $uri, $urutan, $id_admin] 
             );
             
             if ($insert_result) {
@@ -126,7 +126,7 @@ $offset = ($page_num - 1) * $limit;
 
 // Search & Filter
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
-$filter_kategori = isset($_GET['kategori']) ? trim($_GET['kategori']) : '';
+// $filter_kategori = isset($_GET['kategori']) ? trim($_GET['kategori']) : ''; // Dihapus
 
 $where_conditions = [];
 $query_params = [];
@@ -138,11 +138,11 @@ if (!empty($search)) {
     $query_params[] = '%' . $search . '%';
 }
 
-if (!empty($filter_kategori)) {
-    $param_count++;
-    $where_conditions[] = "kategori = $$param_count";
-    $query_params[] = $filter_kategori;
-}
+// if (!empty($filter_kategori)) { // Dihapus
+//     $param_count++;
+//     $where_conditions[] = "kategori = $$param_count";
+//     $query_params[] = $filter_kategori;
+// }
 
 $where_clause = '';
 if (count($where_conditions) > 0) {
@@ -188,8 +188,8 @@ if (count($query_params) > 0) {
     $link_result = pg_query($conn, "SELECT * FROM link_eksternal $where_clause ORDER BY urutan ASC, created_at DESC LIMIT $limit OFFSET $offset");
 }
 
-// Get kategori for filter
-$kategori_result = pg_query($conn, "SELECT DISTINCT kategori FROM link_eksternal WHERE kategori IS NOT NULL ORDER BY kategori");
+// Get kategori for filter // Dihapus
+// $kategori_result = pg_query($conn, "SELECT DISTINCT kategori FROM link_eksternal WHERE kategori IS NOT NULL ORDER BY kategori");
 ?>
 
 <?php if (!empty($success_msg)): ?>
@@ -221,27 +221,16 @@ $kategori_result = pg_query($conn, "SELECT DISTINCT kategori FROM link_eksternal
         <form method="GET" action="">
             <input type="hidden" name="page" value="link_eksternal">
             <div class="row g-3">
-                <div class="col-md-8">
+                <div class="col-md-10">
                     <input type="text" class="form-control" name="search" placeholder="Cari link..." value="<?= htmlspecialchars($search) ?>">
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-2">
                     <div class="input-group">
-                        <select class="form-select" name="kategori">
-                            <option value="">Semua Kategori</option>
-                            <?php 
-                            pg_result_seek($kategori_result, 0); // Reset pointer
-                            while($kat = pg_fetch_assoc($kategori_result)): 
-                            ?>
-                                <option value="<?= htmlspecialchars($kat['kategori']) ?>" <?= $filter_kategori == $kat['kategori'] ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($kat['kategori']) ?>
-                                </option>
-                            <?php endwhile; ?>
-                        </select>
-                        <button class="btn btn-primary-custom" type="submit">
+                        <button class="btn btn-primary-custom" type="submit" style="border-top-right-radius: 0; border-bottom-right-radius: 0;">
                             <i class="fas fa-search"></i>
                         </button>
-                        <?php if (!empty($search) || !empty($filter_kategori)): ?>
-                            <a href="?page=link_eksternal" class="btn btn-secondary">Reset</a>
+                        <?php if (!empty($search)): // Filter kategori dihapus, hanya cek search ?>
+                            <a href="?page=link_eksternal" class="btn btn-secondary" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">Reset</a>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -257,7 +246,6 @@ $kategori_result = pg_query($conn, "SELECT DISTINCT kategori FROM link_eksternal
                 <th style="width: 50px;">No</th>
                 <th>Nama Link</th>
                 <th>URL</th>
-                <th>Kategori</th>
                 <th style="width: 80px;">Urutan</th>
                 <th style="width: 180px;">Aksi</th>
             </tr>
@@ -283,15 +271,6 @@ $kategori_result = pg_query($conn, "SELECT DISTINCT kategori FROM link_eksternal
                                 </small>
                             </a>
                         </td>
-                        <td>
-                            <?php if (!empty($row['kategori'])): ?>
-                                <span class="badge badge-category badge-link">
-                                    <?= htmlspecialchars($row['kategori']) ?>
-                                </span>
-                            <?php else: ?>
-                                <small class="text-muted">-</small>
-                            <?php endif; ?>
-                        </td>
                         <td class="text-center">
                             <span class="badge bg-secondary"><?= $row['urutan'] ?></span>
                         </td>
@@ -311,8 +290,7 @@ $kategori_result = pg_query($conn, "SELECT DISTINCT kategori FROM link_eksternal
                 <?php endwhile; ?>
             <?php else: ?>
                 <tr>
-                    <td colspan="6">
-                        <div class="empty-state">
+                    <td colspan="5"> <div class="empty-state">
                             <i class="fas fa-link"></i>
                             <p>Tidak ada data link eksternal</p>
                         </div>
@@ -327,21 +305,21 @@ $kategori_result = pg_query($conn, "SELECT DISTINCT kategori FROM link_eksternal
     <nav>
         <ul class="pagination justify-content-center">
             <li class="page-item <?= $page_num <= 1 ? 'disabled' : '' ?>">
-                <a class="page-link" href="?page=link_eksternal&p=<?= $page_num - 1 ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?><?= !empty($filter_kategori) ? '&kategori=' . urlencode($filter_kategori) : '' ?>">
+                <a class="page-link" href="?page=link_eksternal&p=<?= $page_num - 1 ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>">
                     <i class="fas fa-chevron-left"></i>
                 </a>
             </li>
             
             <?php for($i = 1; $i <= $total_pages; $i++): ?>
                 <li class="page-item <?= $i == $page_num ? 'active' : '' ?>">
-                    <a class="page-link" href="?page=link_eksternal&p=<?= $i ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?><?= !empty($filter_kategori) ? '&kategori=' . urlencode($filter_kategori) : '' ?>">
+                    <a class="page-link" href="?page=link_eksternal&p=<?= $i ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>">
                         <?= $i ?>
                     </a>
                 </li>
             <?php endfor; ?>
             
             <li class="page-item <?= $page_num >= $total_pages ? 'disabled' : '' ?>">
-                <a class="page-link" href="?page=link_eksternal&p=<?= $page_num + 1 ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?><?= !empty($filter_kategori) ? '&kategori=' . urlencode($filter_kategori) : '' ?>">
+                <a class="page-link" href="?page=link_eksternal&p=<?= $page_num + 1 ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>">
                     <i class="fas fa-chevron-right"></i>
                 </a>
             </li>
@@ -376,24 +354,10 @@ $kategori_result = pg_query($conn, "SELECT DISTINCT kategori FROM link_eksternal
                     </div>
                     
                     <div class="row">
-                        <div class="col-md-8 mb-3">
-                            <label for="kategori" class="form-label">Kategori</label>
-                            <select class="form-select" name="kategori">
-                                <option value="">Pilih Kategori</option>
-                                <option value="Website Resmi" <?= ($edit_data && $edit_data['kategori'] == 'Website Resmi') ? 'selected' : '' ?>>Website Resmi</option>
-                                <option value="Portal" <?= ($edit_data && $edit_data['kategori'] == 'Portal') ? 'selected' : '' ?>>Portal</option>
-                                <option value="Dokumentasi" <?= ($edit_data && $edit_data['kategori'] == 'Dokumentasi') ? 'selected' : '' ?>>Dokumentasi</option>
-                                <option value="Referensi" <?= ($edit_data && $edit_data['kategori'] == 'Referensi') ? 'selected' : '' ?>>Referensi</option>
-                                <option value="Tools" <?= ($edit_data && $edit_data['kategori'] == 'Tools') ? 'selected' : '' ?>>Tools</option>
-                                <option value="Social Media" <?= ($edit_data && $edit_data['kategori'] == 'Social Media') ? 'selected' : '' ?>>Social Media</option>
-                                <option value="Lainnya" <?= ($edit_data && $edit_data['kategori'] == 'Lainnya') ? 'selected' : '' ?>>Lainnya</option>
-                            </select>
-                        </div>
-                        
                         <div class="col-md-4 mb-3">
                             <label for="urutan" class="form-label">Urutan</label>
                             <input type="number" class="form-control" name="urutan" 
-                                       value="<?= $edit_data ? $edit_data['urutan'] : '0' ?>" min="0">
+                                   value="<?= $edit_data ? $edit_data['urutan'] : '0' ?>" min="0">
                             <small class="text-muted">Urutan tampil</small>
                         </div>
                     </div>

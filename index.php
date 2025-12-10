@@ -21,8 +21,8 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
     <link href="assets/css/sejarah.css" rel="stylesheet">
     <link href="assets/css/visi-misi.css" rel="stylesheet">
     <link href="assets/css/sarana.css" rel="stylesheet">
-    <link href="assets/css/detail_anggota.css" rel="stylesheet"> 
-    <link href="assets/css/arsip.css" rel="stylesheet">  
+    <link href="assets/css/detail_anggota.css" rel="stylesheet">
+    <link href="assets/css/arsip.css" rel="stylesheet">
 </head>
 
 <body>
@@ -31,10 +31,9 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
             <div class="d-flex justify-content-between align-items-center">
                 <div class="header-links">
                     <?php
-                    // Get external links excluding social media
+                    // Get external links
                     $link_query = pg_query($conn, "
-                        SELECT * FROM link_eksternal 
-                        WHERE kategori != 'Social Media' 
+                        SELECT * FROM link_eksternal
                         ORDER BY urutan ASC
                     ");
 
@@ -57,6 +56,7 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
             </div>
         </div>
     </div>
+
     <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top shadow-sm">
         <div class="container">
             <?php
@@ -85,9 +85,11 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
                     <small class="d-block text-muted" style="font-size: 0.7rem;">Network and Cyber Security</small>
                 </span>
             </a>
+
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
+
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
@@ -95,7 +97,7 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
                     </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle <?= in_array($page, ['sejarah', 'visi-misi', 'anggota', 'detail_anggota']) ? 'active' : '' ?>"
-                            href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            href="#" id="navbarDropdownProfil" role="button" data-bs-toggle="dropdown">
                             Profil
                         </a>
                         <ul class="dropdown-menu">
@@ -109,10 +111,10 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
                     </li>
                     <li class="nav-item">
                         <a class="nav-link <?= $page == 'arsip' ? 'active' : '' ?>" href="?page=arsip">Arsip</a>
-                    </li>   
+                    </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle <?= in_array($page, ['sarana', 'produk-layanan']) ? 'active' : '' ?>"
-                            href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                        <a class="nav-link dropdown-toggle <?= in_array($page, ['sarana', 'layanan']) ? 'active' : '' ?>"
+                            href="#" id="navbarDropdownLayanan" role="button" data-bs-toggle="dropdown">
                             Layanan
                         </a>
                         <ul class="dropdown-menu">
@@ -140,7 +142,7 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
             case 'anggota':
                 include 'pages/user/anggota.php';
                 break;
-            case 'detail_anggota': 
+            case 'detail_anggota':
                 include 'pages/user/detail_anggota.php';
                 break;
             case 'sarana':
@@ -165,30 +167,12 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
         <div class="container">
             <div class="row g-4">
                 <div class="col-md-4">
-                    <h5 class="text-white mb-3">Lab Network and Cyber Security</h5>
-                    <p class="text-light">Teknologi Informasi Polinema</p>
-                    <div class="social-links mt-3">
-                        <?php
-                        // Get social media links
-                        $social_query = pg_query($conn, "SELECT * FROM link_eksternal WHERE kategori = 'Social Media' ORDER BY urutan ASC LIMIT 5");
-                        while ($social = pg_fetch_assoc($social_query)):
-                            // Map nama_link to Font Awesome icon names
-                            $icon_map = [
-                                'Facebook' => 'facebook-f',
-                                'Instagram' => 'instagram',
-                                'Twitter' => 'twitter',
-                                'LinkedIn' => 'linkedin-in',
-                                'YouTube' => 'youtube',
-                                'TikTok' => 'tiktok'
-                            ];
-                            $icon = isset($icon_map[$social['nama_link']]) ? $icon_map[$social['nama_link']] : strtolower($social['nama_link']);
-                        ?>
-                            <a href="<?= htmlspecialchars($social['uri']) ?>" target="_blank" class="text-white me-3">
-                                <i class="fab fa-<?= $icon ?>"></i>
-                            </a>
-                        <?php endwhile; ?>
-                    </div>
+                    <h5 class="text-white mb-1">Lab Network and Cyber Security</h5>
+                    <p class="text-light mb-3" style="font-size: 0.9rem;">Teknologi Informasi Polinema</p>
+
+                    <div class="footer-logo"></div>
                 </div>
+
                 <div class="col-md-4">
                     <h5 class="text-white mb-3">Kontak</h5>
                     <p class="text-light mb-2">
@@ -204,17 +188,21 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
                         (0341) 404424
                     </p>
                 </div>
+
                 <div class="col-md-4">
-                    <h5 class="text-white mb-3">Tentang Kami</h5>
+                    <h5 class="text-white mb-3">Nama Anggota Kelompok</h5>
                     <ul class="list-unstyled">
-                        <li><a href="?page=beranda" class="text-light text-decoration-none">Beranda</a></li>
-                        <li><a href="?page=sejarah" class="text-light text-decoration-none">Profil</a></li>
-                        <li><a href="?page=galeri" class="text-light text-decoration-none">Galeri</a></li>
-                        <li><a href="?page=arsip" class="text-light text-decoration-none">Arsip</a></li>
+                        <li>Akhmad Ghozali - 244107060112</li>
+                        <li>Atha Maulidia - 244107060080</li>
+                        <li>M Wildan Wibisono - 244107060118</li>
+                        <li>Mutiara Inayah M. - 244107060041</li>
+                        <li>Sastra Maheva Zaky - 244107060116</li>
                     </ul>
                 </div>
             </div>
+
             <hr class="border-light my-4">
+
             <div class="text-center text-light">
                 <p class="mb-0">© 2025 Lab Network and Cyber Security - Polinema. All rights reserved.</p>
             </div>

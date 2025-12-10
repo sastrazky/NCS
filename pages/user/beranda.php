@@ -1,18 +1,15 @@
 <?php
 
-// Get profil data
+//  profil data
 $profil_query = pg_query($conn, "SELECT * FROM profil LIMIT 1");
 $profil = pg_fetch_assoc($profil_query);
 
-// Get latest agenda
+//  latest agenda
 $agenda_query = pg_query($conn, "SELECT * FROM agenda WHERE tanggal_mulai >= CURRENT_DATE ORDER BY tanggal_mulai ASC LIMIT 3");
 
-// Get latest galeri (diubah LIMIT menjadi 4 sesuai permintaan tampilan, meskipun query asli mengambil 6.
-// Jika ingin query asli tetap 6, Anda harus menghitung 4 di loop PHP)
-// Mengubah Query untuk mengambil 4 data terbaru
 $galeri_query = pg_query($conn, "SELECT * FROM galeri ORDER BY created_at DESC LIMIT 4");
 
-// Get stats
+//  stats
 $stats = [
     'anggota' => pg_fetch_assoc(pg_query($conn, "SELECT COUNT(*) as total FROM anggota"))['total'],
     'layanan' => pg_fetch_assoc(pg_query($conn, "SELECT COUNT(*) as total FROM layanan"))['total'],
@@ -165,7 +162,7 @@ $stats = [
         </div>
 
         <div class="text-center mt-4">
-            <a href="?page=agenda" class="btn btn-primary">
+            <a href="?page=galeri&tab=agenda" class="btn btn-primary">
                 Lihat Semua Agenda <i class="fas fa-arrow-right ms-2"></i>
             </a>
         </div>
