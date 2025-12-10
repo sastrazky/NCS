@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $kategori   = trim($_POST['kategori']);
     $pesan      = trim($_POST['isi_pesan']);
 
-    if (empty($nama) || empty($email) || empty($judul) || empty($pesan)) {
+    if (empty($nama) || empty($email) || empty($hp) || empty($judul) || empty($pesan)) {
         $error_msg = "Harap isi semua field yang wajib.";
     } else {
         $sql = "INSERT INTO layanan 
@@ -122,15 +122,16 @@ if (isset($_GET['success']) && $_GET['success'] == '1') {
                                 <div class="col-md-6">
                                     <label for="nomor_hp" class="form-label fw-semibold" 
                                            style="color: #495057; margin-bottom: 0.5rem; font-size: 0.95rem;">
-                                        Nomor HP
+                                        No. HP <span class="text-danger">*</span>
                                     </label>
-                                    <input type="number" 
+                                    <input type="text" 
                                            name="nomor_hp" 
                                            id="nomor_hp" 
                                            class="form-control form-control-lg"
                                            style="border: 2px solid #e9ecef; border-radius: 10px; padding: 12px 20px; transition: all 0.3s; font-size: 1rem;"
                                            placeholder="081234567890"
-                                           value="<?= htmlspecialchars($hp ?? '') ?>">
+                                           value="<?= htmlspecialchars($hp ?? '') ?>"
+                                           required>
                                 </div>
                                 
                                 <div class="col-md-6">
@@ -160,7 +161,7 @@ if (isset($_GET['success']) && $_GET['success'] == '1') {
                                         class="form-select form-select-lg"
                                         style="border: 2px solid #e9ecef; border-radius: 10px; padding: 12px 20px; transition: all 0.3s; font-size: 1rem;">
                                     <?php
-                                    $categories = ["Permintaan Layanan", "Pengaduan", "Saran", "Lainnya"];
+                                    $categories = ["Laporan Masalah", "Saran & Masukan", "Konsultasi", "Lainnya"];
                                     foreach ($categories as $cat) {
                                         $sel = (isset($kategori) && $kategori === $cat) ? 'selected' : '';
                                         echo "<option value=\"$cat\" $sel>$cat</option>";

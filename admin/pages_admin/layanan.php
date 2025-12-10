@@ -63,7 +63,7 @@ if (count($params) > 0) {
     $result = pg_query($conn, "SELECT * FROM layanan ORDER BY created_at DESC");
 }
 
-$categories = ["Permintaan Layanan", "Pengaduan", "Saran", "Lainnya"];
+$categories = ["Laporan Masalah", "Saran & Masukan", "Konsultasi", "Lainnya"];
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -111,7 +111,7 @@ $categories = ["Permintaan Layanan", "Pengaduan", "Saran", "Lainnya"];
                 <div class="col-md-4">
                     <div> 
                         <select class="form-select" name="kategori" onchange="this.form.submit()">
-                            <option value="semua" <?= $kategori_filter === 'semua' ? 'selected' : '' ?>>▼ Semua Kategori</option>
+                            <option value="semua" <?= $kategori_filter === 'semua' ? 'selected' : '' ?>>Semua Kategori</option>
                             <?php foreach ($categories as $cat): ?>
                                 <option value="<?= $cat ?>" <?= $kategori_filter === $cat ? 'selected' : '' ?>>
                                     <?= htmlspecialchars($cat) ?>
@@ -129,7 +129,7 @@ $categories = ["Permintaan Layanan", "Pengaduan", "Saran", "Lainnya"];
     <table class="table table-hover">
         <thead>
             <tr>
-                <th style="width: 30px;">No</th>
+                <th style="width: 30px;" class="text-center">No</th>
                 <th style="width: 120px;">Nama</th>
                 <th style="width: 160px;">Email</th>
                 <th style="width: 100px;">No. HP</th>
@@ -147,7 +147,7 @@ $categories = ["Permintaan Layanan", "Pengaduan", "Saran", "Lainnya"];
                 while ($row = pg_fetch_assoc($result)): 
             ?>
                 <tr data-row-id="<?= $row['id_layanan'] ?>">
-                    <td><?= $no++ ?></td>
+                    <td class="text-center"><?= $no++ ?></td>
                     
                     <td>
                         <span class="fw-semibold text-truncate d-block" title="<?= htmlspecialchars($row['nama_lengkap']) ?>">
