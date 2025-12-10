@@ -12,8 +12,8 @@ $stats['profil'] = pg_fetch_assoc($profil_result)['total'];
 $anggota_result = pg_query($conn, "SELECT COUNT(*) as total FROM anggota");
 $stats['anggota'] = pg_fetch_assoc($anggota_result)['total'];
 
-// Total Produk & Layanan
-$produk_result = pg_query($conn, "SELECT COUNT(*) as total FROM produk_layanan");
+// Total Layanan
+$produk_result = pg_query($conn, "SELECT COUNT(*) as total FROM layanan");
 $stats['produk'] = pg_fetch_assoc($produk_result)['total'];
 
 // Total Sarana Prasarana
@@ -54,7 +54,7 @@ $activity_query = "
     SELECT 'produk', judul,
            COALESCE(updated_at, created_at),
            CASE WHEN updated_at IS NULL THEN 'ditambahkan' ELSE 'diperbarui' END
-    FROM produk_layanan
+    FROM layanan
 
     UNION ALL
     SELECT 'sarana', nama_fasilitas,

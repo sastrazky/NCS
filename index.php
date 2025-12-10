@@ -160,7 +160,7 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
                         <a class="nav-link <?= $page == 'arsip' ? 'active' : '' ?>" href="?page=arsip">Arsip</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link <?= $page == 'produk' ? 'active' : '' ?>" href="?page=produk">Produk & Layanan</a>
+                        <a class="nav-link <?= $page == 'layanan' ? 'active' : '' ?>" href="?page=layanan">Layanan</a>
                     </li>
                 </ul>
             </div>
@@ -192,8 +192,8 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
             case 'arsip':
                 include 'pages/user/arsip.php';
                 break;
-            case 'produk':
-                include 'pages/user/produk-layanan.php';
+            case 'layanan':
+                include 'pages/user/layanan.php';
                 break;
             default:
                 include 'pages/user/beranda.php';

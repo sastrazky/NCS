@@ -13,7 +13,7 @@ $galeri_query = pg_query($conn, "SELECT * FROM galeri ORDER BY created_at DESC L
 // Get stats
 $stats = [
     'anggota' => pg_fetch_assoc(pg_query($conn, "SELECT COUNT(*) as total FROM anggota"))['total'],
-    'produk' => pg_fetch_assoc(pg_query($conn, "SELECT COUNT(*) as total FROM produk_layanan"))['total'],
+    'layanan' => pg_fetch_assoc(pg_query($conn, "SELECT COUNT(*) as total FROM layanan"))['total'],
     'sarana' => pg_fetch_assoc(pg_query($conn, "SELECT COUNT(*) as total FROM sarana_prasarana"))['total'],
     'arsip' => pg_fetch_assoc(pg_query($conn, "SELECT COUNT(*) as total FROM arsip"))['total']
 ];
@@ -57,8 +57,8 @@ $stats = [
                     <div class="stat-icon">
                         <i class="fas fa-box"></i>
                     </div>
-                    <div class="stat-number"><?= number_format($stats['produk']) ?></div>
-                    <div class="stat-label">Produk & Layanan</div>
+                    <div class="stat-number"><?= number_format($stats['layanan']) ?></div>
+                    <div class="stat-label">Layanan</div>
                 </div>
             </div>
 
