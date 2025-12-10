@@ -3,7 +3,7 @@ $host = "localhost";
 $port = "5432";
 $dbname = "db_ncs";
 $user = "postgres";
-$pass = "12345";
+$pass = "241005";
 
 try {
     $pdo = new PDO("pgsql:host=$host;port=$port;dbname=$dbname", $user, $pass);
@@ -40,13 +40,6 @@ if (isset($_GET['download'])) {
 
         // Cek apakah file ada
         if (file_exists($filepath)) {
-
-            // Update jumlah download
-            pg_query_params($conn, "
-                UPDATE arsip 
-                SET jumlah_download = jumlah_download + 1 
-                WHERE id_arsip = $1
-            ", [$id_arsip]);
 
             // Header download
             header("Content-Type: application/pdf");
