@@ -27,7 +27,7 @@ if (isset($_GET['success'])) {
 }
 
 // Pagination
-$limit = 15;
+$limit = 5;
 $page_num = isset($_GET['p']) ? (int)$_GET['p'] : 1;
 $offset = ($page_num - 1) * $limit;
 
