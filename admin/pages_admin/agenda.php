@@ -274,33 +274,29 @@ $bulan_indo = [
         <form method="GET" action="">
             <input type="hidden" name="page" value="agenda">
             <div class="row g-3">
-                <div class="col-md-5">
-                    <input type="text" class="form-control" name="search" placeholder="Cari agenda..." value="<?= htmlspecialchars($search) ?>">
-                </div>
-                <div class="col-md-3">
-                    <select class="form-select" name="bulan">
-                        <option value="">Semua Bulan</option>
-                        <?php foreach($bulan_indo as $num => $nama): ?>
-                            <option value="<?= $num ?>" <?= $filter_bulan == $num ? 'selected' : '' ?>><?= $nama ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <div class="input-group">
-                        <select class="form-select" name="status">
-                            <option value="">Semua Status</option>
-                            <option value="akan_datang" <?= $filter_status == 'akan_datang' ? 'selected' : '' ?>>Akan Datang</option>
-                            <option value="berlangsung" <?= $filter_status == 'berlangsung' ? 'selected' : '' ?>>Sedang Berlangsung</option>
-                        </select>
-                        <button class="btn btn-primary-custom" type="submit">
-                            <i class="fas fa-search"></i>
-                        </button>
-                        <?php if (!empty($search) || !empty($filter_bulan) || !empty($filter_status)): ?>
-                            <a href="?page=agenda" class="btn btn-secondary">Reset</a>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
+    <div class="col-md-9">
+        <input type="text" class="form-control" name="search" placeholder="Cari agenda..." value="<?= htmlspecialchars($search) ?>">
+    </div>
+
+    <div class="col-md-3">
+        <div class="input-group">
+            <select class="form-select" name="status">
+                <option value="">Semua Status</option>
+                <option value="akan_datang" <?= $filter_status == 'akan_datang' ? 'selected' : '' ?>>Akan Datang</option>
+                <option value="berlangsung" <?= $filter_status == 'berlangsung' ? 'selected' : '' ?>>Sedang Berlangsung</option>
+            </select>
+
+            <button class="btn btn-primary-custom" type="submit">
+                <i class="fas fa-search"></i>
+            </button>
+
+            <?php if (!empty($search) || !empty($filter_status)): ?>
+                <a href="?page=agenda" class="btn btn-secondary">Reset</a>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
+
         </form>
     </div>
 </div>
