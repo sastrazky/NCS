@@ -353,4 +353,46 @@ function getAgendaStatus($tanggal_mulai, $tanggal_selesai)
         const myModal = new bootstrap.Modal(document.getElementById('modalGaleriDetail'));
         myModal.show();
     }
+
+// STOP VIDEO DI MODAL VIEWMEDIA
+function stopVideoModalView() {
+    const body = document.getElementById('viewMediaBody');
+    const vid = body.querySelector('video');
+
+    if (vid) {
+        vid.pause();
+        vid.currentTime = 0;
+        vid.src = "";
+        body.innerHTML = ""; // hapus elemen video agar audio tidak nyangkut
+    }
+}
+
+// tombol close diklik
+document.querySelector('#modalViewMedia .btn-close')
+    .addEventListener('click', stopVideoModalView);
+
+// ketika modal ditutup (backdrop atau close button)
+document.getElementById('modalViewMedia')
+    .addEventListener('hidden.bs.modal', stopVideoModalView);
+
+// STOP VIDEO DI MODAL GALERI DETAIL
+function stopVideoGaleriDetail() {
+    const viewer = document.getElementById('galeriMediaViewer');
+    const vid = viewer.querySelector('video');
+
+    if (vid) {
+        vid.pause();
+        vid.currentTime = 0;
+        vid.src = "";
+        viewer.innerHTML = ""; // hapus video supaya audio hilang total
+    }
+}
+
+// tombol close diklik
+document.querySelector('#modalGaleriDetail .btn-close')
+    .addEventListener('click', stopVideoGaleriDetail);
+
+// ketika modal ditutup (backdrop)
+document.getElementById('modalGaleriDetail')
+    .addEventListener('hidden.bs.modal', stopVideoGaleriDetail);
 </script>

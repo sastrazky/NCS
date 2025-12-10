@@ -582,6 +582,29 @@ function viewMedia(path, type, title) {
     
     var modal = new bootstrap.Modal(document.getElementById('modalViewMedia'));
     modal.show();
+
+    function stopVideoModal() {
+    const modal = document.getElementById('modalViewMedia');
+    const body = document.getElementById('viewMediaBody');
+
+    // Cari video di dalam modal
+    const vid = body.querySelector('video');
+
+    if (vid) {
+        vid.pause();          // stop
+        vid.currentTime = 0;   // reset
+        vid.src = "";          // buang source
+        body.innerHTML = "";   // hapus element video
+    }
+}
+
+// Listener untuk tombol close
+document.querySelector('#modalViewMedia .btn-close')
+    .addEventListener('click', stopVideoModal);
+
+// Listener untuk backdrop atau close dari Bootstrap
+document.getElementById('modalViewMedia')
+    .addEventListener('hidden.bs.modal', stopVideoModal);
 }
 </script>
 

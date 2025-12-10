@@ -287,12 +287,14 @@ body {
 }
 
 .btn-primary-custom {
-    background: var(--primary-color);
+    background: #3b82f6;
+    color: #fff;
+    padding: 10px 18px;      /* bikin ukuran sama */
+    font-weight: 600;
+    border-radius: 10px;     /* samakan border radius */
     border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    color: white;
-    font-weight: 500;
+    box-shadow: 0 2px 6px rgba(59,130,246,0.25);
+    transition: 0.2s ease-in-out;
 }
 
 .btn-primary-custom:hover {
