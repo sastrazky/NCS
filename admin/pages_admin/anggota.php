@@ -519,7 +519,7 @@ if (!empty($search)) {
                                     <div class="mb-3">
                                         <label for="jabatan" class="form-label">Jabatan</label>
                                         <select name="jabatan" class="form-control" style="max-height: 120px; overflow-y: auto;">
-                                            <option value="">-- Pilih Jabatan --</option>
+                                            <option value="" disabled selected>Pilih jabatan</option>
                                             <option value="Peneliti" <?php if ($edit_data && $edit_data['jabatan'] == 'Peneliti') echo 'selected'; ?>>Peneliti</option>
                                             <option value="Ketua Lab" <?php if ($edit_data && $edit_data['jabatan'] == 'Ketua Lab') echo 'selected'; ?>>Ketua Lab</option>
                                             </select>
