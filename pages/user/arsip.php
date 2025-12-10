@@ -19,11 +19,10 @@ if (!empty($filter_kategori)) {
         'Penelitian' => ['Penelitian'],
         'Pengabdian' => ['Pengabdian']
     ];
-    
-    if (isset($kategori_map[$filter_kategori])) {
-       $where_clause = "WHERE kategori = $1";
-        $query_params[] = $filter_kategori;
 
+    if (isset($kategori_map[$filter_kategori])) {
+        $where_clause = "WHERE kategori = $1";
+        $query_params[] = $filter_kategori;
     }
 }
 
@@ -85,7 +84,7 @@ $count3 = $year_stats[$year3] ?? 0;
 ?>
 
 <!-- Page Header -->
-<section class="page-header">
+<section class="page-header-arsip">
     <div class="container">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
@@ -99,7 +98,7 @@ $count3 = $year_stats[$year3] ?? 0;
 </section>
 
 <!-- Content -->
-<section class="section">
+<section class="section-arsip">
     <div class="container">
         <!-- Filter Tabs -->
         <div class="text-center mb-5">
@@ -114,29 +113,29 @@ $count3 = $year_stats[$year3] ?? 0;
         </div>
 
         <!-- Table -->
-<?php if (pg_num_rows($arsip_query) > 0): ?>
-    <div class="table-responsive bg-white rounded shadow-sm">
-        <table class="table table-hover mb-0">
-           <thead class="table-light">
-    <tr>
-        <th style="width: 50px;" class="text-center">No</th>
-        <th style="width: 40%;">Judul Dokumen</th>
-        <th style="width: 180px;">Penulis</th>
-        <th style="width: 120px;" class="text-center">Tanggal</th>
-        <th style="width: 100px;" class="text-center">Ukuran</th>
-        <th style="width: 120px;" class="text-center">Aksi</th>
-    </tr>
-</thead>
-            <tbody>
-                <?php $no = $offset + 1; ?>
-                <?php while($arsip = pg_fetch_assoc($arsip_query)): ?>
-                    <tr>
-                        <td class="text-center"><?= $no++ ?></td>
-                        <td>
-                            <div class="d-flex align-items-start">
-                                <i class="fas fa-file-pdf text-danger me-3 mt-1" style="font-size: 1.5rem; flex-shrink: 0;"></i>
-                                <div style="min-width: 0; flex: 1;">
-                                    <strong class="d-block" style="
+        <?php if (pg_num_rows($arsip_query) > 0): ?>
+            <div class="table-responsive bg-white rounded shadow-sm">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 50px;" class="text-center">No</th>
+                            <th style="width: 40%;">Judul Dokumen</th>
+                            <th style="width: 180px;">Penulis</th>
+                            <th style="width: 120px;" class="text-center">Tanggal</th>
+                            <th style="width: 100px;" class="text-center">Ukuran</th>
+                            <th style="width: 120px;" class="text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php $no = $offset + 1; ?>
+                        <?php while ($arsip = pg_fetch_assoc($arsip_query)): ?>
+                            <tr>
+                                <td class="text-center"><?= $no++ ?></td>
+                                <td>
+                                    <div class="d-flex align-items-start">
+                                        <i class="fas fa-file-pdf text-danger me-3 mt-1" style="font-size: 1.5rem; flex-shrink: 0;"></i>
+                                        <div style="min-width: 0; flex: 1;">
+                                            <strong class="d-block" style="
                                         overflow: hidden;
                                         text-overflow: ellipsis;
                                         display: -webkit-box;
@@ -145,22 +144,22 @@ $count3 = $year_stats[$year3] ?? 0;
                                         line-height: 1.4;
                                         word-break: break-word;
                                     "><?= htmlspecialchars($arsip['judul_dokumen']) ?></strong>
-                                    <?php if (!empty($arsip['deskripsi'])): ?>
-                                        <small class="text-muted" style="
+                                            <?php if (!empty($arsip['deskripsi'])): ?>
+                                                <small class="text-muted" style="
                                             overflow: hidden;
                                             text-overflow: ellipsis;
                                             display: -webkit-box;
                                             -webkit-line-clamp: 1;
                                             -webkit-box-orient: vertical;
                                         ">
-                                            <?= htmlspecialchars($arsip['deskripsi']) ?>
-                                        </small>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <small class="text-muted" style="
+                                                    <?= htmlspecialchars($arsip['deskripsi']) ?>
+                                                </small>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <small class="text-muted" style="
                                 overflow: hidden;
                                 text-overflow: ellipsis;
                                 display: -webkit-box;
@@ -168,32 +167,31 @@ $count3 = $year_stats[$year3] ?? 0;
                                 -webkit-box-orient: vertical;
                                 word-break: break-word;
                             ">
-                                <?= htmlspecialchars($arsip['penulis'] ?? 'Admin Lab NCS') ?>
-                            </small>
-                        </td>
-                        <td class="text-center">
-                            <span class="badge bg-secondary" style="white-space: nowrap;">
-                               <?= !empty($arsip['tanggal']) ? date('d-m-Y', strtotime($arsip['tanggal'])) : date('d-m-Y', strtotime($arsip['created_at'])) ?>
-                            </span>
-                        </td>
-                        <td class="text-center">
-                            <small class="text-muted" style="white-space: nowrap;">
-                                <?= number_format($arsip['ukuran_file_mb'], 1) ?> MB
-                            </small>
-                        </td>
-                        <td class="text-center">
-                        <a href="/NCS/admin/pages_admin/download.php?id=<?= $arsip['id_arsip'] ?>" 
-   class="btn btn-sm btn-primary">
-   <i class="fas fa-download me-1"></i> Download
-</a>
+                                        <?= htmlspecialchars($arsip['penulis'] ?? 'Admin Lab NCS') ?>
+                                    </small>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-secondary" style="white-space: nowrap;">
+                                        <?= !empty($arsip['tanggal']) ? date('d-m-Y', strtotime($arsip['tanggal'])) : date('d-m-Y', strtotime($arsip['created_at'])) ?>
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <small class="text-muted" style="white-space: nowrap;">
+                                        <?= number_format($arsip['ukuran_file_mb'], 1) ?> MB
+                                    </small>
+                                </td>
+                                <td class="text-center">
 
-
-                    </td>
-                    </tr>
-                <?php endwhile; ?>
-            </tbody>
-        </table>
-    </div>
+                                    <a href="/NCS/admin/pages_admin/download.php?id=<?= $arsip['id_arsip'] ?>"
+                                        class="btn btn-sm btn-primary">
+                                        <i class="fas fa-download me-1"></i> Download
+                                    </a>
+                                </td>
+                            </tr>
+                        <?php endwhile; ?>
+                    </tbody>
+                </table>
+            </div>
 
             <!-- Pagination -->
             <?php if ($total_pages > 1): ?>
@@ -204,15 +202,15 @@ $count3 = $year_stats[$year3] ?? 0;
                                 <i class="fas fa-chevron-left"></i>
                             </a>
                         </li>
-                        
-                        <?php for($i = 1; $i <= $total_pages; $i++): ?>
+
+                        <?php for ($i = 1; $i <= $total_pages; $i++): ?>
                             <li class="page-item <?= $i == $page_num ? 'active' : '' ?>">
                                 <a class="page-link" href="?page=arsip&kategori=<?= $filter_kategori ?>&p=<?= $i ?>">
                                     <?= $i ?>
                                 </a>
                             </li>
                         <?php endfor; ?>
-                        
+
                         <li class="page-item <?= $page_num >= $total_pages ? 'disabled' : '' ?>">
                             <a class="page-link" href="?page=arsip&kategori=<?= $filter_kategori ?>&p=<?= $page_num + 1 ?>">
                                 <i class="fas fa-chevron-right"></i>
@@ -230,43 +228,43 @@ $count3 = $year_stats[$year3] ?? 0;
         <?php endif; ?>
 
         <!-- Statistics Cards -->
-<div class="row g-4 mt-5">
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body text-center">
-                <h5 class="text-muted mb-2">Total Dokumen</h5>
-                <h2 class="fw-bold text-primary mb-0"><?= $total_docs ?></h2>
-                <small class="text-muted">Semua Kategori</small>
+        <div class="row g-4 mt-5">
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <h5 class="text-muted mb-2">Total Dokumen</h5>
+                        <h2 class="fw-bold text-primary mb-0"><?= $total_docs ?></h2>
+                        <small class="text-muted">Semua Kategori</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <h5 class="text-muted mb-2">Publikasi <?= $year1 ?></h5>
+                        <h2 class="fw-bold text-primary mb-0"><?= $count1 ?></h2>
+                        <small class="text-muted">Dokumen</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <h5 class="text-muted mb-2">Publikasi <?= $year2 ?></h5>
+                        <h2 class="fw-bold text-primary mb-0"><?= $count2 ?></h2>
+                        <small class="text-muted">Dokumen</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <h5 class="text-muted mb-2">Publikasi <?= $year3 ?></h5>
+                        <h2 class="fw-bold text-primary mb-0"><?= $count3 ?></h2>
+                        <small class="text-muted">Dokumen</small>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body text-center">
-                <h5 class="text-muted mb-2">Publikasi <?= $year1 ?></h5>
-                <h2 class="fw-bold text-primary mb-0"><?= $count1 ?></h2>
-                <small class="text-muted">Dokumen</small>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body text-center">
-                <h5 class="text-muted mb-2">Publikasi <?= $year2 ?></h5>
-                <h2 class="fw-bold text-primary mb-0"><?= $count2 ?></h2>
-                <small class="text-muted">Dokumen</small>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body text-center">
-                <h5 class="text-muted mb-2">Publikasi <?= $year3 ?></h5>
-                <h2 class="fw-bold text-primary mb-0"><?= $count3 ?></h2>
-                <small class="text-muted">Dokumen</small>
-            </div>
-        </div>
-    </div>
-    </div>
     </div>
 </section>

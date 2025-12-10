@@ -21,7 +21,8 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
     <link href="assets/css/sejarah.css" rel="stylesheet">
     <link href="assets/css/visi-misi.css" rel="stylesheet">
     <link href="assets/css/sarana.css" rel="stylesheet">
-    <link href="assets/css/detail_anggota.css" rel="stylesheet">   
+    <link href="assets/css/detail_anggota.css" rel="stylesheet"> 
+    <link href="assets/css/arsip.css" rel="stylesheet">  
 </head>
 
 <body>
@@ -56,7 +57,6 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
             </div>
         </div>
     </div>
-
     <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top shadow-sm">
         <div class="container">
             <?php

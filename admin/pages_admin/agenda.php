@@ -59,12 +59,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $tanggal_selesai = $_POST['tanggal_selesai'];
     // $id_admin sudah didefinisikan di atas
 
-    // Validation
-    if (empty($judul_agenda) || empty($tanggal_mulai)) {
-        $error_msg = "Judul agenda dan tanggal mulai harus diisi!";
-    } else if (!empty($tanggal_selesai) && $tanggal_selesai < $tanggal_mulai) {
-        $error_msg = "Tanggal selesai tidak boleh lebih awal dari tanggal mulai!";
-    } else {
+// Validation
+$today = date("Y-m-d");
+
+if (empty($judul_agenda) || empty($tanggal_mulai)) {
+    $error_msg = "Judul agenda dan tanggal mulai harus diisi!";
+
+} else if ($tanggal_mulai < $today) {
+    $error_msg = "Agenda gagal ditambahkan. Tanggal tidak valid!";
+
+} else if (!empty($tanggal_selesai) && $tanggal_selesai < $tanggal_mulai) {
+    $error_msg = "Tanggal selesai tidak boleh lebih awal dari tanggal mulai!";
+
+} else if (!empty($tanggal_selesai) && $tanggal_selesai < $today) {
+    $error_msg = "Agenda gagal ditambahkan. Tanggal tidak valid!";
+
+} else {
+
         if ($id_agenda > 0) {
             // Update
             $update_result = pg_query_params($conn, 
@@ -122,8 +133,17 @@ if (isset($_GET['error'])) {
     $error_msg = $_GET['error'];
 }
 
+// AUTO DELETE agenda yang sudah selesai
+$auto_delete = pg_query($conn, "
+    DELETE FROM agenda
+    WHERE 
+        (tanggal_selesai IS NOT NULL AND tanggal_selesai < CURRENT_DATE)
+        OR
+        (tanggal_selesai IS NULL AND tanggal_mulai < CURRENT_DATE)
+");
+
 // Pagination
-$limit = 10;
+$limit = 4;
 $page_num = isset($_GET['p']) ? (int)$_GET['p'] : 1;
 $offset = ($page_num - 1) * $limit;
 
@@ -238,8 +258,8 @@ $bulan_indo = [
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h4 class="mb-1 fw-bold">Agenda Kegiatan</h4>
-        <small class="text-muted">Kelola jadwal agenda dan kegiatan NCS</small>
+        <h4 class="mb-1 fw-bold">Agenda</h4>
+        <small class="text-muted">Kelola jadwal agenda NCS</small>
     </div>
     <button class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#modalAgenda">
         <i class="fas fa-plus me-2"></i>Tambah Agenda
@@ -268,7 +288,6 @@ $bulan_indo = [
                             <option value="">Semua Status</option>
                             <option value="akan_datang" <?= $filter_status == 'akan_datang' ? 'selected' : '' ?>>Akan Datang</option>
                             <option value="berlangsung" <?= $filter_status == 'berlangsung' ? 'selected' : '' ?>>Sedang Berlangsung</option>
-                            <option value="selesai" <?= $filter_status == 'selesai' ? 'selected' : '' ?>>Selesai</option>
                         </select>
                         <button class="btn btn-primary-custom" type="submit">
                             <i class="fas fa-search"></i>

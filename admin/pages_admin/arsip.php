@@ -145,9 +145,6 @@ if (isset($_GET['download'])) {
     
     if ($download_row = pg_fetch_assoc($download_query)) {
         if (file_exists($download_row['file_pdf_path'])) {
-            // Update download count
-            pg_query_params($conn, "UPDATE arsip SET jumlah_download = jumlah_download + 1 WHERE id_arsip = $1", [$id_arsip]);
-            
             // Force download
             header('Content-Type: application/pdf');
             header('Content-Disposition: attachment; filename="' . basename($download_row['judul_dokumen']) . '.pdf"');
@@ -259,7 +256,6 @@ if (!empty($search)) {
         <th style="width: 35%;">Dokumen</th>
         <th style="width: 120px;" class="text-center">Kategori</th>
         <th style="width: 100px;" class="text-center">Ukuran</th>
-        <th style="width: 100px;" class="text-center">Download</th>
         <th style="width: 110px;" class="text-center">Tanggal</th>
         <th style="width: 150px;" class="text-center">Aksi</th>
     </tr>
@@ -287,11 +283,6 @@ if (!empty($search)) {
                             </span>
                         </td>
                        <td class="text-center"><?= number_format($row['ukuran_file_mb'], 2) ?> MB</td>
-<td class="text-center">
-    <span class="badge bg-success" style="min-width: 50px;">
-        <i class="fas fa-download me-1"></i><?= number_format($row['jumlah_download']) ?>
-    </span>
-</td>
                         <td class="text-center">
                             <small style="white-space: nowrap;"><?= date('d M Y', strtotime($row['created_at'])) ?></small>
                         </td>

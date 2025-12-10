@@ -1,0 +1,10 @@
+.page-header-arsip {
+    background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+    color: white;
+    padding: 1rem 0 3rem;
+    text-align: center;
+}
+
+.section-arsip {
+    padding: 4rem 0;
+}

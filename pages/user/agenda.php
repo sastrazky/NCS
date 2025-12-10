@@ -11,25 +11,29 @@ $page_num = isset($_GET['p']) ? (int)$_GET['p'] : 1;
 $offset = ($page_num - 1) * $limit;
 
 // Build query
+// Hanya tampilkan agenda yang sedang berlangsung atau akan datang
 $where_conditions = [];
+$where_conditions[] = "(tanggal_mulai > CURRENT_DATE 
+                        OR 
+                        (tanggal_mulai <= CURRENT_DATE AND (tanggal_selesai IS NULL OR tanggal_selesai >= CURRENT_DATE)))";
+
+// Filter status (jika user memilih)
 if (!empty($filter_status)) {
     if ($filter_status == 'akan_datang') {
         $where_conditions[] = "tanggal_mulai > CURRENT_DATE";
     } else if ($filter_status == 'berlangsung') {
         $where_conditions[] = "tanggal_mulai <= CURRENT_DATE AND (tanggal_selesai IS NULL OR tanggal_selesai >= CURRENT_DATE)";
-    } else if ($filter_status == 'selesai') {
-        $where_conditions[] = "tanggal_selesai < CURRENT_DATE";
     }
+    // STATUS SELESAI HILANGKAN → supaya tidak pernah tampil
 }
 
+// Filter bulan
 if (!empty($filter_bulan)) {
     $where_conditions[] = "EXTRACT(MONTH FROM tanggal_mulai) = $filter_bulan";
 }
 
-$where_clause = '';
-if (count($where_conditions) > 0) {
-    $where_clause = 'WHERE ' . implode(' AND ', $where_conditions);
-}
+$where_clause = 'WHERE ' . implode(' AND ', $where_conditions);
+
 
 // Get total records
 $count_query = pg_query($conn, "SELECT COUNT(*) as total FROM agenda $where_clause");
@@ -121,7 +125,7 @@ $bulan_indo = [
                     $tgl_selesai = !empty($agenda['tanggal_selesai']) ? new DateTime($agenda['tanggal_selesai']) : null;
                     ?>
                     <div class="col-md-6">
-                        <div class="card-custom">
+                        <div class="card-custom agenda-card">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-start mb-3">
                                     <div class="agenda-date" style="font-size: 0.9rem;">

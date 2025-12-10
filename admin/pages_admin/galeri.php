@@ -205,7 +205,7 @@ function str_replace_once($search, $replace, $text) {
 
 
 // Pagination
-$limit = 12;
+$limit = 4;
 $page_num = isset($_GET['p']) ? (int)$_GET['p'] : 1;
 $offset = ($page_num - 1) * $limit;
 
@@ -290,7 +290,7 @@ if (count($query_params) > 0) {
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h4 class="mb-1 fw-bold">Galeri</h4>
+        <h4 class="mb-1 fw-bold">Galeri Kegiatan</h4>
         <small class="text-muted">Kelola foto dan video kegiatan NCS</small>
     </div>
     <button class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#modalGaleri">
@@ -586,8 +586,96 @@ function viewMedia(path, type, title) {
 </script>
 
 <style>
+.pagination {
+    margin-top: 1.5rem;
+    gap: 0.25rem;
+}
+
+.pagination .page-link {
+    color: var(--primary-color);
+    background-color: white;
+    border: 1px solid #e2e8f0;
+    padding: 0.5rem 0.75rem;
+    margin: 0 3px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    min-width: 40px;
+    text-align: center;
+}
+
+.pagination .page-link:hover {
+    background-color: #f1f5f9;
+    border-color: var(--primary-color);
+    color: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
+}
+
+.pagination .page-link:focus {
+    box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.15);
+    outline: none;
+    z-index: 3;
+}
+
+.pagination .page-link:active {
+    background-color: #e0e7ff;
+    border-color: var(--primary-color);
+}
+
+.pagination .page-item.active .page-link {
+    background: linear-gradient(135deg, var(--primary-color), #2563eb);
+    border-color: var(--primary-color);
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 3px 8px rgba(59, 130, 246, 0.25);
+    transform: translateY(-1px);
+    z-index: 3;
+}
+
+.pagination .page-item.active .page-link:hover {
+    background: linear-gradient(135deg, #2563eb, #1e40af);
+    transform: translateY(-1px);
+}
+
+.pagination .page-item.disabled .page-link {
+    color: #cbd5e1;
+    pointer-events: none;
+    cursor: not-allowed;
+    background-color: #f8fafc;
+    border-color: #e2e8f0;
+    opacity: 0.6;
+}
+
+/* Ellipsis styling */
+.pagination .page-item.disabled .page-link[disabled] {
+    background-color: transparent;
+    border-color: transparent;
+}
+
+/* Icon arrows */
+.pagination .page-link i {
+    font-size: 0.85rem;
+    vertical-align: middle;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+    .pagination .page-link {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.85rem;
+        min-width: 36px;
+    }
+    
+    .pagination {
+        gap: 0.15rem;
+    }
+}
 .galeri-card {
-    transition: all 0.3s;
+    overflow: hidden;        /* WAJIB supaya hover tidak keluar */
+    border-radius: 12px;     /* sama seperti card kedua */
+    transition: all 0.3s ease;
 }
 
 .galeri-card:hover {
