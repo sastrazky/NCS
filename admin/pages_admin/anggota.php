@@ -110,6 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $error_msg = "Nama lengkap dan NIP harus diisi!";
     } else {
         $upload_dir = 'uploads/anggota/'; // Path untuk DB dan file_exists
+        
         if (!file_exists($upload_dir)) {
             mkdir($upload_dir, 0777, true);
         }
@@ -355,8 +356,9 @@ if (!empty($search)) {
                     <a href="?page=anggota" class="btn btn-secondary">Reset</a>
                 <?php endif; ?>
             </div>
-            <small class="text-muted d-block mt-2"></small>
-        </div>
+            <small class="text-muted d-block mt-2">Ditemukan <?= $total_records ?> data.</small>
+        </form>
+    </div>
 </div>
 
 <div class="row g-4 mb-4">
@@ -487,6 +489,7 @@ if (!empty($search)) {
                                                      : 'assets/img/no-user.png' ?>"
                                             class="img-fluid mb-2"
                                             style="max-height: 200px; object-fit: cover;">
+
                                         <input type="file" class="form-control form-control-sm"
                                             name="foto" accept="image/*" onchange="previewImage(this)"
                                             <?= $edit_data ? '' : 'required' ?>>
