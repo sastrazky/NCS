@@ -2,7 +2,8 @@
 // pages/user/galeri.php
 
 // Filter - default ke Agenda
-$filter_tab = isset($_GET['tab']) ? (string)$_GET['tab'] : 'agenda'; // Tambahkan (string)
+$filter_tab = isset($_GET['tab']) ? (string)$_GET['tab'] : 'agenda';
+
 // Pagination
 $limit = 6;
 $page_num = isset($_GET['p']) ? (int)$_GET['p'] : 1;
@@ -55,16 +56,16 @@ function getAgendaStatus($tanggal_mulai, $tanggal_selesai)
 
 <section class="section-galeri">
     <div class="container">
-<div class="text-center mb-5">
-    <div class="btn-group shadow-sm" role="group">
-        <a href="?page=galeri&tab=agenda" class="btn <?= $filter_tab == 'agenda' ? 'btn-primary' : 'btn-outline-secondary' ?> px-5 py-2">
-            <i class="fas fa-calendar-alt me-2"></i> Agenda
-        </a>
-        <a href="?page=galeri&tab=kegiatan" class="btn <?= $filter_tab == 'kegiatan' ? 'btn-primary' : 'btn-outline-secondary' ?> px-5 py-2">
-            <i class="fas fa-images me-2"></i> Kegiatan
-        </a>
-    </div>
-</div>
+        <div class="text-center mb-5">
+            <div class="btn-group shadow-sm" role="group">
+                <a href="?page=galeri&tab=agenda" class="btn <?= $filter_tab == 'agenda' ? 'btn-primary' : 'btn-outline-secondary' ?> px-5 py-2">
+                    <i class="fas fa-calendar-alt me-2"></i> Agenda
+                </a>
+                <a href="?page=galeri&tab=kegiatan" class="btn <?= $filter_tab == 'kegiatan' ? 'btn-primary' : 'btn-outline-secondary' ?> px-5 py-2">
+                    <i class="fas fa-images me-2"></i> Kegiatan
+                </a>
+            </div>
+        </div>
 
         <?php if ($filter_tab == 'agenda'): ?>
             <?php if (pg_num_rows($data_query) > 0): ?>
@@ -122,6 +123,32 @@ function getAgendaStatus($tanggal_mulai, $tanggal_selesai)
                         </div>
                     <?php endwhile; ?>
                 </div>
+                
+                <?php if ($total_pages > 1): ?>
+                    <nav class="mt-5">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item <?= $page_num <= 1 ? 'disabled' : '' ?>">
+                                <a class="page-link" href="?page=galeri&tab=<?= $filter_tab ?>&p=<?= $page_num - 1 ?>">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+
+                            <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                                <li class="page-item <?= $i == $page_num ? 'active' : '' ?>">
+                                    <a class="page-link" href="?page=galeri&tab=<?= $filter_tab ?>&p=<?= $i ?>">
+                                        <?= $i ?>
+                                    </a>
+                                </li>
+                            <?php endfor; ?>
+
+                            <li class="page-item <?= $page_num >= $total_pages ? 'disabled' : '' ?>">
+                                <a class="page-link" href="?page=galeri&tab=<?= $filter_tab ?>&p=<?= $page_num + 1 ?>">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                <?php endif; ?>
             <?php else: ?>
                 <div class="text-center py-5">
                     <i class="fas fa-calendar-times text-muted" style="font-size: 5rem; opacity: 0.3;"></i>
@@ -198,38 +225,38 @@ function getAgendaStatus($tanggal_mulai, $tanggal_selesai)
                         </div>
                     <?php endwhile; ?>
                 </div>
+                
+                <?php if ($total_pages > 1): ?>
+                    <nav class="mt-5">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item <?= $page_num <= 1 ? 'disabled' : '' ?>">
+                                <a class="page-link" href="?page=galeri&tab=<?= $filter_tab ?>&p=<?= $page_num - 1 ?>">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+
+                            <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                                <li class="page-item <?= $i == $page_num ? 'active' : '' ?>">
+                                    <a class="page-link" href="?page=galeri&tab=<?= $filter_tab ?>&p=<?= $i ?>">
+                                        <?= $i ?>
+                                    </a>
+                                </li>
+                            <?php endfor; ?>
+
+                            <li class="page-item <?= $page_num >= $total_pages ? 'disabled' : '' ?>">
+                                <a class="page-link" href="?page=galeri&tab=<?= $filter_tab ?>&p=<?= $page_num + 1 ?>">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                <?php endif; ?>
             <?php else: ?>
                 <div class="text-center py-5">
                     <i class="fas fa-images text-muted" style="font-size: 5rem; opacity: 0.3;"></i>
                     <h4 class="mt-3 text-muted">Belum ada kegiatan</h4>
                 </div>
             <?php endif; ?>
-        <?php endif; ?>
-        
-        <?php if ($total_pages > 1): ?>
-            <nav class="mt-5">
-                <ul class="pagination justify-content-center">
-                    <li class="page-item <?= $page_num <= 1 ? 'disabled' : '' ?>">
-                        <a class="page-link" href="?page=galeri&tab=<?= $filter_tab ?>&p=<?= $page_num - 1 ?>">
-                            <i class="fas fa-chevron-left"></i>
-                        </a>
-                    </li>
-
-                    <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-                        <li class="page-item <?= $i == $page_num ? 'active' : '' ?>">
-                            <a class="page-link" href="?page=galeri&tab=<?= $filter_tab ?>&p=<?= $i ?>">
-                                <?= $i ?>
-                            </a>
-                        </li>
-                    <?php endfor; ?>
-
-                    <li class="page-item <?= $page_num >= $total_pages ? 'disabled' : '' ?>">
-                        <a class="page-link" href="?page=galeri&tab=<?= $filter_tab ?>&p=<?= $page_num + 1 ?>">
-                            <i class="fas fa-chevron-right"></i>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
         <?php endif; ?>
     </div>
 </section>
@@ -242,7 +269,7 @@ function getAgendaStatus($tanggal_mulai, $tanggal_selesai)
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body text-center p-0" id="viewMediaBody">
-                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -252,13 +279,13 @@ function getAgendaStatus($tanggal_mulai, $tanggal_selesai)
         <div class="modal-content">
             <div class="modal-header border-0 pb-0">
                 <h5 class="modal-title fw-bold" id="galeriModalTitle"></h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button"="btn-close" data-bs-dismiss="modal"></button>
             </div>
             
             <div class="modal-body pt-0">
                 <div class="text-center mb-3">
                     <div id="galeriMediaViewer" class="rounded shadow-sm" style="max-height: 400px; overflow: hidden; margin: 0 auto; width: 100%;">
-                        </div>
+                    </div>
                 </div>
                 
                 <h6 class="fw-bold mb-1 mt-3">Tanggal Kegiatan:</h6>
@@ -269,8 +296,7 @@ function getAgendaStatus($tanggal_mulai, $tanggal_selesai)
                 <div id="descWrapper" class="desc-scroll">
                     <p id="galeriModalDescription" class="text-muted"></p>
                 </div>
-
-
+            </div>
             
             <div class="modal-footer border-0 pt-0">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
@@ -278,7 +304,6 @@ function getAgendaStatus($tanggal_mulai, $tanggal_selesai)
         </div>
     </div>
 </div>
-
 
 <script>
     // Fungsi MODAL LAMA (Hanya Media Besar) - Dijaga untuk kompatibilitas
@@ -315,13 +340,13 @@ function getAgendaStatus($tanggal_mulai, $tanggal_selesai)
         
         if (tipeMedia === 'Video') {
             viewer.innerHTML = `
-                <video controls style="width: 100%; height: 100%; object-fit: cover;">
+                <video controls style="width: 100%; height: auto; max-height: 400px; object-fit: contain; border-radius: 8px;">
                     <source src="${mediaPath}" type="video/mp4">
                     Browser kamu ga support video 😢
                 </video>
             `;
         } else {
-            viewer.innerHTML = `<img src="${mediaPath}" class="img-fluid" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">`;
+            viewer.innerHTML = `<img src="${mediaPath}" class="img-fluid" style="width: 100%; height: auto; max-height: 400px; object-fit: contain; border-radius: 8px;">`;
         }
 
         // Show Modal
