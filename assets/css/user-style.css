@@ -68,6 +68,7 @@ body {
 .navbar {
     padding: 1rem 0;
     border-top: 10px solid #34597E;
+
 }
 
 .navbar-brand {
@@ -81,10 +82,26 @@ body {
 }
 
 .nav-link {
-    color: var(--text-dark) !important;
-    font-weight: 500;
-    padding: 0.5rem 1rem !important;
-    transition: all 0.3s;
+    color: #1a1a1a !important;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 10px 20px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: relative;
+}
+
+.nav-link::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #0047AB, #0066FF);
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
 }
 
 .nav-link:hover,
@@ -109,7 +126,7 @@ body {
 .hero {
     background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
     color: white;
-    padding: 20rem 0 6rem;
+    padding: 10rem 0 6rem;
     position: relative;
     overflow: hidden;
     background: url('../../assets/image/gedung-sipil.jpg') no-repeat center center / cover;

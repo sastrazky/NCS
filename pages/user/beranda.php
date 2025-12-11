@@ -34,16 +34,16 @@ function getAgendaStatus($tanggal_mulai, $tanggal_selesai)
 ?>
 
 <section class="hero">
-    <div class="container hero-content">
-        <div class="row align-items-center">
-            <div class="col-lg-8 ">
-                <h1><?= htmlspecialchars($profil['nama_profil'] ?? "Lab Network and Cyber Security") ?></h1>
-                <p><?= nl2br(htmlspecialchars($profil['deskripsi_singkat'] ?? "Teknologi Informasi Polinema")) ?></p>
-                <div class="mt-4">
-                </div>
-            </div>
-        </div>
-    </div>
+    <div class="container hero-content">
+        <div class="row align-items-center">
+            <div class="col-lg-10 text-center mx-auto">
+                <h1><?= htmlspecialchars($profil['nama_profil'] ?? "Lab Network and Cyber Security") ?></h1>
+                <p><?= nl2br(htmlspecialchars($profil['deskripsi_singkat'] ?? "Teknologi Informasi Polinema")) ?></p>
+                <div class="mt-4">
+                </div>
+            </div>
+        </div>
+    </div>
 </section>
 
 <section class="stats-section section">
