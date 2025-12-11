@@ -161,7 +161,7 @@ if (isset($_GET['success']) && $_GET['success'] == '1') {
                                         style="border: 2px solid #e9ecef; border-radius: 10px; padding: 12px 20px; transition: all 0.3s; font-size: 1rem;">
                                         <option value="" disabled selected>Pilih kategori</option>
                                     <?php
-                                    $categories = ["Laporan Masalah", "Pengaduan", "Saran & Masukan", "Lainnya"];
+                                    $categories = ["Laporan Masalah", "Konsultasi", "Saran & Masukan", "Lainnya"];
                                     foreach ($categories as $cat) {
                                         $sel = (isset($kategori) && $kategori === $cat) ? 'selected' : '';
                                         echo "<option value=\"$cat\" $sel>$cat</option>";

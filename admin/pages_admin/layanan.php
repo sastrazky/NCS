@@ -63,7 +63,7 @@ if (count($params) > 0) {
     $result = pg_query($conn, "SELECT * FROM layanan ORDER BY created_at DESC");
 }
 
-$categories = ["Laporan Masalah", "Saran & Masukan", "Konsultasi", "Lainnya"];
+$categories = ["Laporan Masalah", "Konsultasi", "Saran & Masukan", "Lainnya"];
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -183,14 +183,8 @@ $categories = ["Laporan Masalah", "Saran & Masukan", "Konsultasi", "Lainnya"];
                     <td>
                         <div class="message-preview-clean" title="<?= htmlspecialchars($row['isi_pesan']) ?>">
                             <?php 
-                            // Batasi teks menjadi 200 karakter
-                            $preview_text = htmlspecialchars($row['isi_pesan']);
-                            $max_length = 200;
-
-                            if (strlen($preview_text) > $max_length) {
-                                $preview_text = substr($preview_text, 0, $max_length) . '...';
-                            }
-                            echo nl2br($preview_text);
+                            // Tampilkan semua teks tanpa batasan karakter
+                            echo nl2br(htmlspecialchars($row['isi_pesan']));
                             ?>
                         </div>
                     </td>
@@ -273,7 +267,7 @@ $categories = ["Laporan Masalah", "Saran & Masukan", "Konsultasi", "Lainnya"];
 
 /* Message Preview - Fixed Layout */
 .message-preview-clean {
-    max-height: 70px; 
+    max-height: 90px; 
     overflow-y: auto;
     padding: 8px;
     background: #f8f9fa;
