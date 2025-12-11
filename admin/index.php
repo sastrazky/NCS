@@ -65,14 +65,6 @@ if ($id_admin > 0 && isset($conn)) {
                 <i class="fas fa-users"></i>
                 <span>Anggota</span>
             </a>
-            <a href="?page=layanan" class="<?= $page == 'layanan' ? 'active' : '' ?>">
-                <i class="fas fa-box"></i>
-                <span>Layanan</span>
-            </a>
-            <a href="?page=sarana_prasarana" class="<?= $page == 'sarana_prasarana' ? 'active' : '' ?>">
-                <i class="fas fa-warehouse"></i>
-                <span>Sarana Prasarana</span>
-            </a>
             <a href="?page=agenda" class="<?= $page == 'agenda' ? 'active' : '' ?>">
                 <i class="fas fa-calendar"></i>
                 <span>Agenda</span>
@@ -84,6 +76,14 @@ if ($id_admin > 0 && isset($conn)) {
             <a href="?page=arsip" class="<?= $page == 'arsip' ? 'active' : '' ?>">
                 <i class="fas fa-file-pdf"></i>
                 <span>Arsip PDF</span>
+            </a>
+            <a href="?page=sarana_prasarana" class="<?= $page == 'sarana_prasarana' ? 'active' : '' ?>">
+                <i class="fas fa-warehouse"></i>
+                <span>Sarana Prasarana</span>
+            </a>
+            <a href="?page=layanan" class="<?= $page == 'layanan' ? 'active' : '' ?>">
+                <i class="fas fa-box"></i>
+                <span>Layanan</span>
             </a>
             <a href="?page=link_eksternal" class="<?= $page == 'link_eksternal' ? 'active' : '' ?>">
                 <i class="fas fa-link"></i>
@@ -134,7 +134,7 @@ if ($id_admin > 0 && isset($conn)) {
                     include 'pages_admin/anggota.php';
                     break;
                 case 'layanan':
-                    include("pages_admin/layanan.php");
+                    include 'pages_admin/layanan.php';
                     break;
                 case 'sarana_prasarana':
                     include 'pages_admin/sarana_prasarana.php';

@@ -66,24 +66,7 @@ $activity_query = "
 $activities_result = pg_query($conn, $activity_query);
 ?>
 
-<div class="row g-4 mb-4">
-    <div class="col-md-3">
-        <div class="stat-card">
-            <div class="d-flex justify-content-between align-items-start">
-                <div>
-                    <p class="text-muted mb-1" style="font-size: 0.85rem;">Total Profil</p>
-                    <h3 class="mb-0 fw-bold"><?= number_format($stats['profil']) ?></h3>
-                    <small class="text-success">
-                        <i class="fas fa-check-circle"></i> Aktif
-                    </small>
-                </div>
-                <div class="stat-icon blue">
-                    <i class="fas fa-building"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-    
+<div class="row g-4 mb-4 justify-content-center">
     <div class="col-md-3">
         <div class="stat-card">
             <div class="d-flex justify-content-between align-items-start">
@@ -100,43 +83,7 @@ $activities_result = pg_query($conn, $activity_query);
             </div>
         </div>
     </div>
-    
-    <div class="col-md-3">
-        <div class="stat-card">
-            <div class="d-flex justify-content-between align-items-start">
-                <div>
-                    <p class="text-muted mb-1" style="font-size: 0.85rem;">Layanan</p>
-                    <h3 class="mb-0 fw-bold"><?= number_format($stats['layanan']) ?></h3>
-                    <small class="text-success">
-                        <i class="fas fa-box"></i> Layanan
-                    </small>
-                </div>
-                <div class="stat-icon green">
-                    <i class="fas fa-box"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-3">
-        <div class="stat-card">
-            <div class="d-flex justify-content-between align-items-start">
-                <div>
-                    <p class="text-muted mb-1" style="font-size: 0.85rem;">Sarana Prasarana</p>
-                    <h3 class="mb-0 fw-bold"><?= number_format($stats['sarana']) ?></h3>
-                    <small class="text-warning">
-                        <i class="fas fa-warehouse"></i> Items
-                    </small>
-                </div>
-                <div class="stat-icon orange">
-                    <i class="fas fa-warehouse"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
-<div class="row g-4 mb-4">
     <div class="col-md-3">
         <div class="stat-card">
             <div class="d-flex justify-content-between align-items-start">
@@ -153,7 +100,7 @@ $activities_result = pg_query($conn, $activity_query);
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-3">
         <div class="stat-card">
             <div class="d-flex justify-content-between align-items-start">
@@ -170,7 +117,7 @@ $activities_result = pg_query($conn, $activity_query);
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-3">
         <div class="stat-card">
             <div class="d-flex justify-content-between align-items-start">
@@ -187,7 +134,43 @@ $activities_result = pg_query($conn, $activity_query);
             </div>
         </div>
     </div>
-    
+</div>
+
+<div class="row g-4 mb-4 justify-content-center">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="text-muted mb-1" style="font-size: 0.85rem;">Sarana Prasarana</p>
+                    <h3 class="mb-0 fw-bold"><?= number_format($stats['sarana']) ?></h3>
+                    <small class="text-warning">
+                        <i class="fas fa-warehouse"></i> Items
+                    </small>
+                </div>
+                <div class="stat-icon orange">
+                    <i class="fas fa-warehouse"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="text-muted mb-1" style="font-size: 0.85rem;">Layanan</p>
+                    <h3 class="mb-0 fw-bold"><?= number_format($stats['layanan']) ?></h3>
+                    <small class="text-success">
+                        <i class="fas fa-box"></i> Layanan
+                    </small>
+                </div>
+                <div class="stat-icon green">
+                    <i class="fas fa-box"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="col-md-3">
         <div class="stat-card">
             <div class="d-flex justify-content-between align-items-start">
@@ -214,47 +197,64 @@ $activities_result = pg_query($conn, $activity_query);
         </div>
         <span class="badge bg-primary"><?= pg_num_rows($activities_result) ?> aktivitas</span>
     </div>
-    
+
     <?php if (pg_num_rows($activities_result) > 0): ?>
-        <?php while($activity = pg_fetch_assoc($activities_result)): ?>
+        <?php while ($activity = pg_fetch_assoc($activities_result)): ?>
             <?php
-                // Set badge and dot color based on type
-                $badge_class = 'badge-' . $activity['type'];
-                $dot_color = '';
-                switch($activity['type']) {
-                    case 'profil': $dot_color = 'blue'; break;
-                    case 'anggota': $dot_color = 'purple'; break;
-                    case 'layanan': $dot_color = 'green'; break; 
-                    case 'sarana': $dot_color = 'orange'; break;
-                    case 'agenda': $dot_color = 'pink'; break;
-                    case 'galeri': $dot_color = 'yellow'; break;
-                    case 'arsip': $dot_color = 'blue'; break;
-                    case 'link': $dot_color = 'green'; break;
-                    default: $dot_color = 'secondary';
-                }
-                
-                // Format date
-                if (!empty($activity['date'])) {
-                    $date = new DateTime($activity['date']);
-                    $now = new DateTime();
-                    $diff = $now->diff($date);
-                    
-                    if ($diff->days == 0) {
-                        if ($diff->h == 0) {
-                            $time_ago = $diff->i . ' menit yang lalu';
-                        } else {
-                            $time_ago = $diff->h . ' jam yang lalu';
-                        }
-                    } else if ($diff->days == 1) {
-                        $time_ago = 'Kemarin';
-                    } else if ($diff->days < 7) {
-                        $time_ago = $diff->days . ' hari yang lalu';
+            // Set badge and dot color based on type
+            $badge_class = 'badge-' . $activity['type'];
+            $dot_color = '';
+            switch ($activity['type']) {
+                case 'profil':
+                    $dot_color = 'blue';
+                    break;
+                case 'anggota':
+                    $dot_color = 'purple';
+                    break;
+                case 'layanan':
+                    $dot_color = 'green';
+                    break;
+                case 'sarana':
+                    $dot_color = 'orange';
+                    break;
+                case 'agenda':
+                    $dot_color = 'pink';
+                    break;
+                case 'galeri':
+                    $dot_color = 'yellow';
+                    break;
+                case 'arsip':
+                    $dot_color = 'blue';
+                    break;
+                case 'link':
+                    $dot_color = 'green';
+                    break;
+                default:
+                    $dot_color = 'secondary';
+            }
+
+            // Format date
+            if (!empty($activity['date'])) {
+                $date = new DateTime($activity['date']);
+                $now = new DateTime();
+                $diff = $now->diff($date);
+
+                if ($diff->days == 0) {
+                    if ($diff->h == 0) {
+                        $time_ago = $diff->i . ' menit yang lalu';
                     } else {
-                        $time_ago = $date->format('d M Y');
+                        $time_ago = $diff->h . ' jam yang lalu';
                     }
+                } else if ($diff->days == 1) {
+                    $time_ago = 'Kemarin';
+                } else if ($diff->days < 7) {
+                    $time_ago = $diff->days . ' hari yang lalu';
                 } else {
-                    $time_ago = '-';
+                    $time_ago = $date->format('d M Y');
                 }
+            } else {
+                $time_ago = '-';
+            }
             ?>
             <div class="activity-item">
                 <div class="activity-dot <?= $dot_color ?>"></div>
@@ -264,7 +264,7 @@ $activities_result = pg_query($conn, $activity_query);
                             <h6 class="mb-1"><?= htmlspecialchars($activity['title']) ?></h6>
                             <small class="text-muted">
                                 <span class="badge badge-category <?= $badge_class ?>">
-                                    <?= strtoupper(str_replace('_', ' ', $activity['type'])) ?> 
+                                    <?= strtoupper(str_replace('_', ' ', $activity['type'])) ?>
                                 </span>
                                 <span class="ms-2"><?= ucfirst($activity['action']) ?></span>
                                 <?php if (!empty($activity['admin_name'])): ?>
