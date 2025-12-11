@@ -57,7 +57,7 @@ if ($data_detail) {
 $foto_path = (!empty($data_anggota['foto_path'])) ? "admin/" . $data_anggota['foto_path'] : "assets/images/no-image.jpg";
 if (!file_exists($foto_path)) $foto_path = "assets/images/no-image.jpg";
 
-$gelar_display = $data_anggota['gelar'] ?? 'S.T., M.T.'; 
+$gelar_display = $data_anggota['gelar'] ?? ''; 
 // Mengambil NIDN dari database
 $nidn_display = $data_anggota['nidn'] ?? '-';
 $program_studi_display = 'Teknik Informatika'; // Placeholder/Contoh
@@ -113,7 +113,7 @@ $program_studi_display = 'Teknik Informatika'; // Placeholder/Contoh
                 <div class="main-content">
                     
                     <div class="profile-header">
-                        <h2 class="mb-2 profile-title"><?= htmlspecialchars($data_anggota['nama_lengkap']) . ', ' . htmlspecialchars($gelar_display) ?></h2>
+                        <h2 class="mb-2 profile-title"><?= htmlspecialchars($data_anggota['nama_lengkap']) . ' ' . htmlspecialchars($gelar_display) ?></h2>
                     </div>
 
                     <div class="mb-4 tag-list">

@@ -14,7 +14,7 @@ $id_admin = (int)$_SESSION['id_admin']; // Ambil ID Admin yang sedang login
 // Get data for edit
 $edit_data = null;
 // Ambil data detail juga jika mode edit
-$edit_detail_data = null; 
+$edit_detail_data = null;
 if (isset($_GET['edit'])) {
     $id_anggota = (int)$_GET['edit'];
     // Mengambil data utama anggota
@@ -29,7 +29,7 @@ if (isset($_GET['edit'])) {
 // Handle Delete (TIDAK ADA PERUBAHAN SIGNIFIKAN KARENA ON DELETE CASCADE SUDAH DITERAPKAN DI DB)
 if (isset($_GET['delete'])) {
     $id_anggota = (int)$_GET['delete'];
-    
+
     // --- LANGKAH 1 (DELETE): Ambil Judul Item untuk Log ---
     $file_query = pg_query_params($conn, "SELECT nama_lengkap, foto_path FROM anggota WHERE id_anggota = $1", [$id_anggota]);
     $item_title = 'Anggota ID ' . $id_anggota; // Default title
@@ -71,8 +71,8 @@ if (isset($_GET['delete'])) {
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $id_anggota = isset($_POST['id_anggota']) ? (int)$_POST['id_anggota'] : 0;
     $nama_lengkap = trim($_POST['nama_lengkap']);
-    $nip = trim($_POST['nip']); 
-    $nidn = trim($_POST['nidn']); 
+    $nip = trim($_POST['nip']);
+    $nidn = trim($_POST['nidn']);
     $jabatan = trim($_POST['jabatan']);
     $email = trim($_POST['email']);
     $urutan = (int)$_POST['urutan'];
@@ -84,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $pendidikan = trim($_POST['pendidikan']);
     $sertifikasi = trim($_POST['sertifikasi']);
     $mata_kuliah = trim($_POST['mata_kuliah']);
-    
+
     // --- KELOLA MULTI-LINK JSON ---
     $link_publikasi_array = [];
     if (isset($_POST['link_nama']) && isset($_POST['link_url']) && is_array($_POST['link_nama'])) {
@@ -104,13 +104,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Encode array menjadi JSON string untuk disimpan di database
     $link_publikasi = json_encode($link_publikasi_array);
     // ------------------------------
-    
+
     // Validation
     if (empty($nama_lengkap) || empty($nip)) { // Menggunakan $nip
         $error_msg = "Nama lengkap dan NIP harus diisi!";
     } else {
         $upload_dir = 'uploads/anggota/'; // Path untuk DB dan file_exists
-        
+
         if (!file_exists($upload_dir)) {
             mkdir($upload_dir, 0777, true);
         }
@@ -145,14 +145,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         } else {
             // Jika tidak ada upload baru, ambil path lama saat Edit
             if ($id_anggota > 0) {
-                 $old_data_query = pg_query_params($conn, "SELECT foto_path, nip FROM anggota WHERE id_anggota = $1", [$id_anggota]);
-                 $old_data = pg_fetch_assoc($old_data_query);
-                 $foto_path = $old_data['foto_path'] ?? '';
+                $old_data_query = pg_query_params($conn, "SELECT foto_path, nip FROM anggota WHERE id_anggota = $1", [$id_anggota]);
+                $old_data = pg_fetch_assoc($old_data_query);
+                $foto_path = $old_data['foto_path'] ?? '';
             } else {
                 // FOTO WAJIB SAAT INSERT (jika tidak ada file diupload, ini akan menjadi error)
                 $error_msg = "Foto wajib diunggah saat menambah anggota!";
             }
-            
+
             // Jika insert dan foto tidak ada, kita keluar
             if ($id_anggota == 0 && empty($foto_path)) {
                 // error_msg sudah diset di atas
@@ -165,14 +165,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 // Update
                 $update_query_fields = "nama_lengkap = $1, nip = $2, nidn = $3, jabatan = $4, email = $5, urutan = $6, status = $7, updated_at = NOW()";
                 // Urutan parameter: 1=nama, 2=nip, 3=nidn, 4=jabatan, 5=email, 6=urutan, 7=status, 8=id_anggota
-                $params = [$nama_lengkap, $nip, $nidn, $jabatan, $email, $urutan, $status, $id_anggota]; 
-                
+                $params = [$nama_lengkap, $nip, $nidn, $jabatan, $email, $urutan, $status, $id_anggota];
+
                 if ($new_foto_uploaded) {
                     // Jika ada foto baru, tambahkan foto_path sebagai $8 dan id_anggota sebagai $9
                     $update_query_fields .= ", foto_path = $" . (count($params) + 1);
                     $params = [$nama_lengkap, $nip, $nidn, $jabatan, $email, $urutan, $status, $foto_path, $id_anggota];
                 }
-                
+
                 // Eksekusi Update Anggota Utama
                 $update_result = pg_query_params(
                     $conn,
@@ -182,11 +182,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                 // --- UPDATE DETAIL ANGGOTA ---
                 $detail_exists_query = pg_query_params($conn, "SELECT id_detail FROM detail_anggota WHERE id_anggota = $1", [$id_anggota]);
-                
+
                 if (pg_num_rows($detail_exists_query) > 0) {
                     // Jika detail sudah ada, lakukan UPDATE
                     $detail_update_params = [
-                        $keahlian, $pendidikan, $sertifikasi, $mata_kuliah, $link_publikasi, $id_anggota
+                        $keahlian,
+                        $pendidikan,
+                        $sertifikasi,
+                        $mata_kuliah,
+                        $link_publikasi,
+                        $id_anggota
                     ];
                     pg_query_params(
                         $conn,
@@ -196,7 +201,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 } else {
                     // Jika detail belum ada, lakukan INSERT
                     $detail_insert_params = [
-                        $id_anggota, $keahlian, $pendidikan, $sertifikasi, $mata_kuliah, $link_publikasi
+                        $id_anggota,
+                        $keahlian,
+                        $pendidikan,
+                        $sertifikasi,
+                        $mata_kuliah,
+                        $link_publikasi
                     ];
                     pg_query_params(
                         $conn,
@@ -223,23 +233,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 }
             } else {
                 // Insert
-                
+
                 // Mulai Transaksi untuk memastikan kedua tabel terisi
                 pg_query($conn, "BEGIN");
-                
+
                 // Insert Anggota Utama
                 $insert_result = pg_query_params(
                     $conn,
                     "INSERT INTO anggota (nama_lengkap, nip, nidn, jabatan, email, foto_path, urutan, status, id_admin, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW()) RETURNING id_anggota",
                     [$nama_lengkap, $nip, $nidn, $jabatan, $email, $foto_path, $urutan, $status, $id_admin]
                 );
-                
+
                 if ($insert_result) {
                     $new_id_anggota = pg_fetch_result($insert_result, 0, 'id_anggota');
 
                     // --- INSERT DETAIL ANGGOTA ---
                     $detail_insert_params = [
-                        $new_id_anggota, $keahlian, $pendidikan, $sertifikasi, $mata_kuliah, $link_publikasi
+                        $new_id_anggota,
+                        $keahlian,
+                        $pendidikan,
+                        $sertifikasi,
+                        $mata_kuliah,
+                        $link_publikasi
                     ];
                     $detail_insert_result = pg_query_params(
                         $conn,
@@ -260,7 +275,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         ";
                         pg_query($conn, $log_query);
                         // ----------------------
-                        
+
                         header("Location: ?page=anggota&success=" . urlencode("Anggota berhasil ditambahkan!"));
                         exit();
                     } else {
@@ -294,7 +309,7 @@ $where_clause = '';
 $query_params = [];
 
 if (!empty($search)) {
-    $where_clause = "WHERE nama_lengkap ILIKE $1 OR nip ILIKE $1 OR jabatan ILIKE $1"; 
+    $where_clause = "WHERE nama_lengkap ILIKE $1 OR nip ILIKE $1 OR jabatan ILIKE $1";
     $query_params[] = '%' . $search . '%';
 }
 
@@ -378,11 +393,11 @@ if (!empty($search)) {
                             </div>
                         <?php endif; ?>
 
-                        <div class="position-absolute top-0 end-0 m-2">
+                        <!--        <div class="position-absolute top-0 end-0 m-2">
                             <span class="badge <?= $row['status'] == 'Aktif' ? 'bg-success' : 'bg-secondary' ?>">
                                 <?= htmlspecialchars($row['status'] ?? 'Aktif') ?>
                             </span>
-                        </div>
+                        </div> -->
                     </div>
 
                     <div class="card-body">
@@ -459,7 +474,8 @@ if (!empty($search)) {
 <?php endif; ?>
 
 <div class="modal fade" id="modalAnggota" tabindex="-1" <?= $edit_data ? 'data-bs-show="true"' : '' ?>>
-    <div class="modal-dialog modal-xl"> <div class="modal-content">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
             <form method="POST" enctype="multipart/form-data">
                 <div class="modal-header">
                     <h5 class="modal-title"><?= $edit_data ? 'Edit Anggota' : 'Tambah Anggota' ?></h5>
@@ -467,7 +483,7 @@ if (!empty($search)) {
                 </div>
                 <div class="modal-body">
                     <input type="hidden" name="id_anggota" value="<?= $edit_data ? $edit_data['id_anggota'] : '' ?>">
-                    
+
                     <ul class="nav nav-tabs" id="myTab" role="tablist">
                         <li class="nav-item" role="presentation">
                             <button class="nav-link active" id="data-utama-tab" data-bs-toggle="tab" data-bs-target="#data-utama" type="button" role="tab" aria-controls="data-utama" aria-selected="true">Data Utama</button>
@@ -476,7 +492,7 @@ if (!empty($search)) {
                             <button class="nav-link" id="data-detail-tab" data-bs-toggle="tab" data-bs-target="#data-detail" type="button" role="tab" aria-controls="data-detail" aria-selected="false">Data Detail</button>
                         </li>
                     </ul>
-                    
+
                     <div class="tab-content pt-3" id="myTabContent">
                         <div class="tab-pane fade show active" id="data-utama" role="tabpanel" aria-labelledby="data-utama-tab">
                             <div class="row">
@@ -485,8 +501,8 @@ if (!empty($search)) {
                                     <div class="border rounded p-2 bg-light text-center">
                                         <img id="preview-foto"
                                             src="<?= ($edit_data && !empty($edit_data['foto_path']) && file_exists($edit_data['foto_path']))
-                                                     ? htmlspecialchars($edit_data['foto_path'])
-                                                     : 'assets/img/no-user.png' ?>"
+                                                        ? htmlspecialchars($edit_data['foto_path'])
+                                                        : 'assets/img/no-user.png' ?>"
                                             class="img-fluid mb-2"
                                             style="max-height: 200px; object-fit: cover;">
 
@@ -509,7 +525,7 @@ if (!empty($search)) {
                                         <input type="text" class="form-control" name="nip"
                                             value="<?= $edit_data ? htmlspecialchars($edit_data['nip'] ?? '') : '' ?>" required>
                                     </div>
-                                    
+
                                     <div class="mb-3">
                                         <label for="nidn" class="form-label">NIDN</label>
                                         <input type="text" class="form-control" name="nidn"
@@ -522,7 +538,7 @@ if (!empty($search)) {
                                             <option value="" disabled selected>Pilih jabatan</option>
                                             <option value="Peneliti" <?php if ($edit_data && $edit_data['jabatan'] == 'Peneliti') echo 'selected'; ?>>Peneliti</option>
                                             <option value="Ketua Lab" <?php if ($edit_data && $edit_data['jabatan'] == 'Ketua Lab') echo 'selected'; ?>>Ketua Lab</option>
-                                            </select>
+                                        </select>
                                     </div>
                                     <div class="mb-3">
                                         <label for="email" class="form-label">Email</label>
@@ -530,27 +546,34 @@ if (!empty($search)) {
                                             value="<?= $edit_data ? htmlspecialchars($edit_data['email']) : '' ?>"
                                             placeholder="email@example.com">
                                     </div>
+
+                                    <div class="mb-3">
+                                        <label for="urutan" class="form-label">Urutan Tampil</label>
+                                        <input type="number" class="form-control" name="urutan"
+                                            value="<?= $edit_data ? $edit_data['urutan'] : '0' ?>" min="0">
+                                        <small class="text-muted">Angka lebih kecil akan tampil lebih dahulu</small>
+                                    </div>
                                 </div>
                             </div>
-                            
+
                             <div class="row">
-                                <div class="col-md-6 mb-3">
+                                <!--        <div class="mb-3">
                                     <label for="urutan" class="form-label">Urutan Tampil</label>
                                     <input type="number" class="form-control" name="urutan"
                                         value="<?= $edit_data ? $edit_data['urutan'] : '0' ?>" min="0">
                                     <small class="text-muted">Angka lebih kecil akan tampil lebih dahulu</small>
-                                </div>
+                                </div> -->
 
-                                <div class="col-md-6 mb-3">
+                                <!--   <div class="col-md-6 mb-3">
                                     <label for="status" class="form-label">Status</label>
                                     <select class="form-select" name="status">
                                         <option value="Aktif" <?= ($edit_data && $edit_data['status'] == 'Aktif') ? 'selected' : '' ?>>Aktif</option>
                                         <option value="Non-Aktif" <?= ($edit_data && $edit_data['status'] == 'Non-Aktif') ? 'selected' : '' ?>>Non-Aktif</option>
                                     </select>
-                                </div>
+                                </div> -->
                             </div>
                         </div>
-                        
+
                         <div class="tab-pane fade" id="data-detail" role="tabpanel" aria-labelledby="data-detail-tab">
                             <div class="mb-3">
                                 <label for="keahlian" class="form-label">Keahlian (Pisahkan dengan koma/baris baru)</label>
@@ -568,7 +591,7 @@ if (!empty($search)) {
                                 <label for="mata_kuliah" class="form-label">Mata Kuliah (yang diampu/dikuasai - Pisahkan dengan baris baru)</label>
                                 <textarea class="form-control" name="mata_kuliah" rows="2"><?= $edit_detail_data ? htmlspecialchars($edit_detail_data['mata_kuliah']) : '' ?></textarea>
                             </div>
-                            
+
                             <div class="mb-3">
                                 <label class="form-label">Link Publikasi (Nama & URL)</label>
                                 <div id="link-publikasi-container">
@@ -581,22 +604,22 @@ if (!empty($search)) {
                                             $links_array = $decoded_links;
                                         }
                                     }
-                                    
+
                                     // Render existing links if editing
                                     if (!empty($links_array)):
                                         foreach ($links_array as $link):
                                     ?>
-                                        <div class="row g-2 mb-2 link-item">
-                                            <div class="col-4">
-                                                <input type="text" class="form-control" name="link_nama[]" placeholder="Nama (e.g., SINTA)" value="<?= htmlspecialchars($link['nama'] ?? '') ?>">
+                                            <div class="row g-2 mb-2 link-item">
+                                                <div class="col-4">
+                                                    <input type="text" class="form-control" name="link_nama[]" placeholder="Nama (e.g., SINTA)" value="<?= htmlspecialchars($link['nama'] ?? '') ?>">
+                                                </div>
+                                                <div class="col-7">
+                                                    <input type="url" class="form-control" name="link_url[]" placeholder="URL Lengkap" value="<?= htmlspecialchars($link['url'] ?? '') ?>">
+                                                </div>
+                                                <div class="col-1 d-flex align-items-center">
+                                                    <button type="button" class="btn btn-sm btn-danger remove-link"><i class="fas fa-times"></i></button>
+                                                </div>
                                             </div>
-                                            <div class="col-7">
-                                                <input type="url" class="form-control" name="link_url[]" placeholder="URL Lengkap" value="<?= htmlspecialchars($link['url'] ?? '') ?>">
-                                            </div>
-                                            <div class="col-1 d-flex align-items-center">
-                                                <button type="button" class="btn btn-sm btn-danger remove-link"><i class="fas fa-times"></i></button>
-                                            </div>
-                                        </div>
                                     <?php
                                         endforeach;
                                     endif;
@@ -607,8 +630,8 @@ if (!empty($search)) {
                                 </button>
                                 <small class="text-muted d-block mt-2">Simpan sebagai format Nama Link dan URL-nya.</small>
                             </div>
-                            </div>
                         </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <a href="?page=anggota" class="btn btn-secondary">Batal</a>
@@ -617,7 +640,7 @@ if (!empty($search)) {
                     </button>
                 </div>
             </form>
-            
+
         </div>
     </div>
 </div>
@@ -652,8 +675,8 @@ if (!empty($search)) {
             reader.readAsDataURL(input.files[0]);
         }
     }
-    
-    document.addEventListener('DOMContentLoaded', function () {
+
+    document.addEventListener('DOMContentLoaded', function() {
         const container = document.getElementById('link-publikasi-container');
         const addButton = document.getElementById('add-link');
 
@@ -680,7 +703,7 @@ if (!empty($search)) {
         }
 
         // Add button listener
-        addButton.addEventListener('click', function () {
+        addButton.addEventListener('click', function() {
             container.appendChild(createLinkRow());
         });
 
@@ -702,20 +725,22 @@ if (!empty($search)) {
 <style>
     .btn-primary-custom {
         color: #fff;
-        background-color: #0d6efd; /* Warna default Bootstrap Primary */
+        background-color: #0d6efd;
+        /* Warna default Bootstrap Primary */
         border-color: #0d6efd;
     }
 
     .btn-primary-custom:hover {
-        background-color: #0b5ed7; 
+        background-color: #0b5ed7;
         border-color: #0a58ca;
     }
-    
+
     .btn-edit {
         color: #0d6efd;
         border: none;
         background: transparent;
     }
+
     .btn-edit:hover {
         color: #0b5ed7;
         background-color: #f1f5f9;
@@ -727,6 +752,7 @@ if (!empty($search)) {
         border: none;
         background: transparent;
     }
+
     .btn-delete:hover {
         color: #bb2d3b;
         background-color: #f1f5f9;
