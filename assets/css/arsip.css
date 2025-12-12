@@ -3,8 +3,30 @@
     color: white;
     padding: 1rem 0 3rem;
     text-align: center;
+    position: relative;
+    animation: gradientShift 8s ease infinite;
+    overflow: hidden;
 }
-
+.page-header-arsip::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: rotate 20s linear infinite;
+}
 .section-arsip {
     padding: 4rem 0;
+}
+
+@keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }

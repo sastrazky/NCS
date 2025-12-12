@@ -1,13 +1,21 @@
-/* ========================
-   HALAMAN GALERI
-   ======================== */
-
-/* 1. Page Header  */
 .page-header-galeri {
-    background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
-    color: #fff;
+    background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+    color: white;
     padding: 1rem 0 3rem;
     text-align: center;
+    position: relative;
+    animation: gradientShift 8s ease infinite;
+    overflow: hidden;
+}
+.page-header-galeri::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: rotate 20s linear infinite;
 }
 
 .page-header-galeri h1 {
@@ -24,27 +32,9 @@
     padding: 4rem 0;
 }
 
-/* 3. Base Card Style (Reusable) */
-.card-custom {
-    background: #fff;
-    border: none;
-    border-radius: 14px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
-    overflow: hidden;
-    transition: all 0.3s ease;
-}
-
-.card-custom:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
-}
-
 /* ------------------------
    A. Styles untuk AGENDA
    ------------------------ */
-.agenda-card .card-body {
-    padding: 1.5rem;
-}
 
 /* Date Box Styling */
 .date-box {
@@ -169,17 +159,8 @@
 }
 
 .card-body-galeri .desc-galeri {
-    max-width: 86%;        
-    margin-left: 1.4rem;  
-}
-
-.card-body-galeri .desc-galeri {
     font-size: 0.88rem;
     line-height: 1.35;
-}
-
-.card-body-galeri {
-    padding-top: 0.9rem;
 }
 
 .card-title-galeri {
@@ -312,4 +293,14 @@
 .desc-scroll::-webkit-scrollbar-thumb {
     background: #ccc;
     border-radius: 10px;
+}
+
+@keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
