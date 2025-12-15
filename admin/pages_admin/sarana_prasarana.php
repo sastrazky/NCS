@@ -189,7 +189,7 @@ if (isset($_GET['error'])) {
 
 
 // Pagination
-$limit = 10;
+$limit = 4;
 $page_num = isset($_GET['p']) ? (int)$_GET['p'] : 1;
 $offset = ($page_num - 1) * $limit;
 
