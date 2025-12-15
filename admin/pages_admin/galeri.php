@@ -205,7 +205,7 @@ function str_replace_once($search, $replace, $text) {
 
 
 // Pagination
-$limit = 4;
+$limit = 8;
 $page_num = isset($_GET['p']) ? (int)$_GET['p'] : 1;
 $offset = ($page_num - 1) * $limit;
 

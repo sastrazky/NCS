@@ -8,6 +8,10 @@ $profil_query = pg_query($conn, "SELECT * FROM profil LIMIT 1");
 $profil = pg_fetch_assoc($profil_query);
 ?>
 
+<head>
+    <link href="assets/css/visi-misi.css" rel="stylesheet">
+</head>
+
 <!-- Page Header -->
 <section class="page-header-visi-misi">
     <div class="container">

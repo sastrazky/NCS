@@ -37,7 +37,9 @@ if (isset($_GET['success']) && $_GET['success'] == '1') {
     $success_msg = "Pesan berhasil dikirim! Kami akan segera menghubungi Anda.";
 }
 ?>
-
+<head>
+    <link href="assets/css/sarana.css" rel="stylesheet">
+</head>
 <!-- Page Header Section -->
 <section class="page-header-sarana">
     <div class="container">

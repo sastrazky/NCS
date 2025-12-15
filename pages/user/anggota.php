@@ -3,6 +3,10 @@
 $query = pg_query($conn, "SELECT * FROM anggota ORDER BY urutan ASC");
 ?>
 
+<head>
+    <link href="assets/css/anggota.css" rel="stylesheet">
+</head>
+
 <section class="page-header-anggota">
     <div class="container">
         <nav aria-label="breadcrumb">

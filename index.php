@@ -14,15 +14,9 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="assets/css/user-style.css" rel="stylesheet">
-    <link href="assets/css/anggota.css" rel="stylesheet">
-    <link href="assets/css/agenda.css" rel="stylesheet">
     <link href="assets/css/footer.css" rel="stylesheet">
     <link href="assets/css/galeri.css" rel="stylesheet">
-    <link href="assets/css/sejarah.css" rel="stylesheet">
-    <link href="assets/css/visi-misi.css" rel="stylesheet">
-    <link href="assets/css/sarana.css" rel="stylesheet">
-    <link href="assets/css/detail_anggota.css" rel="stylesheet">
-    <link href="assets/css/arsip.css" rel="stylesheet">
+    <link href="assets/css/agenda.css" rel="stylesheet">
 </head>
 
 <body>
@@ -82,7 +76,7 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'beranda';
                 <?php endif; ?>
                 <span class="brand-text">
                     <strong>NCS</strong>
-                    <small class="d-block text-muted" style="font-size: 0.7rem;">Network and Cyber Security</small>
+                    <small class="d-block text-muted" style="font-size: 1rem;">Network and Cyber Security</small>
                 </span>
             </a>
 

@@ -64,6 +64,10 @@ $program_studi_display = 'Teknik Informatika'; // Placeholder/Contoh
 
 ?>
 
+<head>
+    <link href="assets/css/detail_anggota.css" rel="stylesheet">
+    <link href="assets/css/anggota.css" rel="stylesheet">
+</head>
 <section class="page-header-anggota">
     <div class="container">
         <nav aria-label="breadcrumb">
@@ -113,7 +117,7 @@ $program_studi_display = 'Teknik Informatika'; // Placeholder/Contoh
                 <div class="main-content">
                     
                     <div class="profile-header">
-                        <h2 class="mb-2 profile-title"><?= htmlspecialchars($data_anggota['nama_lengkap']) . ' ' . htmlspecialchars($gelar_display) ?></h2>
+                        <hr><h2 class="mb-2 profile-title"><?= htmlspecialchars($data_anggota['nama_lengkap']) . ' ' . htmlspecialchars($gelar_display) ?></h2>
                     </div>
 
                     <div class="mb-4 tag-list">

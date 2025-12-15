@@ -2,7 +2,7 @@
 // pages/user/sarana.php
 
 // Pagination
-$limit = 9;
+$limit = 6;
 $page_num = isset($_GET['p']) ? (int)$_GET['p'] : 1;
 $offset = ($page_num - 1) * $limit;
 
@@ -27,7 +27,9 @@ $stats_query = pg_query($conn, "
 $stats = pg_fetch_assoc($stats_query);
 ?>
 
-<!-- Page Header -->
+<head>
+    <link href="assets/css/sarana.css" rel="stylesheet">
+</head>
 <section class="page-header-sarana">
     <div class="container">
         <nav aria-label="breadcrumb">
@@ -41,10 +43,8 @@ $stats = pg_fetch_assoc($stats_query);
     </div>
 </section>
 
-<!-- Content -->
 <section class="section-sarana">
     <div class="container">
-        <!-- Fasilitas Grid -->
         <?php if (pg_num_rows($sarana_query) > 0): ?>
             <div class="row g-4">
                 <?php while ($sarana = pg_fetch_assoc($sarana_query)): ?>
@@ -65,9 +65,6 @@ $stats = pg_fetch_assoc($stats_query);
                             data-bs-target="#detailModal<?= $sarana['id_sarana'] ?>"
                             style="cursor: pointer;">
 
-
-
-                            <!-- Image -->
                             <div class="facility-image">
                                 <?php if (!empty($original_media) && $media_path !== "assets/images/no-image.jpg"): ?>
                                     <img src="<?= htmlspecialchars($media_path) ?>"
@@ -79,7 +76,6 @@ $stats = pg_fetch_assoc($stats_query);
                                     </div>
                                 <?php endif; ?>
 
-                                <!-- Jumlah Badge -->
                                 <div class="position-absolute bottom-0 start-0 m-3">
                                     <span class="badge bg-dark bg-opacity-75">
                                         <i class="fas fa-cubes me-1"></i>
@@ -88,7 +84,6 @@ $stats = pg_fetch_assoc($stats_query);
                                 </div>
                             </div>
 
-                            <!-- Content -->
                             <div class="card-body-sarana">
                                 <h5 class="card-title-sarana">
                                     <?= htmlspecialchars($sarana['nama_fasilitas']) ?>
@@ -103,10 +98,8 @@ $stats = pg_fetch_assoc($stats_query);
 
                         </div>
                     </div>
-                    <!-- DETAIL MODAL -->
                     <div class="modal fade" id="detailModal<?= $sarana['id_sarana'] ?>" tabindex="-1">
-                        <div class="modal-dialog modal-md modal-dialog-centered"> <!-- lebih kecil & rapi -->
-                            <div class="modal-content">
+                        <div class="modal-dialog modal-md modal-dialog-centered"> <div class="modal-content">
 
                                 <div class="modal-header py-2">
                                     <h5 class="modal-title fw-bold">
@@ -117,7 +110,6 @@ $stats = pg_fetch_assoc($stats_query);
 
                                 <div class="modal-body p-3">
 
-                                    <!-- GAMBAR -->
                                     <div class="detail-image-wrapper mb-3">
                                         <?php if (!empty($original_media) && $media_path !== "assets/images/no-image.jpg"): ?>
                                             <img src="<?= htmlspecialchars($media_path) ?>"
@@ -129,7 +121,6 @@ $stats = pg_fetch_assoc($stats_query);
                                         <?php endif; ?>
                                     </div>
 
-                                    <!-- DETAIL -->
                                     <div>
                                         <p class="mb-1"><strong>Jumlah Unit:</strong> <?= $sarana['jumlah'] ?> Unit</p>
 
@@ -153,7 +144,6 @@ $stats = pg_fetch_assoc($stats_query);
                 <?php endwhile; ?>
             </div>
 
-            <!-- Pagination -->
             <?php if ($total_pages > 1): ?>
                 <nav class="mt-5">
                     <ul class="pagination justify-content-center">
@@ -190,7 +180,6 @@ $stats = pg_fetch_assoc($stats_query);
     </div>
 </section>
 
-<!-- Statistics -->
 <section class="section-sarana bg-light py-4">
     <div class="container">
         <div class="row justify-content-center">

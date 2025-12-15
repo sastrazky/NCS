@@ -145,7 +145,7 @@ $auto_delete = pg_query($conn, "
 ");
 
 // Pagination
-$limit = 4;
+$limit = 6;
 $page_num = isset($_GET['p']) ? (int)$_GET['p'] : 1;
 $offset = ($page_num - 1) * $limit;
 

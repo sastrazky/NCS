@@ -1,7 +1,5 @@
 <?php
 // pages/user/galeri.php
-
-// Filter - default ke Agenda
 $filter_tab = isset($_GET['tab']) ? (string)$_GET['tab'] : 'agenda';
 
 // Pagination
@@ -33,14 +31,16 @@ function getAgendaStatus($tanggal_mulai, $tanggal_selesai)
 
     if ($tanggal_mulai > $today) {
         return ['status' => 'Akan Datang', 'class' => 'bg-primary'];
-    } else if ($end_date < $today) {
-        return ['status' => 'Selesai', 'class' => 'bg-secondary'];
     } else {
         return ['status' => 'Berlangsung', 'class' => 'bg-success'];
     }
 }
 ?>
 
+<head>
+    <link href="assets/css/galeri.css" rel="stylesheet">
+    <link href="assets/css/agenda.css" rel="stylesheet">
+</head>
 <section class="page-header-galeri">
     <div class="container">
         <nav aria-label="breadcrumb">

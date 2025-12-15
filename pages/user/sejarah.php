@@ -15,6 +15,11 @@ if (!file_exists($logo_path)) {
     $logo_path = "assets/images/logo-ncs.png";
 }
 ?>
+
+<head>
+    <link href="assets/css/sejarah.css" rel="stylesheet">
+</head>
+
 <!-- Page Header -->
 <section class="page-header-sejarah">
     <div class="container">

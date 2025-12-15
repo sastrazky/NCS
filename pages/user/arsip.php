@@ -10,38 +10,18 @@ $page_num = isset($_GET['p']) ? (int)$_GET['p'] : 1;
 $offset = ($page_num - 1) * $limit;
 
 // Build query based on kategori
-$where_clause = '';
-$query_params = [];
-
-if (!empty($filter_kategori)) {
-    // Map kategori display ke kategori database
-    $kategori_map = [
-        'Penelitian' => ['Penelitian'],
-        'Pengabdian' => ['Pengabdian']
-    ];
-    
-    if (isset($kategori_map[$filter_kategori])) {
-       $where_clause = "WHERE kategori = $1";
-        $query_params[] = $filter_kategori;
-
-    }
-}
+$where_clause = "WHERE kategori = $1"; // <-- Diperbarui
+$query_params = [$filter_kategori];     // <-- Diperbarui
 
 // Get total records
-if (!empty($query_params)) {
-    $count_query = pg_query_params($conn, "SELECT COUNT(*) as total FROM arsip $where_clause", $query_params);
-} else {
-    $count_query = pg_query($conn, "SELECT COUNT(*) as total FROM arsip");
-}
+// Menggunakan pg_query_params karena query_params selalu ada
+$count_query = pg_query_params($conn, "SELECT COUNT(*) as total FROM arsip $where_clause", $query_params);
 $total_records = pg_fetch_assoc($count_query)['total'];
 $total_pages = ceil($total_records / $limit);
 
 // Get data
-if (!empty($query_params)) {
-    $arsip_query = pg_query_params($conn, "SELECT * FROM arsip $where_clause ORDER BY created_at DESC LIMIT $limit OFFSET $offset", $query_params);
-} else {
-    $arsip_query = pg_query($conn, "SELECT * FROM arsip ORDER BY created_at DESC LIMIT $limit OFFSET $offset");
-}
+// Menggunakan pg_query_params karena query_params selalu ada
+$arsip_query = pg_query_params($conn, "SELECT * FROM arsip $where_clause ORDER BY created_at DESC LIMIT $limit OFFSET $offset", $query_params);
 
 // Get statistics
 // PERBAIKAN - Get statistics - Total dokumen
@@ -84,6 +64,9 @@ $count2 = $year_stats[$year2] ?? 0;
 $count3 = $year_stats[$year3] ?? 0;
 ?>
 
+<head>
+    <link href="assets/css/arsip.css" rel="stylesheet">
+</head>
 <!-- Page Header -->
 <section class="page-header-arsip">
     <div class="container">
