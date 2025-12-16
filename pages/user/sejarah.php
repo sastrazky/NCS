@@ -1,5 +1,5 @@
 <?php
-// pages/user/sejarah.php
+// ambil data profil
 $profil_query = pg_query($conn, "SELECT * FROM profil LIMIT 1");
 $profil = pg_fetch_assoc($profil_query);
 
@@ -44,7 +44,7 @@ if (!file_exists($logo_path)) {
             <div class="col-lg-9 mx-auto">
                 <?php if ($profil): ?>
                     <div class="content-box-sejarah">
-                        <!-- Logo fix -->
+                        <!-- Logo  -->
                         <div class="text-center mb-4">
                             <img src="<?= htmlspecialchars($logo_path) ?>"
                                 alt="Logo NCS"

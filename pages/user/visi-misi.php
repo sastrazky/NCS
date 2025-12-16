@@ -1,8 +1,4 @@
 <?php
-// ====================================
-// pages/user/visi-misi.php
-// ====================================
-
 // Ambil data dari tabel profil
 $profil_query = pg_query($conn, "SELECT * FROM profil LIMIT 1");
 $profil = pg_fetch_assoc($profil_query);
@@ -39,7 +35,7 @@ $profil = pg_fetch_assoc($profil_query);
                     <!-- VISI -->
                     <div class="content-box-visi-misi">
                         <h3 class="text-primary mb-4">
-                           Visi
+                            Visi
                         </h3>
 
                         <div style="text-align: justify; line-height: 2;">
@@ -54,9 +50,9 @@ $profil = pg_fetch_assoc($profil_query);
                         </h3>
 
                         <?php
-                            // Pecah misi berdasarkan enter
-                            $misi_list = explode("\n", $profil['misi']);
-                            $misi_list = array_filter(array_map('trim', $misi_list));
+                        // Pecah misi berdasarkan enter
+                        $misi_list = explode("\n", $profil['misi']);
+                        $misi_list = array_filter(array_map('trim', $misi_list));
                         ?>
 
                         <?php if (count($misi_list) > 0): ?>

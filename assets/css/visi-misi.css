@@ -1,3 +1,9 @@
+/* biar animasinya tidak menggangu breadcrumn*/
+.page-header-visi-misi nav[aria-label="breadcrumb"],
+.page-header-visi-misi .container {
+    position: relative;
+    z-index: 2; 
+}
 .page-header-visi-misi {
     background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
     color: white;
@@ -6,6 +12,7 @@
     position: relative;
     animation: gradientShift 8s ease infinite;
     overflow: hidden;
+    z-index: 1;
 }
 .page-header-visi-misi::before {
     content: '';
@@ -16,6 +23,7 @@
     height: 200%;
     background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
     animation: rotate 20s linear infinite;
+    z-index: 1;
 }
 
 .section-visi-misi::before {

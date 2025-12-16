@@ -1,36 +1,75 @@
 <?php
-// pages/anggota.php (Modifikasi untuk detail_anggota + Multi-Link JSON + NIDN + NIP Only)
-
-// Pastikan $conn tersedia dan SESSION dimulai
+// Pastikan koneksi dan sesi admin ada
 if (!isset($conn) || !isset($_SESSION['id_admin'])) {
-    // Diasumsikan koneksi dan session sudah dicek di index.php
+    // Handle error atau redirect jika tidak terautentikasi (asumsi ini sudah dihandle di index.php/file utama)
 }
 
-// Handle success/error messages
 $success_msg = '';
 $error_msg = '';
-$id_admin = (int)$_SESSION['id_admin']; // Ambil ID Admin yang sedang login
+$id_admin = (int)$_SESSION['id_admin']; 
+
+// Get success message from URL
+if (isset($_GET['success'])) {
+    $success_msg = $_GET['success'];
+    // Redireksi untuk menghilangkan parameter GET (sudah ada di kode asli, dijaga)
+    $current_url = strtok($_SERVER["REQUEST_URI"], '?'); 
+    $redirect_url = $current_url . '?page=anggota';
+    // Hentikan eksekusi script setelah header diset
+    // header("Location: $redirect_url"); 
+    // exit();
+}
+
+// Get error message from URL (JIKA ANDA PERNAH MEMAKAI INI JUGA)
+if (isset($_GET['error'])) {
+    $error_msg = $_GET['error'];
+    // Redireksi untuk menghilangkan parameter GET (sudah ada di kode asli, dijaga)
+    $current_url = strtok($_SERVER["REQUEST_URI"], '?'); 
+    $redirect_url = $current_url . '?page=anggota';
+    // Hentikan eksekusi script setelah header diset
+    // header("Location: $redirect_url");
+    // exit();
+}
 
 // Get data for edit
 $edit_data = null;
 // Ambil data detail juga jika mode edit
 $edit_detail_data = null;
+$id_anggota_edit_current = 0;
 if (isset($_GET['edit'])) {
-    $id_anggota = (int)$_GET['edit'];
+    $id_anggota_edit_current = (int)$_GET['edit'];
     // Mengambil data utama anggota
-    $edit_query = pg_query_params($conn, "SELECT * FROM anggota WHERE id_anggota = $1", [$id_anggota]);
+    $edit_query = pg_query_params($conn, "SELECT * FROM anggota WHERE id_anggota = $1", [$id_anggota_edit_current]);
     $edit_data = pg_fetch_assoc($edit_query);
 
     // MENGAMBIL DATA DETAIL TAMBAHAN
-    $detail_query = pg_query_params($conn, "SELECT * FROM detail_anggota WHERE id_anggota = $1", [$id_anggota]);
+    $detail_query = pg_query_params($conn, "SELECT * FROM detail_anggota WHERE id_anggota = $1", [$id_anggota_edit_current]);
     $edit_detail_data = pg_fetch_assoc($detail_query);
 }
+
+// --- LOGIC BARU: CEK KETERSEDIAAN JABATAN KETUA LAB ---
+$is_ketua_lab_occupied = false;
+$check_ketua_query = "SELECT COUNT(*) as count FROM anggota WHERE jabatan = 'Ketua Lab'";
+$check_ketua_params = [];
+
+if ($id_anggota_edit_current > 0) {
+    // Jika dalam mode edit, kecualikan anggota yang sedang diedit
+    $check_ketua_query .= " AND id_anggota != $1";
+    $check_ketua_params[] = $id_anggota_edit_current;
+}
+
+$check_ketua_result = pg_query_params($conn, $check_ketua_query, $check_ketua_params);
+$ketua_count = pg_fetch_assoc($check_ketua_result)['count'];
+
+if ($ketua_count > 0) {
+    $is_ketua_lab_occupied = true;
+}
+// --- AKHIR LOGIC CEK KETERSEDIAAN JABATAN KETUA LAB ---
 
 // Handle Delete (TIDAK ADA PERUBAHAN SIGNIFIKAN KARENA ON DELETE CASCADE SUDAH DITERAPKAN DI DB)
 if (isset($_GET['delete'])) {
     $id_anggota = (int)$_GET['delete'];
 
-    // --- LANGKAH 1 (DELETE): Ambil Judul Item untuk Log ---
+    // --- LANGKAH 1 (DELETE): Ambil Judul Item untuk Log dan Path Foto ---
     $file_query = pg_query_params($conn, "SELECT nama_lengkap, foto_path FROM anggota WHERE id_anggota = $1", [$id_anggota]);
     $item_title = 'Anggota ID ' . $id_anggota; // Default title
 
@@ -76,7 +115,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $jabatan = trim($_POST['jabatan']);
     $email = trim($_POST['email']);
     $urutan = (int)$_POST['urutan'];
-    $status = $_POST['status'];
+
+    // Variabel status dihapus (sesuai permintaan user)
     $id_admin = $_SESSION['id_admin'];
 
     // Data Detail Anggota Baru
@@ -84,6 +124,29 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $pendidikan = trim($_POST['pendidikan']);
     $sertifikasi = trim($_POST['sertifikasi']);
     $mata_kuliah = trim($_POST['mata_kuliah']);
+
+    // --- VALIDASI: HANYA BOLEH ADA SATU KETUA LAB ---
+    if ($jabatan === 'Ketua Lab') {
+        // Query untuk mencari anggota lain yang jabatannya 'Ketua Lab'
+        // Jika mode edit ($id_anggota > 0), kecualikan dirinya sendiri dari hitungan
+        $check_query = "SELECT COUNT(*) as count FROM anggota WHERE jabatan = $1";
+        $params = ['Ketua Lab'];
+
+        if ($id_anggota > 0) {
+            // Jika edit, tambahkan kondisi WHERE NOT id_anggota = $2
+            $check_query .= " AND id_anggota != $2";
+            $params[] = $id_anggota;
+        }
+
+        $check_result = pg_query_params($conn, $check_query, $params);
+        $count = pg_fetch_assoc($check_result)['count'];
+
+        if ($count > 0) {
+            // Set error message jika Ketua sudah ada
+            $error_msg = "Gagal menyimpan data! Jabatan 'Ketua Lab' sudah diisi oleh anggota lain.";
+        }
+    }
+    // --- AKHIR VALIDASI KETUA LAB ---
 
     // --- KELOLA MULTI-LINK JSON ---
     $link_publikasi_array = [];
@@ -103,11 +166,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
     // Encode array menjadi JSON string untuk disimpan di database
     $link_publikasi = json_encode($link_publikasi_array);
-    // ------------------------------
 
     // Validation
-    if (empty($nama_lengkap) || empty($nip)) { // Menggunakan $nip
-        $error_msg = "Nama lengkap dan NIP harus diisi!";
+    // Perubahan: Cek $error_msg dari validasi Ketua Lab
+    if (!empty($error_msg) || empty($nama_lengkap) || empty($nip)) {
+        if (empty($error_msg)) {
+            $error_msg = "Nama lengkap dan NIP harus diisi!";
+        }
     } else {
         $upload_dir = 'uploads/anggota/'; // Path untuk DB dan file_exists
 
@@ -145,11 +210,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         } else {
             // Jika tidak ada upload baru, ambil path lama saat Edit
             if ($id_anggota > 0) {
-                $old_data_query = pg_query_params($conn, "SELECT foto_path, nip FROM anggota WHERE id_anggota = $1", [$id_anggota]);
+                $old_data_query = pg_query_params($conn, "SELECT foto_path FROM anggota WHERE id_anggota = $1", [$id_anggota]);
                 $old_data = pg_fetch_assoc($old_data_query);
                 $foto_path = $old_data['foto_path'] ?? '';
             } else {
-                // FOTO WAJIB SAAT INSERT (jika tidak ada file diupload, ini akan menjadi error)
+                // FOTO WAJIB SAAT INSERT
                 $error_msg = "Foto wajib diunggah saat menambah anggota!";
             }
 
@@ -163,20 +228,41 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if (empty($error_msg)) {
             if ($id_anggota > 0) {
                 // Update
-                $update_query_fields = "nama_lengkap = $1, nip = $2, nidn = $3, jabatan = $4, email = $5, urutan = $6, status = $7, updated_at = NOW()";
-                // Urutan parameter: 1=nama, 2=nip, 3=nidn, 4=jabatan, 5=email, 6=urutan, 7=status, 8=id_anggota
-                $params = [$nama_lengkap, $nip, $nidn, $jabatan, $email, $urutan, $status, $id_anggota];
+                // Perubahan: Hilangkan 'status' dari daftar kolom UPDATE
+                $update_query_fields = "nama_lengkap = $1, nip = $2, nidn = $3, jabatan = $4, email = $5, urutan = $6, updated_at = NOW()";
+
+                // Inisialisasi parameter update (tanpa foto dan tanpa ID)
+                $params_base = [$nama_lengkap, $nip, $nidn, $jabatan, $email, $urutan];
 
                 if ($new_foto_uploaded) {
-                    // Jika ada foto baru, tambahkan foto_path sebagai $8 dan id_anggota sebagai $9
-                    $update_query_fields .= ", foto_path = $" . (count($params) + 1);
-                    $params = [$nama_lengkap, $nip, $nidn, $jabatan, $email, $urutan, $status, $foto_path, $id_anggota];
+                    // --- LOGIKA PENGHAPUSAN FOTO LAMA DIMULAI ---
+                    // 1. Ambil PATH foto lama sebelum diupdate
+                    $old_data_query_path = pg_query_params($conn, "SELECT foto_path FROM anggota WHERE id_anggota = $1", [$id_anggota]);
+                    $old_data_path = pg_fetch_assoc($old_data_query_path);
+                    $old_foto_path = $old_data_path['foto_path'] ?? '';
+
+                    // 2. HAPUS FILE FOTO LAMA dari server
+                    if (!empty($old_foto_path) && file_exists($old_foto_path)) {
+                        @unlink($old_foto_path); 
+                    }
+                    // --- LOGIKA PENGHAPUSAN FOTO LAMA SELESAI ---
+
+                    // Tambahkan foto_path BARU ke parameter base jika ada upload baru
+                    $params_base[] = $foto_path;
+
+                    // Tambahkan field foto_path ke query fields
+                    $update_query_fields .= ", foto_path = $" . count($params_base);
                 }
+
+                // Tambahkan ID Anggota sebagai parameter terakhir untuk klausa WHERE
+                $params = $params_base;
+                $params[] = $id_anggota;
+                $where_index = count($params); // ID anggota adalah parameter terakhir
 
                 // Eksekusi Update Anggota Utama
                 $update_result = pg_query_params(
                     $conn,
-                    "UPDATE anggota SET $update_query_fields WHERE id_anggota = $" . count($params),
+                    "UPDATE anggota SET $update_query_fields WHERE id_anggota = $$where_index",
                     $params
                 );
 
@@ -238,10 +324,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 pg_query($conn, "BEGIN");
 
                 // Insert Anggota Utama
+                // Perubahan: Hilangkan 'status' dari daftar kolom INSERT (kolom 8) dan dari parameter
                 $insert_result = pg_query_params(
                     $conn,
-                    "INSERT INTO anggota (nama_lengkap, nip, nidn, jabatan, email, foto_path, urutan, status, id_admin, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW()) RETURNING id_anggota",
-                    [$nama_lengkap, $nip, $nidn, $jabatan, $email, $foto_path, $urutan, $status, $id_admin]
+                    "INSERT INTO anggota (nama_lengkap, nip, nidn, jabatan, email, foto_path, urutan, id_admin, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW()) RETURNING id_anggota",
+                    // Parameter sekarang hanya 8 ($1 sampai $8), status dihilangkan
+                    [$nama_lengkap, $nip, $nidn, $jabatan, $email, $foto_path, $urutan, $id_admin]
                 );
 
                 if ($insert_result) {
@@ -293,10 +381,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-// Get success message from URL
+// Get success message from URL (Diulang jika ada error/success dari POST, walau sudah dicegah di awal)
 if (isset($_GET['success'])) {
     $success_msg = $_GET['success'];
 }
+// Get error message from URL (Diulang jika ada error/success dari POST, walau sudah dicegah di awal)
+if (isset($_GET['error'])) {
+    $error_msg = $_GET['error'];
+}
+
 
 // Pagination
 $limit = 12;
@@ -328,12 +421,23 @@ $anggota_query_base = "SELECT *, nip AS nip FROM anggota $where_clause ORDER BY 
 if (!empty($search)) {
     // Clone parameters for LIMIT and OFFSET
     $exec_params = $query_params;
+    // Tentukan index parameter untuk LIMIT dan OFFSET
+    $limit_index = count($query_params) + 1;
+    $offset_index = count($query_params) + 2;
+
+    $exec_params[] = $limit; 
+    $exec_params[] = $offset; 
+
+    $anggota_query_base = "SELECT *, nip AS nip FROM anggota $where_clause ORDER BY urutan ASC, nama_lengkap ASC LIMIT $" . $limit_index . " OFFSET $" . $offset_index;
+
     $anggota_result = pg_query_params($conn, $anggota_query_base, $exec_params);
 } else {
-    $anggota_result = pg_query($conn, $anggota_query_base);
+    // Tanpa WHERE clause, parameter hanya LIMIT dan OFFSET
+    $anggota_query_base = "SELECT *, nip AS nip FROM anggota ORDER BY urutan ASC, nama_lengkap ASC LIMIT $1 OFFSET $2";
+    $anggota_result = pg_query_params($conn, $anggota_query_base, [$limit, $offset]);
 }
-?>
 
+?>
 <?php if (!empty($success_msg)): ?>
     <div class="alert alert-success alert-dismissible fade show" role="alert">
         <i class="fas fa-check-circle me-2"></i><?= htmlspecialchars($success_msg) ?>
@@ -371,7 +475,6 @@ if (!empty($search)) {
                     <a href="?page=anggota" class="btn btn-secondary">Reset</a>
                 <?php endif; ?>
             </div>
-            <small class="text-muted d-block mt-2">Ditemukan <?= $total_records ?> data.</small>
         </form>
     </div>
 </div>
@@ -392,12 +495,6 @@ if (!empty($search)) {
                                 <i class="fas fa-user text-muted" style="font-size: 5rem;"></i>
                             </div>
                         <?php endif; ?>
-
-                        <!--        <div class="position-absolute top-0 end-0 m-2">
-                            <span class="badge <?= $row['status'] == 'Aktif' ? 'bg-success' : 'bg-secondary' ?>">
-                                <?= htmlspecialchars($row['status'] ?? 'Aktif') ?>
-                            </span>
-                        </div> -->
                     </div>
 
                     <div class="card-body">
@@ -448,7 +545,7 @@ if (!empty($search)) {
 </div>
 
 <?php if ($total_pages > 1): ?>
-    <nav>
+    <nav class="mt-5">
         <ul class="pagination justify-content-center">
             <li class="page-item <?= $page_num <= 1 ? 'disabled' : '' ?>">
                 <a class="page-link" href="?page=anggota&p=<?= $page_num - 1 ?><?= !empty($search) ? '&search=' . urlencode($search) : '' ?>">
@@ -536,9 +633,19 @@ if (!empty($search)) {
                                         <label for="jabatan" class="form-label">Jabatan</label>
                                         <select name="jabatan" class="form-control" style="max-height: 120px; overflow-y: auto;">
                                             <option value="" disabled selected>Pilih jabatan</option>
+                                            <option value="Ketua Lab" 
+                                                <?php 
+                                                    if ($edit_data && $edit_data['jabatan'] == 'Ketua Lab') {
+                                                        echo 'selected'; 
+                                                    } elseif ($is_ketua_lab_occupied) {
+                                                        echo 'disabled';
+                                                    }
+                                                ?>
+                                            >Ketua Lab</option>
                                             <option value="Peneliti" <?php if ($edit_data && $edit_data['jabatan'] == 'Peneliti') echo 'selected'; ?>>Peneliti</option>
-                                            <option value="Ketua Lab" <?php if ($edit_data && $edit_data['jabatan'] == 'Ketua Lab') echo 'selected'; ?>>Ketua Lab</option>
+                                            
                                         </select>
+            
                                     </div>
                                     <div class="mb-3">
                                         <label for="email" class="form-label">Email</label>
@@ -557,20 +664,6 @@ if (!empty($search)) {
                             </div>
 
                             <div class="row">
-                                <!--        <div class="mb-3">
-                                    <label for="urutan" class="form-label">Urutan Tampil</label>
-                                    <input type="number" class="form-control" name="urutan"
-                                        value="<?= $edit_data ? $edit_data['urutan'] : '0' ?>" min="0">
-                                    <small class="text-muted">Angka lebih kecil akan tampil lebih dahulu</small>
-                                </div> -->
-
-                                <!--   <div class="col-md-6 mb-3">
-                                    <label for="status" class="form-label">Status</label>
-                                    <select class="form-select" name="status">
-                                        <option value="Aktif" <?= ($edit_data && $edit_data['status'] == 'Aktif') ? 'selected' : '' ?>>Aktif</option>
-                                        <option value="Non-Aktif" <?= ($edit_data && $edit_data['status'] == 'Non-Aktif') ? 'selected' : '' ?>>Non-Aktif</option>
-                                    </select>
-                                </div> -->
                             </div>
                         </div>
 
@@ -609,17 +702,17 @@ if (!empty($search)) {
                                     if (!empty($links_array)):
                                         foreach ($links_array as $link):
                                     ?>
-                                            <div class="row g-2 mb-2 link-item">
-                                                <div class="col-4">
-                                                    <input type="text" class="form-control" name="link_nama[]" placeholder="Nama (e.g., SINTA)" value="<?= htmlspecialchars($link['nama'] ?? '') ?>">
-                                                </div>
-                                                <div class="col-7">
-                                                    <input type="url" class="form-control" name="link_url[]" placeholder="URL Lengkap" value="<?= htmlspecialchars($link['url'] ?? '') ?>">
-                                                </div>
-                                                <div class="col-1 d-flex align-items-center">
-                                                    <button type="button" class="btn btn-sm btn-danger remove-link"><i class="fas fa-times"></i></button>
-                                                </div>
+                                        <div class="row g-2 mb-2 link-item">
+                                            <div class="col-4">
+                                                <input type="text" class="form-control" name="link_nama[]" placeholder="Nama (e.g., SINTA)" value="<?= htmlspecialchars($link['nama'] ?? '') ?>">
                                             </div>
+                                            <div class="col-7">
+                                                <input type="url" class="form-control" name="link_url[]" placeholder="URL Lengkap" value="<?= htmlspecialchars($link['url'] ?? '') ?>">
+                                            </div>
+                                            <div class="col-1 d-flex align-items-center">
+                                                <button type="button" class="btn btn-sm btn-danger remove-link"><i class="fas fa-times"></i></button>
+                                            </div>
+                                        </div>
                                     <?php
                                         endforeach;
                                     endif;

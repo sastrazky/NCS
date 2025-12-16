@@ -1,53 +1,170 @@
-.profile-title {
-    margin: 0;
-    font-size: 1.8rem;
-}
-.sidebar-info {
-    padding: 15px;
-    border-right: 1px solid #eee;
-    height: 100%;
-}
-.profile-photo {
-    width: 100%;
-    height: auto;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-.sidebar-info h6 {
-    font-size: 0.9rem;
-    color: #495057;
-    margin-bottom: 0;
-    font-weight: bold;
-}
-.sidebar-info p {
-    margin-bottom: 15px;
-    font-size: 1rem;
-}
-.tag-list .badge {
-    padding: 0.5em 0.8em;
-    font-size: 0.9em;
-    border-radius: 15px;
-    background-color: #3498db !important;
-}
-.link-list .btn-outline-primary {
-    border-radius: 20px;
-    border-width: 2px;
-}
-.link-list .btn-outline-primary:hover {
-    background-color: #0d6efd;
-    color: white;
-}
-.card {
-    border: 1px solid #eee;
+/* Variabel Warna Kustom */
+:root {
+    --primary-custom: #0d6efd; /* Biru Primer */
+    --secondary-text: #6c757d; /* Abu-abu sedang untuk label */
+    --info-value-color: #212529; /* Teks utama sangat gelap */
+    --light-bg: #f8f9fa;
 }
 
-/* KODE CSS BARU UNTUK MENGHILANGKAN BULLET */
+/* Bagian Header dan Konten Utama */
+.section-detail-anggota {
+    background-color: var(--light-bg); /* Background halaman */
+}
+.section-detail-anggota .container {
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 0 30px rgba(0,0,0,0.05);
+    padding: 30px;
+}
+.section-title {
+    color: var(--primary-custom);
+    padding-left: 10px;
+}
+
+/* Sidebar Info (Kolom Kiri) */
+.sidebar-card {
+    border: none !important;
+    background-color: #ffffff;
+}
+.profile-section-title {
+    font-size: 0.95rem;
+    color: #495057 !important;
+    margin-bottom: 15px !important;
+}
+
+.profile-photo-lg {
+    width: 100%;
+    max-width: 200px;
+    height: auto;
+    border-radius: 10px;
+    object-fit: cover;
+    border: 3px solid #dee2e6;
+    padding: 3px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* Styling Detail Info */
+.info-group {
+    margin-bottom: 18px; /* Tambah jarak antar grup info */
+    padding-bottom: 5px;
+    border-bottom: 1px dashed #eee; /* Garis pemisah tipis */
+}
+.info-group:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+.info-label {
+    font-size: 0.8rem; /* Lebih kecil dan tegas */
+    color: var(--secondary-text);
+    margin-bottom: 4px;
+    font-weight: 700; /* Lebih tebal */
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+}
+.info-label i {
+    font-size: 1rem;
+}
+.info-value {
+    font-size: 1rem;
+    color: var(--info-value-color);
+    margin-bottom: 0;
+    line-height: 1.4;
+    font-weight: 500;
+    padding-left: 20px; /* Indentasi nilai */
+}
+
+
+/* Tags Keahlian */
+.bg-primary-custom {
+    background-color: var(--primary-custom) !important;
+    color: white;
+}
+.tag-list .badge {
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
+/* Link Publikasi - TAMPILAN SEDERHANA */
+.btn-outline-primary-simple {
+    color: var(--primary-custom);
+    border-color: var(--primary-custom);
+    border-radius: 6px; /* Kotak sedikit membulat, bukan pil */
+    border-width: 1px;
+    transition: all 0.3s;
+    font-size: 0.85rem;
+    padding: .3rem .7rem; /* Ukuran tombol lebih kecil */
+}
+.btn-outline-primary-simple:hover {
+    background-color: var(--primary-custom);
+    color: white;
+}
+
+/* Kartu Pendidikan & Sertifikasi */
+.custom-card-list {
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+.custom-card-list:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.15) !important;
+}
+.custom-card-list .card-body {
+    padding: 1.5rem;
+}
+
+/* List Item - Mata Kuliah, Pendidikan, Sertifikasi */
 .detail-no-bullet {
     list-style-type: none;
     padding-left: 0;
+    margin-bottom: 0;
 }
-/* Memastikan list item tidak memiliki background image/icon */
 .detail-no-bullet li {
-    padding-left: 0; 
-    background-image: none !important;
+    padding: 5px 0; 
+    line-height: 1.5;
+    position: relative;
+    /* Menambahkan dot kustom untuk Pendidikan/Sertifikasi */
+    padding-left: 15px; 
+}
+.detail-no-bullet li:before {
+    content: "\2022"; /* Bullet point */
+    color: #6c757d; /* Warna abu-abu */
+    font-weight: bold;
+    display: inline-block;
+    width: 1em;
+    margin-left: -1em;
+}
+
+/* List Group untuk Mata Kuliah */
+.list-group-item {
+    border: none;
+    border-bottom: 1px dashed #eee;
+    padding: 10px 0;
+}
+.list-group-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+.list-group-item i.fa-dot-circle {
+    font-size: 0.8em;
+}
+.list-group-item span {
+    color: var(--info-value-color);
+}
+
+
+/* Responsif */
+@media (max-width: 767.98px) {
+    .section-detail-anggota .container {
+        padding: 15px;
+    }
+    .sidebar-card {
+        margin-bottom: 20px;
+    }
+    .col-md-5, .col-md-7 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    .profile-photo-lg {
+        max-width: 150px;
+    }
 }

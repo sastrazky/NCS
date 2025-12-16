@@ -1,3 +1,9 @@
+/* biar animasinya tidak menggangu breadcrumn*/
+.page-header-arsip nav[aria-label="breadcrumb"],
+.page-header-arsip .container {
+    position: relative;
+    z-index: 2; 
+}
 .page-header-arsip {
     background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
     color: white;
@@ -6,6 +12,7 @@
     position: relative;
     animation: gradientShift 8s ease infinite;
     overflow: hidden;
+    z-index: 1;
 }
 .page-header-arsip::before {
     content: '';

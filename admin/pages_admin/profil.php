@@ -39,7 +39,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         } else if ($file_size > 5 * 1024 * 1024) { // 5MB max
             $error_msg = "Ukuran file maksimal 5MB!";
         } else {
-            $upload_dir = '../uploads/profil/';
+            // NOTE: Path upload ini menggunakan '..' untuk keluar dari direktori admin/
+            $upload_dir = 'uploads/profil/'; 
+            
+            // Logika untuk memastikan direktori ada
+            // Asumsi file ini berada di admin/pages_admin/profil.php, 
+            // maka path folder harus disesuaikan jika dieksekusi dari file tersebut.
+            // Jika eksekusi dilakukan dari root admin/index.php, path harus disesuaikan.
+            // Menggunakan path relatif dari file eksekusi:
             if (!file_exists($upload_dir)) {
                 mkdir($upload_dir, 0777, true);
             }
@@ -66,8 +73,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             if ($new_logo_uploaded) {
                 // Hapus logo lama jika upload logo baru berhasil
                 if (!empty($profil_data['logo_path']) && file_exists($profil_data['logo_path'])) {
-                    unlink($profil_data['logo_path']);
+                    @unlink($profil_data['logo_path']); // Menggunakan @unlink untuk menghindari script error
                 }
+                // --- 
                 
                 // Update dengan logo baru
                 $update_result = pg_query_params($conn, 
@@ -97,7 +105,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $error_msg = "Gagal memperbarui profil!";
             }
         } else {
-            // Insert new profil (Hanya jalankan jika ada logo_path baru atau kosong jika tidak ada)
+            if (empty($logo_path) && $new_logo_uploaded == false) {
+            }
+            
             $insert_result = pg_query_params($conn, 
                 "INSERT INTO profil (sejarah, visi, misi, logo_path, id_admin, updated_at) VALUES ($1, $2, $3, $4, $5, NOW())",
                 [$sejarah, $visi, $misi, $logo_path, $id_admin]
@@ -124,6 +134,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 // Get success message from URL
 if (isset($_GET['success'])) {
     $success_msg = $_GET['success'];
+}
+// Get error message from URL (Diulang jika ada error/success dari POST, walau sudah dicegah di awal)
+if (isset($_GET['error'])) {
+    $error_msg = $_GET['error'];
 }
 
 // Refresh profil data after operations
@@ -190,6 +204,11 @@ $profil_data = pg_fetch_assoc($profil_query);
                         <label class="form-label fw-bold">Logo Organisasi</label>
                         <div class="border rounded p-3 bg-light">
                             <div id="preview-wrapper" class="mb-3 text-center">
+                                <?php 
+                                    $current_logo_path = ($profil_data && !empty($profil_data['logo_path'])) 
+                                        ? htmlspecialchars($profil_data['logo_path']) 
+                                        : 'assets/img/no-image.png'; // Gunakan placeholder yang lebih generik
+                                ?>
                                 <?php if ($profil_data && !empty($profil_data['logo_path'])): ?>
                                     <img src="<?= htmlspecialchars($profil_data['logo_path']) ?>" 
                                         alt="Logo" 
@@ -203,11 +222,11 @@ $profil_data = pg_fetch_assoc($profil_query);
                                 <?php endif; ?>
                             </div>
                             <input type="file" 
-                               class="form-control" 
-                               id="logo" 
-                               name="logo" 
-                               accept="image/*"
-                               onchange="previewImage(this)">
+                                class="form-control" 
+                                id="logo" 
+                                name="logo" 
+                                accept="image/*"
+                                onchange="previewImage(this)">
                             <small class="text-muted d-block mt-2">Format: JPG, PNG, GIF | Max: 5MB</small>
                         </div>
                     </div>
@@ -219,10 +238,10 @@ $profil_data = pg_fetch_assoc($profil_query);
                             <i class="fas fa-history text-primary me-2"></i>Sejarah
                         </label>
                         <textarea class="form-control" 
-                                     id="sejarah" 
-                                     name="sejarah" 
-                                     rows="5" 
-                                     placeholder="Tuliskan sejarah organisasi..."><?= $profil_data ? htmlspecialchars($profil_data['sejarah']) : '' ?></textarea>
+                                    id="sejarah" 
+                                    name="sejarah" 
+                                    rows="5" 
+                                    placeholder="Tuliskan sejarah organisasi..."><?= $profil_data ? htmlspecialchars($profil_data['sejarah']) : '' ?></textarea>
                     </div>
 
                     <div class="mb-4">
@@ -230,10 +249,10 @@ $profil_data = pg_fetch_assoc($profil_query);
                             <i class="fas fa-eye text-primary me-2"></i>Visi
                         </label>
                         <textarea class="form-control" 
-                                     id="visi" 
-                                     name="visi" 
-                                     rows="4" 
-                                     placeholder="Tuliskan visi organisasi..."><?= $profil_data ? htmlspecialchars($profil_data['visi']) : '' ?></textarea>
+                                    id="visi" 
+                                    name="visi" 
+                                    rows="4" 
+                                    placeholder="Tuliskan visi organisasi..."><?= $profil_data ? htmlspecialchars($profil_data['visi']) : '' ?></textarea>
                     </div>
 
                     <div class="mb-4">
@@ -241,10 +260,10 @@ $profil_data = pg_fetch_assoc($profil_query);
                             <i class="fas fa-bullseye text-primary me-2"></i>Misi
                         </label>
                         <textarea class="form-control" 
-                                     id="misi" 
-                                     name="misi" 
-                                     rows="6" 
-                                     placeholder="Tuliskan misi organisasi (gunakan enter untuk pemisah)..."><?= $profil_data ? htmlspecialchars($profil_data['misi']) : '' ?></textarea>
+                                    id="misi" 
+                                    name="misi" 
+                                    rows="6" 
+                                    placeholder="Tuliskan misi organisasi (gunakan enter untuk pemisah)..."><?= $profil_data ? htmlspecialchars($profil_data['misi']) : '' ?></textarea>
                         <small class="text-muted">Tips: Pisahkan setiap misi dengan baris baru</small>
                     </div>
                 </div>
@@ -277,9 +296,9 @@ $profil_data = pg_fetch_assoc($profil_query);
                 <div class="card-body text-center">
                     <?php if (!empty($profil_data['logo_path'])): ?>
                         <img src="<?= htmlspecialchars($profil_data['logo_path']) ?>" 
-                             alt="Logo NCS" 
-                             class="img-fluid rounded" 
-                             style="max-height: 300px; object-fit: contain;">
+                            alt="Logo NCS" 
+                            class="img-fluid rounded" 
+                            style="max-height: 300px; object-fit: contain;">
                     <?php else: ?>
                         <div class="empty-state" style="padding: 2rem;">
                             <i class="fas fa-image"></i>
@@ -372,6 +391,12 @@ $profil_data = pg_fetch_assoc($profil_query);
 <script>
 function previewImage(input) {
     const wrapper = document.getElementById('preview-wrapper');
+    const defaultPlaceholder = `
+        <div class="text-muted">
+            <i class="fas fa-image" style="font-size: 4rem;"></i>
+            <p class="mt-2">Belum ada logo</p>
+        </div>
+    `;
 
     if (input.files && input.files[0]) {
         const reader = new FileReader();
@@ -387,23 +412,22 @@ function previewImage(input) {
 
         reader.readAsDataURL(input.files[0]);
     } else {
-        // Jika file dihapus, kembalikan ke tampilan default (jika ada logo lama atau "Belum ada logo")
-        // Logika ini mungkin perlu disesuaikan tergantung bagaimana Anda ingin menangani penghapusan file
-        // Untuk saat ini, kita akan mencoba memuat ulang tampilan default jika tidak ada file yang dipilih
-        // (Ini memerlukan akses ke $profil_data, yang tidak tersedia di JS, jadi ini hanya perbaikan tampilan)
-        wrapper.innerHTML = `
-            <?php if ($profil_data && !empty($profil_data['logo_path'])): ?>
-                <img src="<?= htmlspecialchars($profil_data['logo_path']) ?>" 
-                    alt="Logo" 
-                    class="img-fluid" 
-                    style="max-height: 200px; object-fit: contain;">
-            <?php else: ?>
-                <div class="text-muted">
-                    <i class="fas fa-image" style="font-size: 4rem;"></i>
-                    <p class="mt-2">Belum ada logo</p>
-                </div>
-            <?php endif; ?>
-        `;
+        // Jika file dibatalkan/dihapus, kembalikan ke tampilan default
+        // Karena kita tidak bisa mengakses PHP $profil_data di sini, kita akan menampilkan placeholder generik.
+        
+        // Coba pertahankan logo lama jika ada (ini perlu bantuan dari PHP saat pertama kali load)
+        const currentLogoPath = '<?= ($profil_data && !empty($profil_data['logo_path'])) ? htmlspecialchars($profil_data['logo_path']) : '' ?>';
+        
+        if (currentLogoPath) {
+             wrapper.innerHTML = `
+                <img src="${currentLogoPath}" 
+                     alt="Logo" 
+                     class="img-fluid" 
+                     style="max-height: 200px; object-fit: contain;">
+            `;
+        } else {
+            wrapper.innerHTML = defaultPlaceholder;
+        }
     }
 }
 </script>
